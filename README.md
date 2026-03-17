@@ -1,1 +1,1937 @@
-# nutrition-system
+[index.html](https://github.com/user-attachments/files/26055446/index.html)
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食品營養標示計算系統</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap');
+  :root {
+    --bg:#f5f2eb;--surface:#fffdf7;--surface2:#f0ece0;
+    --border:#d4c9a8;--border2:#c2b68a;
+    --accent:#8b6914;--accent2:#c4961a;--accent-light:#f5e8c0;
+    --text:#2c2416;--text2:#5a4a2a;--text3:#8a7550;
+    --red:#c0392b;--green:#27632a;
+    --shadow:0 2px 12px rgba(139,105,20,0.10);--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+  .header{background:linear-gradient(135deg,#6b4f10 0%,#9a7020 60%,#c4961a 100%);color:#fff8e8;padding:18px 32px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 16px rgba(0,0,0,0.18);}
+  .header-icon{font-size:2rem;}
+  .header h1{font-family:'Noto Serif TC',serif;font-size:1.35rem;font-weight:700;letter-spacing:2px;}
+  .header p{font-size:0.8rem;opacity:.8;margin-top:2px;}
+
+  .container{max-width:1420px;margin:0 auto;padding:24px 20px 60px;}
+  .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border2);}
+  .tab-btn{padding:10px 26px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;cursor:pointer;font-size:.95rem;font-family:inherit;color:var(--text2);border-radius:var(--radius) var(--radius) 0 0;transition:all .2s;margin-right:4px;font-weight:500;}
+  .tab-btn.active{background:var(--surface);color:var(--accent);border-color:var(--border2);border-bottom:2px solid var(--surface);margin-bottom:-2px;font-weight:700;}
+  .tab-btn:hover:not(.active){background:var(--accent-light);}
+  .tab-panel{display:none;}.tab-panel.active{display:block;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow);}
+  .card-title{font-family:'Noto Serif TC',serif;font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:.82rem;color:var(--text2);font-weight:500;}
+  input[type=text],input[type=number],textarea,select{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.88rem;color:var(--text);background:#fdfaf2;transition:border-color .2s,box-shadow .2s;width:100%;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(196,150,26,.15);}
+  textarea{resize:vertical;min-height:60px;}
+
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.83rem;}
+  thead th{background:linear-gradient(180deg,#8b6914 0%,#7a5c10 100%);color:#fff8e8;padding:8px 10px;text-align:center;font-weight:600;white-space:nowrap;border:1px solid #6b4f10;}
+  tbody tr:nth-child(even){background:#faf7ee;}
+  tbody tr:hover{background:var(--accent-light);}
+  tbody td{padding:6px 8px;border:1px solid var(--border);text-align:center;vertical-align:middle;}
+  tbody td:first-child{text-align:left;}
+  tbody td input{border:none;background:transparent;text-align:right;width:100%;padding:2px 4px;font-family:inherit;font-size:.83rem;color:var(--text);}
+  tbody td input[type=text]{text-align:left;}
+  tbody td input:focus{outline:1px solid var(--accent2);border-radius:3px;background:#fff;}
+  .th-name{width:130px;text-align:left!important;}
+  .th-weight{width:88px;}
+  .th-pct{width:60px;}
+  .th-nutrient{width:70px;}
+  .th-del{width:42px;}
+
+  /* Autocomplete */
+  .name-wrap{position:relative;}
+  .ac-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:0 0 6px 6px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;max-height:200px;overflow-y:auto;display:none;}
+  .ac-dropdown.open{display:block;}
+  .ac-item{padding:7px 12px;cursor:pointer;font-size:.84rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+  .ac-item:hover{background:var(--accent-light);}
+  .ac-name{font-weight:600;}
+  .ac-preview{font-size:.72rem;color:var(--text3);}
+
+  /* Row DB match highlight */
+  tr.db-match td{background:#f0fff2!important;}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .18s;border:none;}
+  .btn-primary{background:var(--accent);color:#fff8e8;}
+  .btn-primary:hover{background:#7a5c10;transform:translateY(-1px);box-shadow:0 4px 12px rgba(139,105,20,.3);}
+  .btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+  .btn-secondary:hover{background:var(--accent-light);color:var(--accent);}
+  .btn-danger{background:#e74c3c;color:#fff;font-size:.75rem;padding:4px 8px;border-radius:4px;}
+  .btn-danger:hover{background:var(--red);}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-success:hover{background:#1e4d21;}
+  .btn-sm{padding:4px 10px;font-size:.78rem;}
+  .btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  /* Nutrition label */
+  .label-wrapper{display:flex;gap:24px;flex-wrap:wrap;}
+  .nutrition-label{width:320px;border:2px solid #111;padding:0;background:#fff;font-family:'Noto Sans TC',Arial,sans-serif;flex-shrink:0;}
+  .nl-title{font-size:1.5rem;font-weight:900;border-bottom:8px solid #111;padding:6px 8px 4px;}
+  .nl-serving{font-size:.75rem;border-bottom:1px solid #111;padding:4px 8px;}
+  .nl-cal-row{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:4px solid #111;padding:4px 8px;}
+  .nl-cal-lbl{font-size:.7rem;font-weight:700;}
+  .nl-cal-val{font-size:2rem;font-weight:900;line-height:1;}
+  .nl-cal-unit{font-size:.75rem;align-self:center;margin-left:2px;}
+  .nl-row{display:flex;justify-content:space-between;align-items:center;padding:3px 8px;border-bottom:.5px solid #ccc;font-size:.78rem;}
+  .nl-row.bold{font-weight:700;font-size:.82rem;}
+  .nl-row.sub{padding-left:22px;}
+  .nl-row .right{text-align:right;white-space:nowrap;}
+  .nl-footer{font-size:.65rem;padding:4px 8px;border-top:4px solid #111;line-height:1.4;}
+
+  /* Sort */
+  .sort-item{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;}
+  .sort-rank{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;}
+  .sort-rank.top3{background:#c4961a;}
+  .sort-name{flex:1;font-weight:600;}
+  .sort-bar-wrap{flex:2;height:10px;background:#e8e0cc;border-radius:5px;overflow:hidden;}
+  .sort-bar{height:100%;background:linear-gradient(90deg,#c4961a,#8b6914);border-radius:5px;}
+  .sort-weight{font-size:.82rem;color:var(--text2);white-space:nowrap;width:80px;text-align:right;}
+  .sort-pct{font-size:.78rem;color:var(--text3);white-space:nowrap;width:48px;text-align:right;}
+  .label-result{background:var(--accent-light);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin-top:14px;font-size:.9rem;line-height:1.8;}
+
+  .info-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .info-box{background:var(--accent-light);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;min-width:180px;}
+  .info-box .lbl{font-size:.75rem;color:var(--text3);margin-bottom:2px;}
+  .info-box .val{font-size:1.1rem;font-weight:700;color:var(--accent);}
+  .prod-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px;font-size:.88rem;line-height:2;}
+  .prod-info strong{color:var(--accent);min-width:72px;display:inline-block;}
+
+  .toast{position:fixed;bottom:30px;right:30px;background:var(--accent);color:#fff;padding:12px 22px;border-radius:8px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .empty-state{text-align:center;padding:30px;color:var(--text3);font-size:.9rem;font-style:italic;}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:12px;padding:26px 30px;width:min(820px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;}
+  .modal-sm{width:min(500px,96vw);}
+  .modal-title{font-family:'Noto Serif TC',serif;font-size:1.05rem;font-weight:700;color:var(--accent);margin-bottom:8px;}
+  .modal-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text3);}
+  .modal-close:hover{color:var(--red);}
+
+  /* Paste */
+  .fmt-tabs{display:flex;gap:6px;margin-bottom:10px;}
+  .fmt-tab{padding:6px 16px;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:inherit;transition:all .15s;}
+  .fmt-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .hint-box{background:#f0f6ff;border:1px solid #a8c4f0;border-radius:7px;padding:10px 14px;font-size:.82rem;color:#1a3060;margin-bottom:12px;line-height:1.8;}
+  .hint-box strong{display:block;margin-bottom:3px;color:#1a4a8b;}
+  .col-tag{display:inline-block;background:var(--accent-light);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.75rem;color:var(--accent);font-family:monospace;margin:1px;}
+  .paste-area{width:100%;min-height:130px;border:2px dashed var(--border2);border-radius:8px;padding:12px 14px;font-family:'Courier New',monospace;font-size:.82rem;resize:vertical;background:#fdfaf2;color:var(--text);transition:border-color .2s;}
+  .paste-area:focus{outline:none;border-color:var(--accent2);background:#fff;}
+  .preview-wrap{max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:6px;margin:8px 0;}
+  .preview-tbl{font-size:.78rem;width:100%;border-collapse:collapse;}
+  .preview-tbl th{background:var(--accent);color:#fff8e8;padding:5px 8px;white-space:nowrap;position:sticky;top:0;}
+  .preview-tbl td{padding:4px 8px;border:1px solid var(--border);white-space:nowrap;}
+  .preview-tbl tr:nth-child(even) td{background:#faf7ee;}
+
+  /* DB */
+  .db-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .db-toolbar input{flex:1;min-width:160px;}
+  .db-wrap{max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;}
+  .db-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+  .db-tbl th{background:var(--accent);color:#fff8e8;padding:7px 10px;white-space:nowrap;position:sticky;top:0;text-align:center;}
+  .db-tbl th:first-child{text-align:left;}
+  .db-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;}
+  .db-tbl td:first-child{text-align:left;font-weight:600;}
+  .db-tbl tr:hover td{background:var(--accent-light);}
+
+
+  /* ── Column Mapping UI ── */
+  .colmap-section { margin: 12px 0; }
+  .colmap-title { font-size:.84rem; font-weight:600; color:var(--text2); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .colmap-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .colmap-item { display:flex; flex-direction:column; gap:3px; }
+  .colmap-item label { font-size:.72rem; color:var(--text3); font-weight:500; }
+  .colmap-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#fdfaf2; color:var(--text); }
+  .colmap-item select:focus { outline:none; border-color:var(--accent2); }
+  .row-order-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .row-order-item { display:flex; flex-direction:column; gap:3px; }
+  .row-order-item label { font-size:.72rem; color:var(--text3); font-weight:500; }
+  .row-order-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#fdfaf2; color:var(--text); }
+
+
+  /* ── Translation ── */
+  .trans-input-area { display:flex; gap:16px; margin-bottom:16px; }
+  .trans-box { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .trans-box label { font-size:.82rem; font-weight:600; color:var(--text2); }
+  .trans-textarea { width:100%; min-height:220px; border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:inherit; font-size:.88rem; resize:vertical; background:#fdfaf2; color:var(--text); line-height:1.8; }
+  .trans-textarea:focus { outline:none; border-color:var(--accent2); box-shadow:0 0 0 3px rgba(196,150,26,.15); }
+  .trans-textarea[readonly] { background:var(--surface2); cursor:default; }
+  .trans-arrow { display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--border2); flex-shrink:0; padding-top:32px; }
+  .trans-result-item { display:flex; align-items:center; gap:10px; padding:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; }
+  .trans-zh { flex:1; font-weight:600; color:var(--text); }
+  .trans-en { flex:1; color:var(--accent); font-weight:500; }
+  .trans-copy-btn { font-size:.72rem; padding:3px 8px; }
+  .trans-loading { display:flex; align-items:center; gap:8px; color:var(--text3); font-size:.88rem; padding:16px 0; }
+  .spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .api-key-row { display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; background:var(--accent-light); border:1px solid var(--border2); border-radius:8px; padding:12px 16px; }
+  .api-key-row .form-group { flex:1; margin:0; }
+  .api-key-hint { font-size:.76rem; color:var(--text3); margin-top:4px; }
+
+
+  /* ── TransDB ── */
+  .tdb-toolbar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .tdb-toolbar input { flex:1; min-width:160px; }
+  .tdb-wrap { max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; }
+  .tdb-tbl { width:100%; border-collapse:collapse; font-size:.85rem; }
+  .tdb-tbl th { background:var(--accent); color:#fff8e8; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
+  .tdb-tbl td { padding:7px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .tdb-tbl tr:hover td { background:var(--accent-light); }
+  .tdb-tbl td:nth-child(2) { color:var(--accent); font-weight:500; }
+  .tdb-badge-db { display:inline-block; padding:1px 7px; background:#e8f5e9; border:1px solid #90d090; border-radius:10px; font-size:.7rem; color:var(--green); font-weight:700; margin-left:4px; }
+  .tdb-badge-ai { display:inline-block; padding:1px 7px; background:#e8f0ff; border:1px solid #a0b8f0; border-radius:10px; font-size:.7rem; color:#1a4a8b; font-weight:700; margin-left:4px; }
+  .trans-stat { display:flex; gap:10px; margin-bottom:12px; }
+  .trans-stat-box { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:8px 14px; font-size:.82rem; }
+  .trans-stat-box strong { color:var(--accent); font-size:1.1rem; }
+
+  /* ── Expand DB ── */
+  .exp-wrap { max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; }
+  .exp-tbl { width:100%; border-collapse:collapse; font-size:.84rem; }
+  .exp-tbl th { background:var(--accent); color:#fff8e8; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
+  .exp-tbl td { padding:8px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .exp-tbl tr:hover td { background:var(--accent-light); }
+  .exp-tbl td:first-child { font-weight:700; white-space:nowrap; width:160px; }
+  .exp-expanded { color:var(--text2); font-size:.82rem; line-height:1.6; word-break:break-all; }
+  .exp-badge { display:inline-block; padding:1px 7px; background:#fff3e0; border:1px solid #e8aa60; border-radius:10px; font-size:.7rem; color:#7a4800; font-weight:700; }
+  .expand-preview { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:10px 14px; font-size:.85rem; line-height:1.9; margin-top:10px; }
+  .expand-preview .ex-hit { background:#fffde7; border-bottom:2px solid #e8cc60; }
+  @media(max-width:800px){.form-grid{grid-template-columns:1fr;}.label-wrapper{flex-direction:column;}}
+  @media print{.tabs,.card:not(.print-target),.btn-group,.header{display:none!important;}.nutrition-label{border-color:#000;}}
+</style>
+</head>
+<body>
+
+
+<!-- ══ Supabase 狀態 Banner ══ -->
+<div id="supabaseBanner" style="background:#1a3060;color:#e8f0ff;padding:8px 24px;font-size:0.82rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <span style="font-weight:700;white-space:nowrap">🔗 Supabase 雲端資料庫</span>
+  <input id="sbUrl" type="text" style="display:none">
+  <input id="sbKey" type="text" style="display:none">
+  <span id="sbStatus" style="font-size:0.82rem;">🔄 連線中...</span>
+  <button onclick="document.getElementById('supabaseBanner').style.display='none'" style="margin-left:auto;background:none;border:none;color:#9ab;cursor:pointer;font-size:1.1rem">✕</button>
+</div>
+
+<div class="header">
+  <div class="header-icon">🏷️</div>
+  <div>
+    <h1>食品營養標示計算系統</h1>
+    <p>輸入成分配方 · 自動計算營養標示 · 成分重量排序 · 原物料資料庫</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('input',this)">📝 配方輸入</button>
+    <button class="tab-btn" onclick="switchTab('result',this)">📊 營養標示結果</button>
+    <button class="tab-btn" onclick="switchTab('sort',this)">📋 成分排序</button>
+    <button class="tab-btn" onclick="switchTab('db',this)">🗄️ 原物料資料庫</button>
+    <button class="tab-btn" onclick="switchTab('trans',this)">🌐 成分中翻英</button>
+    <button class="tab-btn" onclick="switchTab('transdb',this)">📖 翻譯詞庫</button>
+    <button class="tab-btn" onclick="switchTab('expand',this)">🔍 原料展開庫</button>
+  </div>
+
+  <!-- ─── TAB 1 配方輸入 ─── -->
+  <div class="tab-panel active" id="tab-input">
+    <div class="card">
+      <div class="card-title">🏭 產品基本資料</div>
+      <div class="form-grid">
+        <div class="form-group"><label>品名</label><input type="text" id="productName" placeholder="例：麻香油飯粽"></div>
+        <div class="form-group"><label>內容物（規格）</label><input type="text" id="productContent" placeholder="例：180公克/顆"></div>
+        <div class="form-group full"><label>過敏原</label><input type="text" id="productAllergen" placeholder="例：大豆、小麥、芝麻及其製品"></div>
+        <div class="form-group full"><label>原料（留空則系統自動依排序產生）</label><textarea id="productIngredientLabel" placeholder="若留空，系統將自動依照成分重量由多到少產生原料標示"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚖️ 成分配方表
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 輸入成分名稱可自動帶入資料庫數值 🟢</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="th-name">成分名稱</th>
+            <th class="th-weight">配方重量<br>(g)</th>
+            <th class="th-pct">佔比<br>(%)</th>
+            <th class="th-nutrient">熱量<br>(kcal/100g)</th>
+            <th class="th-nutrient">蛋白質<br>(g/100g)</th>
+            <th class="th-nutrient">脂肪<br>(g/100g)</th>
+            <th class="th-nutrient">飽和脂肪<br>(g/100g)</th>
+            <th class="th-nutrient">反式脂肪<br>(g/100g)</th>
+            <th class="th-nutrient">碳水化合物<br>(g/100g)</th>
+            <th class="th-nutrient">糖<br>(g/100g)</th>
+            <th class="th-nutrient">鈉<br>(mg/100g)</th>
+            <th class="th-del">刪除</th>
+          </tr></thead>
+          <tbody id="ingredientBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="addRow()">＋ 新增成分</button>
+        <button class="btn btn-secondary" onclick="openPasteModal()">📋 批次貼上匯入</button>
+        <button class="btn btn-secondary" onclick="importSample('zhanzin')">📥 範例（臻品肉絲粽）</button>
+        <button class="btn btn-secondary" onclick="importSample('triangle')">📥 範例（三角圓）</button>
+        <button class="btn btn-primary" onclick="calculate()">🔢 計算營養標示</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 2 結果 ─── -->
+  <div class="tab-panel" id="tab-result">
+    <div class="card"><div class="card-title">📊 計算結果</div>
+      <div id="resultContent"><div class="empty-state">請先在「配方輸入」頁面填寫資料並按下「計算」</div></div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 3 排序 ─── -->
+  <div class="tab-panel" id="tab-sort">
+    <div class="card"><div class="card-title">📋 成分排序結果（由多到少）</div>
+      <div id="sortContent"><div class="empty-state">請先在「配方輸入」頁面填寫資料並按下「計算」</div></div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 4 原物料資料庫 ─── -->
+  <div class="tab-panel" id="tab-db">
+    <div class="card">
+      <div class="card-title">🗄️ 原物料資料庫
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 建立後在配方表輸入名稱可自動帶入</span>
+      </div>
+      <div class="db-toolbar">
+        <input type="text" id="dbSearch" placeholder="🔍 搜尋原物料名稱..." oninput="renderDB()">
+        <button class="btn btn-primary" onclick="openDBModal(-1)">＋ 新增原物料</button>
+        <button class="btn btn-secondary" onclick="openDBPasteModal()">📋 批次貼上匯入</button>
+        <button class="btn btn-secondary" onclick="exportDB()">⬇️ 匯出 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importDBFile').click()">⬆️ 匯入 JSON</button>
+        <input type="file" id="importDBFile" accept=".json" style="display:none" onchange="importDB(this)">
+      </div>
+      <div class="db-wrap">
+        <table class="db-tbl">
+          <thead><tr>
+            <th style="width:150px">成分名稱</th>
+            <th>熱量<br>kcal/100g</th><th>蛋白質<br>g/100g</th><th>脂肪<br>g/100g</th>
+            <th>飽和脂肪<br>g/100g</th><th>反式脂肪<br>g/100g</th><th>碳水<br>g/100g</th>
+            <th>糖<br>g/100g</th><th>鈉<br>mg/100g</th>
+            <th style="width:110px">操作</th>
+          </tr></thead>
+          <tbody id="dbBody"></tbody>
+        </table>
+      </div>
+      <div id="dbEmpty" class="empty-state" style="display:none">尚無資料，點「新增原物料」開始建立</div>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="dbCount">0</span> 筆 · 資料儲存於本機瀏覽器，重新整理後仍保留</p>
+    </div>
+  </div>
+</div>
+
+  <!-- ─── TAB 5 成分中翻英 ─── -->
+  <div class="tab-panel" id="tab-trans">
+    <div class="card">
+      <div class="card-title">🌐 成分名稱中翻英
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 使用 AI 翻譯食品成分名稱</span>
+      </div>
+
+      <div class="api-key-row">
+        <div class="form-group">
+          <label>Anthropic API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="saveApiKey(this.value)">
+          <div class="api-key-hint">API Key 僅儲存於本機瀏覽器，不會上傳。可至 <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a> 取得。</div>
+        </div>
+      </div>
+
+      <div class="trans-input-area">
+        <div class="trans-box">
+          <label>中文成分（每行一個，或貼上逗號/頓號分隔的清單）</label>
+          <textarea class="trans-textarea" id="transInput" placeholder="樹薯粉&#10;大豆沙拉油&#10;香菇頭&#10;醬油&#10;黑胡椒粉&#10;..."></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn btn-secondary btn-sm" onclick="loadFromIngredients()">📥 從配方表載入成分</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('transInput').value=''">🗑️ 清除</button>
+          </div>
+        </div>
+        <div class="trans-arrow">→</div>
+        <div class="trans-box">
+          <label>英文翻譯結果</label>
+          <textarea class="trans-textarea" id="transOutput" readonly placeholder="翻譯結果將顯示在這裡..."></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn btn-secondary btn-sm" onclick="copyTransOutput()">📋 複製全部</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin-top:0">
+        <button class="btn btn-primary" onclick="translateIngredients()" id="transBtn">🌐 開始翻譯</button>
+      </div>
+
+      <div id="transLoading" class="trans-loading" style="display:none">
+        <div class="spinner"></div>
+        <span>翻譯中，請稍候...</span>
+      </div>
+
+      <div id="transStats" class="trans-stat" style="display:none">
+        <div class="trans-stat-box">詞庫命中 <strong id="statDB">0</strong> 筆 <span class="tdb-badge-db">詞庫</span></div>
+        <div class="trans-stat-box">AI 翻譯 <strong id="statAI">0</strong> 筆 <span class="tdb-badge-ai">AI</span></div>
+        <div class="trans-stat-box" id="statSaveBox" style="display:none">
+          <button class="btn btn-secondary btn-sm" onclick="saveNewToTransDB()" style="padding:3px 10px">💾 將 AI 結果存入詞庫</button>
+        </div>
+      </div>
+
+      <div id="transResultList" style="margin-top:4px;display:none">
+        <div class="card-title" style="border:none;padding-bottom:8px;margin-bottom:8px">📋 逐條對照</div>
+        <div id="transItems"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 6 翻譯詞庫 ─── -->
+  <div class="tab-panel" id="tab-transdb">
+    <div class="card">
+      <div class="card-title">📖 成分翻譯詞庫
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 翻譯時優先從詞庫取，詞庫沒有的再用 AI 補齊</span>
+      </div>
+      <div class="tdb-toolbar">
+        <input type="text" id="tdbSearch" placeholder="🔍 搜尋中文或英文..." oninput="renderTransDB()">
+        <button class="btn btn-primary" onclick="openTransDBModal(-1)">＋ 新增詞條</button>
+        <button class="btn btn-secondary" onclick="exportTransDB()">⬇️ 匯出 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importTDBFile').click()">⬆️ 匯入 JSON</button>
+        <input type="file" id="importTDBFile" accept=".json" style="display:none" onchange="importTransDB(this)">
+      </div>
+      <div class="tdb-wrap">
+        <table class="tdb-tbl">
+          <thead><tr>
+            <th style="width:200px">中文成分名稱</th>
+            <th style="width:260px">英文翻譯</th>
+            <th>備註</th>
+            <th style="width:110px">操作</th>
+          </tr></thead>
+          <tbody id="tdbBody"></tbody>
+        </table>
+      </div>
+      <div id="tdbEmpty" class="empty-state" style="display:none">尚無詞條，點「新增詞條」或先翻譯後存入</div>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="tdbCount">0</span> 筆詞條 · 儲存於本機瀏覽器</p>
+    </div>
+  </div>
+
+
+  <!-- ─── TAB 7 原料展開庫 ─── -->
+  <div class="tab-panel" id="tab-expand">
+    <div class="card">
+      <div class="card-title">🔍 原料展開資料庫
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 設定複合原料的展開內容，成分標示自動套用</span>
+      </div>
+      <div class="tdb-toolbar">
+        <input type="text" id="expSearch" placeholder="🔍 搜尋原料名稱..." oninput="renderExpandDB()">
+        <button class="btn btn-primary" onclick="openExpandModal(-1)">＋ 新增展開記錄</button>
+        <button class="btn btn-secondary" onclick="exportExpandDB()">⬇️ 匯出 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importExpFile').click()">⬆️ 匯入 JSON</button>
+        <input type="file" id="importExpFile" accept=".json" style="display:none" onchange="importExpandDB(this)">
+      </div>
+      <div class="exp-wrap">
+        <table class="exp-tbl">
+          <thead><tr>
+            <th style="width:180px">原料名稱（簡稱）</th>
+            <th>展開內容（成分標示用文字）</th>
+            <th style="width:120px">操作</th>
+          </tr></thead>
+          <tbody id="expBody"></tbody>
+        </table>
+      </div>
+      <div id="expEmpty" class="empty-state" style="display:none">尚無記錄，點「新增展開記錄」開始建立</div>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="expCount">0</span> 筆 · 儲存於本機瀏覽器</p>
+    </div>
+  </div>
+
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ 批次貼上 Modal ══ -->
+<div class="modal-overlay" id="pasteModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closePasteModal()">✕</button>
+    <div class="modal-title">📋 批次貼上匯入成分</div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px">請選擇您資料的格式，然後貼上。</p>
+
+    <div class="fmt-tabs">
+      <button class="fmt-tab active" id="fmtBtn-col" onclick="setFmt('col')">📄 直行格式（每項一行）</button>
+      <button class="fmt-tab" id="fmtBtn-row" onclick="setFmt('row')">📊 橫列格式（Excel 橫排複製）</button>
+    </div>
+
+    <div id="hintCol" class="hint-box">
+      <strong>📌 直行格式 — 一個成分佔多行，每行一個數值</strong>
+      名稱行是唯一非數字的行，多個成分之間可以有空行。<br>
+      若您的數值行順序不同，可在下方「行順序設定」調整。
+    </div>
+    <div id="hintRow" class="hint-box" style="display:none">
+      <strong>📌 橫列格式 — 從 Excel 橫向複製（每列一個成分，Tab 分隔）</strong>
+      若您的欄位順序不同，可在下方「欄位對應設定」調整。
+    </div>
+
+    <!-- 直行格式：行順序設定 -->
+    <div id="rowOrderSection" class="colmap-section">
+      <div class="colmap-title">🔢 行順序設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（第幾行對應哪個欄位，從成分名稱後的第1行算起）</span></div>
+      <div class="row-order-grid" id="rowOrderGrid"></div>
+    </div>
+
+    <!-- 橫列格式：欄位對應設定 -->
+    <div id="colMapSection" class="colmap-section" style="display:none">
+      <div class="colmap-title">🗂️ 欄位對應設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（第幾欄對應哪個欄位）</span></div>
+      <div class="colmap-grid" id="colMapGrid"></div>
+    </div>
+
+    <label style="font-size:.85rem;font-weight:600;color:var(--text2)">📂 貼上資料（Ctrl+V）</label>
+    <textarea class="paste-area" id="pasteArea" placeholder="在此貼上資料..." oninput="parsePaste()"></textarea>
+
+    <div id="previewSection" style="display:none;margin-top:12px">
+      <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">👀 資料預覽 <span id="previewCount" style="color:var(--text3);font-weight:400"></span></div>
+      <div class="preview-wrap">
+        <table class="preview-tbl">
+          <thead><tr><th>成分名稱</th><th>重量(g)</th><th>熱量</th><th>蛋白質</th><th>脂肪</th><th>飽和脂肪</th><th>反式脂肪</th><th>碳水</th><th>糖</th><th>鈉</th></tr></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="confirmPaste()">✅ 匯入</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('pasteArea').value='';parsePaste()">🗑️ 清除</button>
+      <button class="btn btn-secondary" onclick="closePasteModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 新增/編輯原物料 Modal ══ -->
+<div class="modal-overlay" id="dbModal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="closeDBModal()">✕</button>
+    <div class="modal-title" id="dbModalTitle">＋ 新增原物料</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>成分名稱</label>
+        <input type="text" id="dbF_name" placeholder="例：樹薯粉">
+      </div>
+      <div class="form-group"><label>熱量 (kcal/100g)</label><input type="number" id="dbF_cal" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>蛋白質 (g/100g)</label><input type="number" id="dbF_protein" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>脂肪 (g/100g)</label><input type="number" id="dbF_fat" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>飽和脂肪 (g/100g)</label><input type="number" id="dbF_satFat" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>反式脂肪 (g/100g)</label><input type="number" id="dbF_transFat" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>碳水化合物 (g/100g)</label><input type="number" id="dbF_carb" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>糖 (g/100g)</label><input type="number" id="dbF_sugar" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>鈉 (mg/100g)</label><input type="number" id="dbF_sodium" min="0" step="any" value="0"></div>
+    </div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveDBItem()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="closeDBModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let ingredients = [];
+let pasteFormat = 'col';
+let parsedPaste = [];
+let editingDBIdx = -1;
+
+// ══════════════════════════════════
+// LOCAL STORAGE DB
+// ══════════════════════════════════
+// ══════════════════════════════════
+// SUPABASE CONFIG
+// ══════════════════════════════════
+const SB_URL_KEY = 'sb_url';
+const SB_KEY_KEY = 'sb_key';
+
+function getSBConfig() {
+  return {
+    url: 'https://btnyditozvaqcxthomjk.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bnlkaXRvenZhcWN4dGhvbWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MzAwOTgsImV4cCI6MjA4OTMwNjA5OH0.LfJdyZMIzShZMsip0UWNF6BfLfFsu--d_h0G4-Unq-w'
+  };
+}
+
+function saveSBConfig() {
+  const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, '');
+  const key = document.getElementById('sbKey').value.trim();
+  if (!url || !key) { showSBStatus('⚠️ 請填寫 URL 和 Key', 'warn'); return; }
+  localStorage.setItem(SB_URL_KEY, url);
+  localStorage.setItem(SB_KEY_KEY, key);
+  showSBStatus('✅ 已儲存，測試連線中...', 'ok');
+  testSBConnection().then(ok => {
+    showSBStatus(ok ? '🟢 連線成功！資料庫已就緒' : '🔴 連線失敗，請確認 URL / Key', ok ? 'ok' : 'err');
+    if (ok) { renderDB(); renderTransDB(); renderExpandDB(); }
+  });
+}
+
+function showSBStatus(msg, type) {
+  const el = document.getElementById('sbStatus');
+  if (el) { el.textContent = msg; el.style.color = type === 'err' ? '#f08080' : type === 'warn' ? '#f5c060' : '#90e090'; }
+}
+
+async function sbFetch(path, opts = {}) {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  const res = await fetch(url + '/rest/v1/' + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': key,
+      'Authorization': 'Bearer ' + key,
+      'Prefer': opts.prefer || 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) { console.error('Supabase error:', res.status, await res.text()); return null; }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function testSBConnection() {
+  try {
+    const r = await sbFetch('nutrition_db?limit=1');
+    return r !== null;
+  } catch { return false; }
+}
+
+// ── Nutrition DB (原物料) ──
+const DB_KEY = 'nutritionDB_v2';
+function loadDB_local() { try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch { return []; } }
+function saveDB_local(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+let _dbCache = null;
+
+async function loadDB() {
+  const { url, key } = getSBConfig();
+  if (url && key) {
+    try {
+      const rows = await sbFetch('nutrition_db?order=name');
+      if (rows !== null) {
+        _dbCache = rows.map(r => ({ name: r.name, cal: r.cal, protein: r.protein, fat: r.fat, satFat: r.sat_fat, transFat: r.trans_fat, carb: r.carb, sugar: r.sugar, sodium: r.sodium }));
+        saveDB_local(_dbCache);
+        return _dbCache;
+      }
+    } catch(e) { console.warn('Supabase loadDB failed, using local', e); }
+  }
+  return loadDB_local();
+}
+
+async function saveDBItem_sb(item, isEdit, editName) {
+  const { url, key } = getSBConfig();
+  const row = { name: item.name, cal: item.cal, protein: item.protein, fat: item.fat, sat_fat: item.satFat, trans_fat: item.transFat, carb: item.carb, sugar: item.sugar, sodium: item.sodium };
+  if (url && key) {
+    if (isEdit) {
+      await sbFetch(`nutrition_db?name=eq.${encodeURIComponent(editName)}`, { method: 'PATCH', body: JSON.stringify(row), prefer: 'return=minimal' });
+    } else {
+      await sbFetch('nutrition_db', { method: 'POST', body: JSON.stringify(row) });
+    }
+  }
+  const db = loadDB_local();
+  if (isEdit) { const i = db.findIndex(d => d.name === editName); if (i >= 0) db[i] = item; }
+  else db.push(item);
+  saveDB_local(db);
+  _dbCache = null;
+}
+
+async function deleteDB_sb(name) {
+  const { url, key } = getSBConfig();
+  if (url && key) await sbFetch(`nutrition_db?name=eq.${encodeURIComponent(name)}`, { method: 'DELETE', prefer: 'return=minimal' });
+  const db = loadDB_local();
+  const i = db.findIndex(d => d.name === name);
+  if (i >= 0) { db.splice(i, 1); saveDB_local(db); }
+  _dbCache = null;
+}
+
+function findDB(name) {
+  const db = _dbCache || loadDB_local();
+  return db.find(d => d.name.toLowerCase() === name.trim().toLowerCase()) || null;
+}
+function searchDB(q) {
+  const db = _dbCache || loadDB_local();
+  if (!q) return db;
+  const lq = q.toLowerCase();
+  return db.filter(d => d.name.toLowerCase().includes(lq));
+}
+function saveDB(db) { saveDB_local(db); _dbCache = null; }
+
+// ══════════════════════════════════
+// TABS
+// ══════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'db') renderDB();
+}
+
+// ══════════════════════════════════
+// INGREDIENT TABLE
+// ══════════════════════════════════
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function addRow(data) {
+  const d = { name:'', weight:0, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0, ...data };
+  const idx = ingredients.length;
+  ingredients.push({ ...d });
+
+  const tbody = document.getElementById('ingredientBody');
+  const tr = document.createElement('tr');
+  tr.id = 'row-' + idx;
+
+  // Name cell with autocomplete dropdown
+  const nameTd = document.createElement('td');
+  nameTd.innerHTML = `
+    <div class="name-wrap">
+      <input type="text" id="name-${idx}" value="${escH(d.name)}" placeholder="輸入成分名稱"
+        oninput="onNameInput(${idx},this)" onblur="hideAC(${idx})" autocomplete="off" style="width:100%">
+      <div class="ac-dropdown" id="ac-${idx}"></div>
+    </div>`;
+  tr.appendChild(nameTd);
+
+  // Weight
+  const wTd = document.createElement('td');
+  wTd.innerHTML = `<input type="number" id="weight-${idx}" value="${d.weight}" min="0" step="any"
+    oninput="updateF(${idx},'weight',parseFloat(this.value)||0);updatePct()">`;
+  tr.appendChild(wTd);
+
+  // Pct
+  const pTd = document.createElement('td');
+  pTd.id = 'pct-' + idx;
+  pTd.style.cssText = 'color:var(--text3);font-size:.78rem;';
+  pTd.textContent = '0%';
+  tr.appendChild(pTd);
+
+  // Nutrients
+  [['cal',d.cal],['protein',d.protein],['fat',d.fat],['satFat',d.satFat],['transFat',d.transFat],['carb',d.carb],['sugar',d.sugar],['sodium',d.sodium]].forEach(([f, v]) => {
+    const td = document.createElement('td');
+    td.innerHTML = `<input type="number" id="${f}-${idx}" value="${v}" min="0" step="any" oninput="updateF(${idx},'${f}',parseFloat(this.value)||0)">`;
+    tr.appendChild(td);
+  });
+
+  // Delete
+  const delTd = document.createElement('td');
+  delTd.innerHTML = `<button class="btn btn-danger" onclick="removeRow(${idx})">✕</button>`;
+  tr.appendChild(delTd);
+
+  tbody.appendChild(tr);
+  updatePct();
+  if (d.name && findDB(d.name)) tr.classList.add('db-match');
+}
+
+function updateF(idx, field, val) { if (ingredients[idx]) ingredients[idx][field] = val; }
+function removeRow(idx) { ingredients.splice(idx, 1); rebuildTable(); }
+function rebuildTable() {
+  document.getElementById('ingredientBody').innerHTML = '';
+  const s = [...ingredients]; ingredients = [];
+  s.forEach(d => addRow(d));
+}
+function updatePct() {
+  const total = ingredients.reduce((s, r) => s + (r.weight || 0), 0);
+  ingredients.forEach((r, i) => {
+    const cell = document.getElementById('pct-' + i);
+    if (cell) cell.textContent = total > 0 ? (r.weight / total * 100).toFixed(2) + '%' : '0%';
+  });
+}
+
+// ── Autocomplete ──
+function onNameInput(idx, input) {
+  updateF(idx, 'name', input.value);
+  const q = input.value.trim();
+  const ac = document.getElementById('ac-' + idx);
+  if (!q) { ac.classList.remove('open'); return; }
+  const hits = searchDB(q).slice(0, 8);
+  if (!hits.length) { ac.classList.remove('open'); return; }
+  ac.innerHTML = hits.map(r => `
+    <div class="ac-item" onmousedown="applyDB(${idx},'${escH(r.name)}')">
+      <span class="ac-name">${r.name}</span>
+      <span class="ac-preview">熱量 ${r.cal} · 蛋白 ${r.protein} · 脂肪 ${r.fat} · 碳水 ${r.carb}</span>
+    </div>`).join('');
+  ac.classList.add('open');
+}
+function hideAC(idx) { setTimeout(() => { const a = document.getElementById('ac-'+idx); if(a) a.classList.remove('open'); }, 200); }
+
+function applyDB(idx, name) {
+  const item = findDB(name);
+  if (!item) return;
+  const ni = document.getElementById('name-' + idx);
+  if (ni) ni.value = item.name;
+  ingredients[idx].name = item.name;
+  ['cal','protein','fat','satFat','transFat','carb','sugar','sodium'].forEach(f => {
+    ingredients[idx][f] = item[f] || 0;
+    const inp = document.getElementById(f + '-' + idx);
+    if (inp) inp.value = item[f] || 0;
+  });
+  document.getElementById('ac-' + idx).classList.remove('open');
+  const row = document.getElementById('row-' + idx);
+  if (row) row.classList.add('db-match');
+  showToast('✅ 已帶入「' + item.name + '」的營養資料');
+}
+
+// ══════════════════════════════════
+// CALCULATE
+// ══════════════════════════════════
+function calculate() {
+  if (!ingredients.length) { showToast('請先新增成分！'); return; }
+  const totalWeight = ingredients.reduce((s, r) => s + (r.weight || 0), 0);
+  if (!totalWeight) { showToast('請填入成分重量！'); return; }
+
+  const sum = { protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+  ingredients.forEach(r => {
+    const w = r.weight || 0;
+    Object.keys(sum).forEach(k => sum[k] += w * (r[k] || 0) / 100);
+  });
+  const p = {};
+  Object.keys(sum).forEach(k => p[k] = sum[k] / totalWeight * 100);
+  p.cal = p.protein * 4 + p.fat * 9 + p.carb * 4; // Atwater
+
+  renderResult(p, totalWeight);
+  renderSort(ingredients, totalWeight);
+  showToast('✅ 計算完成！');
+  switchTab('result', document.querySelectorAll('.tab-btn')[1]);
+}
+
+// ══════════════════════════════════
+// RENDER
+// ══════════════════════════════════
+function renderResult(p, totalWeight) {
+  const name = document.getElementById('productName').value || '－';
+  const content = document.getElementById('productContent').value || '－';
+  const allergen = document.getElementById('productAllergen').value || '－';
+  const override = document.getElementById('productIngredientLabel').value.trim();
+  const sorted = [...ingredients].sort((a,b) => (b.weight||0)-(a.weight||0));
+  const autoLabel = sorted.filter(r=>r.name).map(r => applyExpand(r.name)).join('、');
+  const finalLabel = override || autoLabel;
+
+  document.getElementById('resultContent').innerHTML = `
+    <div class="prod-info">
+      <div><strong>品名：</strong>${escH(name)}</div>
+      <div><strong>原料：</strong>${escH(finalLabel)}</div>
+      <div><strong>過敏原：</strong>${escH(allergen)}</div>
+      <div><strong>內容物：</strong>${escH(content)}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-box"><div class="lbl">配方總重量</div><div class="val">${totalWeight.toLocaleString()} g</div></div>
+      <div class="info-box"><div class="lbl">成分種類數</div><div class="val">${ingredients.length} 種</div></div>
+    </div>
+    <div class="label-wrapper">
+      <div class="nutrition-label">
+        <div class="nl-title">營養標示</div>
+        <div class="nl-serving">每一份量 100 公克</div>
+        <div class="nl-cal-row">
+          <div class="nl-cal-lbl">每份<br>熱量</div>
+          <div style="display:flex;align-items:flex-end">
+            <div class="nl-cal-val">${p.cal.toFixed(1)}</div>
+            <div class="nl-cal-unit">大卡</div>
+          </div>
+        </div>
+        ${nlR('蛋白質',p.protein.toFixed(1),'g',true)}
+        ${nlR('脂肪',p.fat.toFixed(1),'g',true)}
+        ${nlR('飽和脂肪',p.satFat.toFixed(1),'g',false,true)}
+        ${nlR('反式脂肪',p.transFat.toFixed(2),'g',false,true)}
+        ${nlR('碳水化合物',p.carb.toFixed(1),'g',true)}
+        ${nlR('糖',p.sugar.toFixed(1),'g',false,true)}
+        ${nlR('鈉',p.sodium.toFixed(0),'mg',true)}
+        <div class="nl-footer">*每日參考值：熱量 2000大卡、蛋白質 60公克、脂肪 65公克、飽和脂肪 18公克、碳水化合物 300公克、鈉 2400毫克</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-family:'Noto Serif TC',serif;font-weight:700;color:var(--accent);margin-bottom:10px">📋 詳細數值（每100g）</div>
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+          <tr style="background:var(--accent-light)">
+            <th style="padding:7px 12px;text-align:left;border:1px solid var(--border)">項目</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid var(--border)">數值</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid var(--border)">單位</th>
+          </tr>
+          ${dR('熱量（Atwater）',p.cal.toFixed(2),'大卡')}
+          ${dR('蛋白質',p.protein.toFixed(3),'g')}
+          ${dR('脂肪',p.fat.toFixed(3),'g')}
+          ${dR('飽和脂肪',p.satFat.toFixed(3),'g')}
+          ${dR('反式脂肪',p.transFat.toFixed(4),'g')}
+          ${dR('碳水化合物',p.carb.toFixed(3),'g')}
+          ${dR('糖',p.sugar.toFixed(3),'g')}
+          ${dR('鈉',p.sodium.toFixed(3),'mg')}
+        </table>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="window.print()">🖨️ 列印標示</button>
+          <button class="btn btn-secondary" onclick="copyResult()">📋 複製文字</button>
+        </div>
+      </div>
+    </div>`;
+  window._lastResult = { name, finalLabel, allergen, content, p };
+}
+function nlR(label,val,unit,bold,sub) {
+  return `<div class="nl-row${bold?' bold':''}${sub?' sub':''}"><div>${label}</div><div class="right">${val} ${unit}</div></div>`;
+}
+function dR(label,val,unit) {
+  return `<tr><td style="padding:6px 12px;border:1px solid var(--border)">${label}</td><td style="padding:6px 12px;border:1px solid var(--border);text-align:right;font-weight:600">${val}</td><td style="padding:6px 12px;border:1px solid var(--border);text-align:right;color:var(--text3)">${unit}</td></tr>`;
+}
+
+function renderSort(rows, totalWeight) {
+  const sorted = [...rows].filter(r=>r.name).sort((a,b)=>(b.weight||0)-(a.weight||0));
+  const maxW = sorted[0]?.weight || 1;
+  let html = `<div style="margin-bottom:14px;font-size:.85rem;color:var(--text2)">共 ${sorted.length} 種，總重 ${totalWeight.toLocaleString()} g</div>`;
+  sorted.forEach((r,i) => {
+    const pct = totalWeight > 0 ? r.weight/totalWeight*100 : 0;
+    html += `<div class="sort-item">
+      <div class="sort-rank${i<3?' top3':''}">${i+1}</div>
+      <div class="sort-name">${r.name}</div>
+      <div class="sort-bar-wrap"><div class="sort-bar" style="width:${(r.weight/maxW*100).toFixed(1)}%"></div></div>
+      <div class="sort-weight">${(r.weight||0).toLocaleString()} g</div>
+      <div class="sort-pct">${pct.toFixed(2)}%</div>
+    </div>`;
+  });
+  const labelTxt = sorted.map(r=>r.name).join('、');
+  const labelExpanded = sorted.map(r => applyExpand(r.name)).join('、');
+  const hasExpanded = labelExpanded !== labelTxt;
+  html += `<div class="label-result">
+    <div style="margin-bottom:10px">
+      <strong>原料標示文字（依排序，含展開）：</strong>
+      <br><span id="sortedLabel">${labelExpanded}</span>
+    </div>
+    ${hasExpanded ? `<div style="margin-bottom:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <strong style="font-size:.8rem;color:var(--text3)">未展開版本：</strong>
+      <br><span style="font-size:.85rem;color:var(--text3)">${labelTxt}</span>
+    </div>` : ''}
+    <div class="btn-group" style="margin-top:6px">
+      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('sortedLabel').textContent).then(()=>showToast('✅ 已複製！'))">📋 複製展開版</button>
+      ${hasExpanded ? `<button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${labelTxt.replace(/'/g,"\\'")}').then(()=>showToast('✅ 已複製！'))">📋 複製未展開版</button>` : ''}
+    </div>
+  </div>`;
+  document.getElementById('sortContent').innerHTML = html;
+}
+
+function copyResult() {
+  if (!window._lastResult) return;
+  const {name,finalLabel,allergen,content,p} = window._lastResult;
+  navigator.clipboard.writeText(`品名：${name}\n原料：${finalLabel}\n過敏原：${allergen}\n內容物：${content}\n\n【營養標示 每100公克】\n熱量：${p.cal.toFixed(1)} 大卡\n蛋白質：${p.protein.toFixed(2)} g\n脂肪：${p.fat.toFixed(2)} g\n飽和脂肪：${p.satFat.toFixed(2)} g\n反式脂肪：${p.transFat.toFixed(3)} g\n碳水化合物：${p.carb.toFixed(2)} g\n糖：${p.sugar.toFixed(2)} g\n鈉：${p.sodium.toFixed(1)} mg`).then(()=>showToast('✅ 已複製！'));
+}
+
+// ══════════════════════════════════
+// PASTE MODAL
+// ══════════════════════════════════
+const FIELDS = [
+  { key:'weight',   label:'配方重量(g)' },
+  { key:'cal',      label:'熱量(kcal/100g)' },
+  { key:'protein',  label:'蛋白質(g/100g)' },
+  { key:'fat',      label:'脂肪(g/100g)' },
+  { key:'satFat',   label:'飽和脂肪(g/100g)' },
+  { key:'transFat', label:'反式脂肪(g/100g)' },
+  { key:'carb',     label:'碳水化合物(g/100g)' },
+  { key:'sugar',    label:'糖(g/100g)' },
+  { key:'sodium',   label:'鈉(mg/100g)' },
+];
+// rowOrder[i] = which FIELDS index is on line i (0-based after name line), -1 = skip
+let rowOrder = [0,1,2,3,4,5,6,7,8]; // default: weight,cal,protein...sodium
+// colMap[i] = which FIELDS index is in tab-col i (col 0 = name, col 1+ = nutrients), -1 = skip
+let colMap = [-99,0,1,2,3,4,5,6,7,8]; // col0=name(special), col1=weight...
+
+function openPasteModal() {
+  document.getElementById('pasteModal').classList.add('open');
+  buildRowOrderUI();
+  buildColMapUI();
+  document.getElementById('pasteArea').focus();
+}
+function closePasteModal() { document.getElementById('pasteModal').classList.remove('open'); }
+
+function setFmt(fmt) {
+  pasteFormat = fmt;
+  document.getElementById('fmtBtn-col').classList.toggle('active', fmt==='col');
+  document.getElementById('fmtBtn-row').classList.toggle('active', fmt==='row');
+  document.getElementById('hintCol').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('hintRow').style.display = fmt==='row' ? '' : 'none';
+  document.getElementById('rowOrderSection').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('colMapSection').style.display = fmt==='row' ? '' : 'none';
+  parsePaste();
+}
+
+// Build row-order dropdowns for col format (9 rows after name)
+function buildRowOrderUI() {
+  const grid = document.getElementById('rowOrderGrid');
+  grid.innerHTML = '';
+  const opts = ['（略過）', ...FIELDS.map(f => f.label)];
+  for (let i = 0; i < 9; i++) {
+    const div = document.createElement('div');
+    div.className = 'row-order-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 行`;
+    const sel = document.createElement('select');
+    sel.id = 'ro-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      op.value = oi - 1; // -1=skip, 0..8=field index
+      op.textContent = o;
+      if (oi - 1 === rowOrder[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { rowOrder[i] = parseInt(sel.value); parsePaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
+}
+
+// Build col-map dropdowns for row format (up to 10 cols)
+function buildColMapUI() {
+  const grid = document.getElementById('colMapGrid');
+  grid.innerHTML = '';
+  const opts = ['（成分名稱）','（略過）', ...FIELDS.map(f => f.label)];
+  for (let i = 0; i < 10; i++) {
+    const div = document.createElement('div');
+    div.className = 'colmap-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 欄`;
+    const sel = document.createElement('select');
+    sel.id = 'cm-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      // oi=0 -> name(-99), oi=1 -> skip(-1), oi=2..10 -> field 0..8
+      op.value = oi === 0 ? -99 : oi - 2;
+      op.textContent = o;
+      if (op.value == colMap[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { colMap[i] = parseInt(sel.value); parsePaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
+}
+
+function parsePaste() {
+  const raw = document.getElementById('pasteArea').value.trim();
+  if (!raw) { document.getElementById('previewSection').style.display = 'none'; parsedPaste=[]; return; }
+  parsedPaste = pasteFormat === 'col' ? parseCol(raw) : parseRow(raw);
+  showPreview(parsedPaste);
+}
+
+// ── 直行格式解析（依 rowOrder 設定） ──
+function parseCol(raw) {
+  const lines = raw.split('\n').map(l => l.trim());
+  const results = [];
+  let i = 0;
+
+  // 去除單位後取純數字（支援 120000g / 120,000g / 87.5% / 120000公克 等）
+  const stripUnit = v => v
+    .replace(/[,，]/g, '')
+    .replace(/\s*(g|kg|mg|kcal|公克|公斤|毫克|大卡|%)\s*$/i, '')
+    .trim();
+  const isNumLine = v => { if (!v) return false; const s = stripUnit(v); return s !== '' && !isNaN(s); };
+  const toNum = v => parseFloat(stripUnit(v)) || 0;
+
+  while (i < lines.length) {
+    if (!lines[i]) { i++; continue; }
+    if (isNumLine(lines[i])) { i++; continue; } // 跳過孤立數字行
+    const name = lines[i]; i++;
+    const nums = [];
+    while (i < lines.length && nums.length < 9) {
+      if (!lines[i]) break;
+      if (!isNumLine(lines[i])) break;
+      nums.push(toNum(lines[i]));
+      i++;
+    }
+    const d = { name, weight:0, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    rowOrder.forEach((fieldIdx, lineIdx) => {
+      if (fieldIdx < 0 || lineIdx >= nums.length) return;
+      d[FIELDS[fieldIdx].key] = nums[lineIdx];
+    });
+    results.push(d);
+  }
+  return results;
+}
+
+// ── 橫列格式解析（依 colMap 設定） ──
+function parseRow(raw) {
+  return raw.split('\n').map(line => {
+    const c = line.split('\t').map(v => v.trim().replace(/,/g,''));
+    if (c.every(v => !v)) return null;
+    const d = { name:'', weight:0, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    colMap.forEach((fieldCode, ci) => {
+      if (ci >= c.length) return;
+      if (fieldCode === -99) { d.name = c[ci] || ''; return; } // name
+      if (fieldCode < 0) return; // skip
+      const key = FIELDS[fieldCode].key;
+      d[key] = parseFloat(c[ci]) || 0;
+    });
+    if (!d.name && !d.weight) return null;
+    return d;
+  }).filter(Boolean);
+}
+
+function showPreview(data) {
+  if (!data.length) { document.getElementById('previewSection').style.display='none'; return; }
+  document.getElementById('previewSection').style.display = '';
+  document.getElementById('previewCount').textContent = `（共 ${data.length} 筆）`;
+  document.getElementById('previewBody').innerHTML = data.map(d =>
+    `<tr><td>${d.name||'－'}</td><td>${d.weight}</td><td>${d.cal}</td><td>${d.protein}</td><td>${d.fat}</td><td>${d.satFat}</td><td>${d.transFat}</td><td>${d.carb}</td><td>${d.sugar}</td><td>${d.sodium}</td></tr>`
+  ).join('');
+}
+
+function confirmPaste() {
+  if (!parsedPaste.length) { showToast('沒有可匯入的資料！'); return; }
+  const replace = confirm(`偵測到 ${parsedPaste.length} 筆成分。\n\n確定 → 清除現有成分並匯入\n取消 → 附加到後面`);
+  if (replace) { ingredients=[]; document.getElementById('ingredientBody').innerHTML=''; }
+  parsedPaste.forEach(d => {
+    // 若資料庫有相符的，自動補充空白的營養欄位
+    const dbItem = findDB(d.name);
+    if (dbItem && !d.cal && !d.protein && !d.fat && !d.carb) {
+      Object.assign(d, { cal:dbItem.cal, protein:dbItem.protein, fat:dbItem.fat, satFat:dbItem.satFat, transFat:dbItem.transFat, carb:dbItem.carb, sugar:dbItem.sugar, sodium:dbItem.sodium });
+    }
+    addRow(d);
+  });
+  closePasteModal();
+  showToast(`✅ 已匯入 ${parsedPaste.length} 筆！`);
+}
+
+
+
+// ══════════════════════════════════
+// DB MODAL
+// ══════════════════════════════════
+function openDBModal(idx) {
+  editingDBIdx = idx;
+  const db = _dbCache || loadDB_local();
+  document.getElementById('dbModalTitle').textContent = idx < 0 ? '＋ 新增原物料' : '✏️ 編輯原物料';
+  const item = idx >= 0 ? db[idx] : null;
+  document.getElementById('dbF_name').value = item ? item.name : '';
+  ['cal','protein','fat','satFat','transFat','carb','sugar','sodium'].forEach(f => {
+    document.getElementById('dbF_'+f).value = item ? (item[f]||0) : 0;
+  });
+  document.getElementById('dbModal').classList.add('open');
+  document.getElementById('dbF_name').focus();
+}
+function closeDBModal() { document.getElementById('dbModal').classList.remove('open'); }
+
+async function saveDBItem() {
+  const name = document.getElementById('dbF_name').value.trim();
+  if (!name) { showToast('請輸入成分名稱！'); return; }
+  const item = { name, cal:+document.getElementById('dbF_cal').value||0, protein:+document.getElementById('dbF_protein').value||0, fat:+document.getElementById('dbF_fat').value||0, satFat:+document.getElementById('dbF_satFat').value||0, transFat:+document.getElementById('dbF_transFat').value||0, carb:+document.getElementById('dbF_carb').value||0, sugar:+document.getElementById('dbF_sugar').value||0, sodium:+document.getElementById('dbF_sodium').value||0 };
+  const db = _dbCache || loadDB_local();
+  const isEdit = editingDBIdx >= 0;
+  const editName = isEdit ? db[editingDBIdx]?.name : null;
+  if (!isEdit && db.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('⚠️ 此名稱已存在！'); return; }
+  await saveDBItem_sb(item, isEdit, editName);
+  showToast(isEdit ? `✅ 已更新「${name}」` : `✅ 已新增「${name}」`);
+  closeDBModal(); renderDB();
+}
+
+async function deleteDBItem(idx) {
+  const db = _dbCache || loadDB_local();
+  if (!db[idx] || !confirm(`確定要刪除「${db[idx].name}」嗎？`)) return;
+  await deleteDB_sb(db[idx].name);
+  renderDB(); showToast('🗑️ 已刪除');
+}
+
+async function renderDB() {
+  const q = document.getElementById('dbSearch').value;
+  const allDB = await loadDB();
+  _dbCache = allDB;
+  const data = searchDB(q);
+  document.getElementById('dbCount').textContent = allDB.length;
+  const empty = document.getElementById('dbEmpty');
+  const tbody = document.getElementById('dbBody');
+  if (!allDB.length) { tbody.innerHTML=''; empty.style.display=''; return; }
+  empty.style.display = 'none';
+  if (!data.length) { tbody.innerHTML=`<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text3)">找不到符合「${q}」的原物料</td></tr>`; return; }
+  tbody.innerHTML = data.map(item => {
+    const realIdx = allDB.findIndex(d => d.name === item.name);
+    return `<tr>
+      <td>${item.name}</td>
+      <td>${item.cal}</td><td>${item.protein}</td><td>${item.fat}</td>
+      <td>${item.satFat}</td><td>${item.transFat}</td><td>${item.carb}</td>
+      <td>${item.sugar}</td><td>${item.sodium}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openDBModal(${realIdx})" style="margin-right:4px">✏️</button>
+        <button class="btn btn-danger" onclick="deleteDBItem(${realIdx})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function exportDB() {
+  const db = _dbCache || loadDB_local();
+  if (!db.length) { showToast('資料庫是空的！'); return; }
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '原物料資料庫.json'; a.click();
+}
+async function importDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw '';
+      const existing = loadDB(); let added = 0, skipped = 0;
+      const newItems = [];
+      data.forEach(item => {
+        if (!item.name) return;
+        if (existing.find(d => d.name === item.name)) { skipped++; return; }
+        existing.push(item); newItems.push(item); added++;
+      });
+      saveDB(existing);
+      const { url: sbU, key: sbK } = getSBConfig();
+      if (sbU && sbK && newItems.length > 0) {
+        const rows = newItems.map(item => ({ name:item.name, cal:item.cal, protein:item.protein, fat:item.fat, sat_fat:item.satFat, trans_fat:item.transFat, carb:item.carb, sugar:item.sugar, sodium:item.sodium }));
+        await sbFetch('nutrition_db', { method: 'POST', body: JSON.stringify(rows) }).catch(()=>{});
+      }
+      renderDB();
+      showToast(`✅ 匯入完成：新增 ${added} 筆，略過重複 ${skipped} 筆`);
+    } catch { showToast('⚠️ 格式錯誤，請使用系統匯出的 JSON'); }
+  };
+  reader.readAsText(file); input.value = '';
+}
+
+
+
+// ══════════════════════════════════
+// SAMPLE DATA
+// ══════════════════════════════════
+function importSample(type) {
+  ingredients=[]; document.getElementById('ingredientBody').innerHTML='';
+  const rows = type === 'zhanzin' ? [
+    ['糯米',308000,358,8.3,0.8,0.2,0,77.4,0,3],['新肉絲',88000,132,18.6,4.4,0.5,0,7,1.1,523],
+    ['栗子',40000,180,4.3,1.5,0.2,0,37.4,5.5,0.7],['香菇',4500,333,23.3,1.4,0.2,0,66.6,6.7,15],
+    ['菜脯',54000,16,1,0,0,0,3,0,1530],['大豆沙拉油',44000,828,0,92,15,1,0,0,0],
+    ['香椿',9600,394.3,2.6,42.3,6.9,0,1.3,0,503],['醬油露',16500,80,5,0,0,0,15,14,4320],
+    ['素蠔油',13200,140,5,0,0,0,30,25,3200],['鮮味多',4400,184,460,0,0,0,0,0,12583],
+    ['鹽',440,0,0,0,0,0,0,0,39143],['糖',450,398.4,0,0,0,0,99.2,99,3],
+    ['黑胡椒粉',1800,379,12,7,1,0,67,0,7],['素食調味料',300,417.8,38.8,4.3,0,0,74,4.8,1711],
+    ['甘草粉',300,364,9,4,1,0,73,0,109],['爌肉精',900,276,17,9,8,0,32,31,3628],
+    ['香油',1200,819,0,91,17,1,0,0,0],['碎肉',8400,290,54,1.5,0.2,0,31,4.8,30]
+  ] : [
+    ['樹薯粉',120000,350,0,0,0,0,87.5,0,0],['碎肉',16800,290,54,1.5,0.2,0,31,4.8,30],
+    ['香菇頭',1050,333,23.3,1.4,0.2,0,66.6,6.7,15],['香油',3900,819,0,91,17,1,0,0,0],
+    ['大豆沙拉油',7200,828,0,92,15,1,0,0,0],['香椿',2100,394.3,2.6,42.3,6.9,0,1.3,0,503],
+    ['醬油',2100,108,9,0,0,0,18,11,5430],['素沙茶醬',1200,660,7,64,11,0.5,14,0.6,1550],
+    ['鮮味多',525,184,460,0,0,0,0,0,12583],['爌肉精',225,276,17,9,8,0,32,31,3628],
+    ['鹽',2400,0,0,0,0,0,0,0,39143],['菜脯',6000,16,1,0,0,0,3,0,1530],
+    ['黑胡椒粉',300,379,12,7,1,0,67,0,7],['素肉醬',150,417.8,38.8,4.3,0,0,74,4.8,1711],['水',61800,0,0,0,0,0,0,0,0]
+  ];
+  const names = { zhanzin:['臻品新肉絲粽','180公克/顆','大豆、小麥、芝麻及其製品'], triangle:['三角圓','－','大豆、小麥、芝麻、花生、堅果類及其製品'] };
+  const [pname, pcont, pallergen] = names[type];
+  document.getElementById('productName').value = pname;
+  document.getElementById('productContent').value = pcont;
+  document.getElementById('productAllergen').value = pallergen;
+  document.getElementById('productIngredientLabel').value = '';
+  rows.forEach(r => addRow({name:r[0],weight:r[1],cal:r[2],protein:r[3],fat:r[4],satFat:r[5],transFat:r[6],carb:r[7],sugar:r[8],sodium:r[9]}));
+  showToast('✅ 範例資料已載入！');
+}
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+
+// ══════════════════════════════════
+// TRANSLATION DB (詞庫)
+// ══════════════════════════════════
+const TDB_KEY = 'transDB_v1';
+let _tdbCache = null;
+function loadTransDB_local() { try { return JSON.parse(localStorage.getItem(TDB_KEY) || '[]'); } catch { return []; } }
+function saveTransDB_local(db) { localStorage.setItem(TDB_KEY, JSON.stringify(db)); }
+async function loadTransDB_remote() {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  try {
+    const rows = await sbFetch('trans_db?order=zh');
+    if (rows !== null) { const db = rows.map(r => ({ zh: r.zh, en: r.en, note: r.note || '' })); saveTransDB_local(db); return db; }
+  } catch(e) {}
+  return null;
+}
+function loadTransDB() { return _tdbCache || loadTransDB_local(); }
+function saveTransDB(db) { saveTransDB_local(db); _tdbCache = null; }
+function findTransDB(zh) { return loadTransDB().find(d => d.zh.toLowerCase() === zh.trim().toLowerCase()) || null; }
+function searchTransDB(q) {
+  const db = loadTransDB();
+  if (!q) return db;
+  const lq = q.toLowerCase();
+  return db.filter(d => d.zh.toLowerCase().includes(lq) || d.en.toLowerCase().includes(lq));
+}
+
+async function renderTransDB() {
+  const q = document.getElementById('tdbSearch').value;
+  if (!_tdbCache) { const remote = await loadTransDB_remote(); if (remote) _tdbCache = remote; }
+  const all = loadTransDB();
+  const data = searchTransDB(q);
+  document.getElementById('tdbCount').textContent = all.length;
+  const empty = document.getElementById('tdbEmpty');
+  const tbody = document.getElementById('tdbBody');
+  if (!all.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--text3)">找不到符合「${q}」的詞條</td></tr>`; return; }
+  tbody.innerHTML = data.map(item => {
+    const realIdx = all.findIndex(d => d.zh === item.zh);
+    return `<tr>
+      <td><strong>${item.zh}</strong></td>
+      <td>${item.en}</td>
+      <td style="color:var(--text3);font-size:.8rem">${item.note || ''}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openTransDBModal(${realIdx})" style="margin-right:4px">✏️</button>
+        <button class="btn btn-danger" onclick="deleteTransDBItem(${realIdx})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let editingTDBIdx = -1;
+function openTransDBModal(idx) {
+  editingTDBIdx = idx;
+  const db = loadTransDB();
+  document.getElementById('transDBModalTitle').textContent = idx < 0 ? '＋ 新增詞條' : '✏️ 編輯詞條';
+  const item = idx >= 0 ? db[idx] : null;
+  document.getElementById('tdbF_zh').value = item ? item.zh : '';
+  document.getElementById('tdbF_en').value = item ? item.en : '';
+  document.getElementById('tdbF_note').value = item ? (item.note || '') : '';
+  document.getElementById('transDBModal').classList.add('open');
+  document.getElementById('tdbF_zh').focus();
+}
+function closeTransDBModal() { document.getElementById('transDBModal').classList.remove('open'); }
+
+async function saveTransDBItem() {
+  const zh = document.getElementById('tdbF_zh').value.trim();
+  const en = document.getElementById('tdbF_en').value.trim();
+  if (!zh || !en) { showToast('中文和英文名稱都必須填寫！'); return; }
+  const note = document.getElementById('tdbF_note').value.trim();
+  const { url, key } = getSBConfig();
+  const db = loadTransDB();
+  const isEdit = editingTDBIdx >= 0;
+  const editZh = isEdit ? db[editingTDBIdx]?.zh : null;
+  if (!isEdit && db.find(d => d.zh.toLowerCase() === zh.toLowerCase())) { showToast('⚠️ 此中文名稱已存在！'); return; }
+  if (url && key) {
+    if (isEdit) await sbFetch(`trans_db?zh=eq.${encodeURIComponent(editZh)}`, { method: 'PATCH', body: JSON.stringify({ zh, en, note }), prefer: 'return=minimal' });
+    else await sbFetch('trans_db', { method: 'POST', body: JSON.stringify({ zh, en, note }) });
+  }
+  if (isEdit) { db[editingTDBIdx] = { zh, en, note }; }
+  else db.push({ zh, en, note });
+  saveTransDB(db); _tdbCache = db;
+  showToast(isEdit ? `✅ 已更新「${zh}」` : `✅ 已新增「${zh}」`);
+  closeTransDBModal(); renderTransDB();
+}
+
+async function deleteTransDBItem(idx) {
+  const db = loadTransDB();
+  if (!db[idx] || !confirm(`確定刪除「${db[idx].zh}」嗎？`)) return;
+  const { url, key } = getSBConfig();
+  if (url && key) await sbFetch(`trans_db?zh=eq.${encodeURIComponent(db[idx].zh)}`, { method: 'DELETE', prefer: 'return=minimal' });
+  db.splice(idx, 1); saveTransDB(db); _tdbCache = db;
+  renderTransDB(); showToast('🗑️ 已刪除');
+}
+
+function exportTransDB() {
+  const db = loadTransDB();
+  if (!db.length) { showToast('詞庫是空的！'); return; }
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '成分翻譯詞庫.json'; a.click();
+}
+function importTransDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw '';
+      const existing = loadTransDB(); let added = 0, skipped = 0;
+      data.forEach(item => {
+        if (!item.zh || !item.en) return;
+        if (existing.find(d => d.zh === item.zh)) { skipped++; return; }
+        existing.push(item); added++;
+      });
+      saveTransDB(existing); renderTransDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch { showToast('⚠️ 格式錯誤'); }
+  };
+  reader.readAsText(file); input.value = '';
+}
+
+
+// ══════════════════════════════════
+// TRANSLATION
+// ══════════════════════════════════
+let _lastAIResults = []; // AI翻譯結果暫存，供「存入詞庫」使用
+
+function saveApiKey(val) { localStorage.setItem('anthropicApiKey', val); }
+function loadApiKey() {
+  const k = localStorage.getItem('anthropicApiKey') || '';
+  const inp = document.getElementById('apiKeyInput');
+  if (inp && k) inp.value = k;
+  return k;
+}
+
+function loadFromIngredients() {
+  const names = ingredients.filter(r => r.name).map(r => r.name);
+  if (!names.length) { showToast('配方表尚無成分資料！'); return; }
+  document.getElementById('transInput').value = names.join('\n');
+  showToast(`✅ 已載入 ${names.length} 個成分`);
+}
+
+function copyTransOutput() {
+  const val = document.getElementById('transOutput').value;
+  if (!val) { showToast('尚無翻譯結果'); return; }
+  navigator.clipboard.writeText(val).then(() => showToast('✅ 已複製！'));
+}
+
+// 將本次 AI 翻譯結果全部存入詞庫
+function saveNewToTransDB() {
+  if (!_lastAIResults.length) return;
+  const db = loadTransDB(); let added = 0, skipped = 0;
+  _lastAIResults.forEach(r => {
+    if (db.find(d => d.zh.toLowerCase() === r.zh.toLowerCase())) { skipped++; return; }
+    db.push({ zh: r.zh, en: r.en, note: 'AI 翻譯' }); added++;
+  });
+  saveTransDB(db);
+  showToast(`✅ 已存入詞庫：新增 ${added} 筆，略過重複 ${skipped} 筆`);
+  renderTransDB();
+  document.getElementById('statSaveBox').style.display = 'none';
+  _lastAIResults = [];
+}
+
+async function translateIngredients() {
+  const apiKey = loadApiKey();
+  const raw = document.getElementById('transInput').value.trim();
+  if (!raw) { showToast('請先輸入要翻譯的成分！'); return; }
+
+  const items = raw.split(/[\n,，、]+/).map(s => s.trim()).filter(Boolean);
+  if (!items.length) { showToast('找不到成分，請確認輸入格式'); return; }
+
+  document.getElementById('transLoading').style.display = 'flex';
+  document.getElementById('transBtn').disabled = true;
+  document.getElementById('transResultList').style.display = 'none';
+  document.getElementById('transStats').style.display = 'none';
+  document.getElementById('transOutput').value = '';
+  _lastAIResults = [];
+
+  // ── Step 1: 詞庫查詢 ──
+  const dbHits = [];
+  const needAI = [];
+  items.forEach(zh => {
+    const hit = findTransDB(zh);
+    if (hit) dbHits.push({ zh, en: hit.en, src: 'db' });
+    else needAI.push(zh);
+  });
+
+  let aiResults = [];
+
+  // ── Step 2: 需要 AI 翻譯的部分 ──
+  if (needAI.length > 0) {
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+      if (dbHits.length === 0) {
+        showToast('⚠️ 請先填入 Anthropic API Key，或先建立翻譯詞庫！');
+        document.getElementById('transLoading').style.display = 'none';
+        document.getElementById('transBtn').disabled = false;
+        return;
+      }
+      // 部分命中，AI 部分跳過
+      needAI.forEach(zh => aiResults.push({ zh, en: '（需要 API Key 翻譯）', src: 'ai' }));
+    } else {
+      try {
+        const prompt = `你是食品標示專家。請將以下中文食品成分名稱翻譯成英文（食品標示用語，專業準確）。
+請以 JSON 陣列格式回覆，每個元素包含 "zh" 和 "en" 兩個欄位，只回覆 JSON，不要其他文字。
+
+中文成分清單：
+${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
+
+範例輸出格式：
+[{"zh":"樹薯粉","en":"Tapioca Starch"},{"zh":"大豆沙拉油","en":"Soybean Salad Oil"}]`;
+
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+        });
+        if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error?.message || `HTTP ${resp.status}`); }
+        const data = await resp.json();
+        const text = data.content?.[0]?.text || '';
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) throw new Error('回傳格式無法解析');
+        const parsed = JSON.parse(jsonMatch[0]);
+        aiResults = parsed.map(r => ({ zh: r.zh, en: r.en, src: 'ai' }));
+        _lastAIResults = [...aiResults];
+      } catch(err) {
+        showToast('⚠️ AI 翻譯失敗：' + err.message);
+        needAI.forEach(zh => aiResults.push({ zh, en: '（翻譯失敗）', src: 'ai' }));
+      }
+    }
+  }
+
+  // ── Step 3: 按原始輸入順序合併結果 ──
+  const allResults = items.map(zh => {
+    return dbHits.find(r => r.zh === zh) || aiResults.find(r => r.zh === zh) || { zh, en: '（無法翻譯）', src: 'ai' };
+  });
+
+  // ── Step 4: 輸出 ──
+  document.getElementById('transOutput').value = allResults.map(r => r.en).join('\n');
+
+  // Stats
+  const dbCount = allResults.filter(r => r.src === 'db').length;
+  const aiCount = allResults.filter(r => r.src === 'ai').length;
+  document.getElementById('statDB').textContent = dbCount;
+  document.getElementById('statAI').textContent = aiCount;
+  document.getElementById('transStats').style.display = 'flex';
+  document.getElementById('statSaveBox').style.display = aiCount > 0 && _lastAIResults.length > 0 ? '' : 'none';
+
+  // Result list
+  document.getElementById('transItems').innerHTML = allResults.map((r, i) => `
+    <div class="trans-result-item">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0">${i+1}</div>
+      <div class="trans-zh">${r.zh}</div>
+      <div style="color:var(--text3)">→</div>
+      <div class="trans-en">${r.en}</div>
+      <span class="tdb-badge-${r.src}">${r.src === 'db' ? '詞庫' : 'AI'}</span>
+      <button class="btn btn-secondary trans-copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(r.en)}).then(()=>showToast('已複製！'))">複製</button>
+    </div>`).join('');
+  document.getElementById('transResultList').style.display = '';
+  showToast(`✅ 翻譯完成！詞庫 ${dbCount} 筆 + AI ${aiCount} 筆`);
+
+  document.getElementById('transLoading').style.display = 'none';
+  document.getElementById('transBtn').disabled = false;
+}
+
+
+// ══════════════════════════════════
+// EXPAND DB（原料展開）
+// ══════════════════════════════════
+const EXP_KEY = 'expandDB_v1';
+let _expCache = null;
+function loadExpandDB_local() { try { return JSON.parse(localStorage.getItem(EXP_KEY) || '[]'); } catch { return []; } }
+function saveExpandDB_local(db) { localStorage.setItem(EXP_KEY, JSON.stringify(db)); }
+async function loadExpandDB_remote() {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  try {
+    const rows = await sbFetch('expand_db?order=name');
+    if (rows !== null) { const db = rows.map(r => ({ name: r.name, expanded: r.expanded, note: r.note || '' })); saveExpandDB_local(db); return db; }
+  } catch(e) {}
+  return null;
+}
+function loadExpandDB() { return _expCache || loadExpandDB_local(); }
+function saveExpandDB(db) { saveExpandDB_local(db); _expCache = null; }
+function findExpand(name) {
+  const db = loadExpandDB();
+  return db.find(d => d.name.toLowerCase() === name.trim().toLowerCase()) || null;
+}
+
+// 將單一成分名稱套用展開（若有記錄則回傳展開文字，否則原名）
+function applyExpand(name) {
+  const hit = findExpand(name);
+  return hit ? hit.expanded : name;
+}
+
+async function renderExpandDB() {
+  const q = document.getElementById('expSearch').value.toLowerCase();
+  if (!_expCache) { const remote = await loadExpandDB_remote(); if (remote) _expCache = remote; }
+  const all = loadExpandDB();
+  document.getElementById('expCount').textContent = all.length;
+  const empty = document.getElementById('expEmpty');
+  const tbody = document.getElementById('expBody');
+  const data = q ? all.filter(d => d.name.toLowerCase().includes(q) || d.expanded.toLowerCase().includes(q)) : all;
+  if (!all.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--text3)">找不到符合的記錄</td></tr>`; return; }
+  tbody.innerHTML = data.map(item => {
+    const realIdx = all.findIndex(d => d.name === item.name);
+    return `<tr>
+      <td>
+        <div>${item.name}</div>
+        ${item.note ? `<div style="font-size:.72rem;color:var(--text3);margin-top:2px">${item.note}</div>` : ''}
+      </td>
+      <td><div class="exp-expanded">${escH(item.expanded)}</div></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openExpandModal(${realIdx})" style="margin-right:4px">✏️</button>
+        <button class="btn btn-danger" onclick="deleteExpandItem(${realIdx})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let editingExpIdx = -1;
+function openExpandModal(idx) {
+  editingExpIdx = idx;
+  const db = loadExpandDB();
+  document.getElementById('expandModalTitle').textContent = idx < 0 ? '＋ 新增展開記錄' : '✏️ 編輯展開記錄';
+  const item = idx >= 0 ? db[idx] : null;
+  document.getElementById('expF_name').value = item ? item.name : '';
+  document.getElementById('expF_expanded').value = item ? item.expanded : '';
+  document.getElementById('expF_note').value = item ? (item.note || '') : '';
+  document.getElementById('expandModal').classList.add('open');
+  document.getElementById('expF_name').focus();
+}
+function closeExpandModal() { document.getElementById('expandModal').classList.remove('open'); }
+
+async function saveExpandItem() {
+  const name = document.getElementById('expF_name').value.trim();
+  const expanded = document.getElementById('expF_expanded').value.trim();
+  if (!name) { showToast('請填寫原料名稱！'); return; }
+  if (!expanded) { showToast('請填寫展開內容！'); return; }
+  const note = document.getElementById('expF_note').value.trim();
+  const { url, key } = getSBConfig();
+  const db = loadExpandDB();
+  const isEdit = editingExpIdx >= 0;
+  const editName = isEdit ? db[editingExpIdx]?.name : null;
+  if (!isEdit && db.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('⚠️ 此名稱已存在！'); return; }
+  if (url && key) {
+    if (isEdit) await sbFetch(`expand_db?name=eq.${encodeURIComponent(editName)}`, { method: 'PATCH', body: JSON.stringify({ name, expanded, note }), prefer: 'return=minimal' });
+    else await sbFetch('expand_db', { method: 'POST', body: JSON.stringify({ name, expanded, note }) });
+  }
+  if (isEdit) { db[editingExpIdx] = { name, expanded, note }; }
+  else db.push({ name, expanded, note });
+  saveExpandDB(db); _expCache = db;
+  showToast(isEdit ? `✅ 已更新「${name}」` : `✅ 已新增「${name}」的展開記錄`);
+  closeExpandModal(); renderExpandDB();
+}
+
+async function deleteExpandItem(idx) {
+  const db = loadExpandDB();
+  if (!db[idx] || !confirm(`確定刪除「${db[idx].name}」的展開記錄嗎？`)) return;
+  const { url, key } = getSBConfig();
+  if (url && key) await sbFetch(`expand_db?name=eq.${encodeURIComponent(db[idx].name)}`, { method: 'DELETE', prefer: 'return=minimal' });
+  db.splice(idx, 1); saveExpandDB(db); _expCache = db;
+  renderExpandDB(); showToast('🗑️ 已刪除');
+}
+
+function exportExpandDB() {
+  const db = loadExpandDB();
+  if (!db.length) { showToast('展開庫是空的！'); return; }
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '原料展開資料庫.json'; a.click();
+}
+function importExpandDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw '';
+      const existing = loadExpandDB(); let added = 0, skipped = 0;
+      data.forEach(item => {
+        if (!item.name || !item.expanded) return;
+        if (existing.find(d => d.name === item.name)) { skipped++; return; }
+        existing.push(item); added++;
+      });
+      saveExpandDB(existing); renderExpandDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch { showToast('⚠️ 格式錯誤'); }
+  };
+  reader.readAsText(file); input.value = '';
+}
+
+// ══════════════════════════════════
+// DB PASTE MODAL（原物料批次匯入）
+// ══════════════════════════════════
+const DB_FIELDS = [
+  { key:'cal',      label:'熱量(kcal/100g)' },
+  { key:'protein',  label:'蛋白質(g/100g)' },
+  { key:'fat',      label:'脂肪(g/100g)' },
+  { key:'satFat',   label:'飽和脂肪(g/100g)' },
+  { key:'transFat', label:'反式脂肪(g/100g)' },
+  { key:'carb',     label:'碳水化合物(g/100g)' },
+  { key:'sugar',    label:'糖(g/100g)' },
+  { key:'sodium',   label:'鈉(mg/100g)' },
+];
+let dbPasteFormat = 'col';
+let dbParsedPaste = [];
+let dbRowOrder = [0,1,2,3,4,5,6,7]; // cal,protein,fat,satFat,transFat,carb,sugar,sodium
+let dbColMap = [-99,0,1,2,3,4,5,6,7]; // col0=name, col1..=fields
+
+function openDBPasteModal() {
+  document.getElementById('dbPasteModal').classList.add('open');
+  buildDBRowOrderUI();
+  buildDBColMapUI();
+  document.getElementById('dbPasteArea').focus();
+}
+function closeDBPasteModal() { document.getElementById('dbPasteModal').classList.remove('open'); }
+
+function setDBFmt(fmt) {
+  dbPasteFormat = fmt;
+  document.getElementById('dbFmtBtn-col').classList.toggle('active', fmt==='col');
+  document.getElementById('dbFmtBtn-row').classList.toggle('active', fmt==='row');
+  document.getElementById('dbHintCol').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('dbHintRow').style.display = fmt==='row' ? '' : 'none';
+  document.getElementById('dbRowOrderSection').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('dbColMapSection').style.display = fmt==='row' ? '' : 'none';
+  parseDBPaste();
+}
+
+function buildDBRowOrderUI() {
+  const grid = document.getElementById('dbRowOrderGrid');
+  grid.innerHTML = '';
+  const opts = ['（略過）', ...DB_FIELDS.map(f => f.label)];
+  for (let i = 0; i < 8; i++) {
+    const div = document.createElement('div');
+    div.className = 'row-order-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 行`;
+    const sel = document.createElement('select');
+    sel.id = 'dbro-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      op.value = oi - 1;
+      op.textContent = o;
+      if (oi - 1 === dbRowOrder[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { dbRowOrder[i] = parseInt(sel.value); parseDBPaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
+}
+
+function buildDBColMapUI() {
+  const grid = document.getElementById('dbColMapGrid');
+  grid.innerHTML = '';
+  const opts = ['（成分名稱）', '（略過）', ...DB_FIELDS.map(f => f.label)];
+  for (let i = 0; i < 9; i++) {
+    const div = document.createElement('div');
+    div.className = 'colmap-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 欄`;
+    const sel = document.createElement('select');
+    sel.id = 'dbcm-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      op.value = oi === 0 ? -99 : oi - 2;
+      op.textContent = o;
+      if (op.value == dbColMap[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { dbColMap[i] = parseInt(sel.value); parseDBPaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
+}
+
+function parseDBPaste() {
+  const raw = document.getElementById('dbPasteArea').value.trim();
+  if (!raw) { document.getElementById('dbPreviewSection').style.display = 'none'; dbParsedPaste = []; return; }
+  dbParsedPaste = dbPasteFormat === 'col' ? parseDBCol(raw) : parseDBRow(raw);
+  showDBPreview(dbParsedPaste);
+}
+
+function parseDBCol(raw) {
+  const lines = raw.split('\n').map(l => l.trim());
+  const results = [];
+  let i = 0;
+  const stripUnit = v => v.replace(/[,，]/g,'').replace(/\s*(g|kg|mg|kcal|公克|公斤|毫克|大卡|%)\s*$/i,'').trim();
+  const isNumLine = v => { if (!v) return false; const s = stripUnit(v); return s !== '' && !isNaN(s); };
+  const toNum = v => parseFloat(stripUnit(v)) || 0;
+  while (i < lines.length) {
+    if (!lines[i]) { i++; continue; }
+    if (isNumLine(lines[i])) { i++; continue; }
+    const name = lines[i]; i++;
+    const nums = [];
+    while (i < lines.length && nums.length < 8) {
+      if (!lines[i]) break;
+      if (!isNumLine(lines[i])) break;
+      nums.push(toNum(lines[i])); i++;
+    }
+    const d = { name, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    dbRowOrder.forEach((fieldIdx, lineIdx) => {
+      if (fieldIdx < 0 || lineIdx >= nums.length) return;
+      d[DB_FIELDS[fieldIdx].key] = nums[lineIdx];
+    });
+    results.push(d);
+  }
+  return results;
+}
+
+function parseDBRow(raw) {
+  return raw.split('\n').map(line => {
+    const c = line.split('\t').map(v => v.trim().replace(/[,，]/g,'').replace(/\s*(g|kg|mg|kcal|%)\s*$/i,'').trim());
+    if (c.every(v => !v)) return null;
+    const d = { name:'', cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    dbColMap.forEach((fieldCode, ci) => {
+      if (ci >= c.length) return;
+      if (fieldCode === -99) { d.name = c[ci] || ''; return; }
+      if (fieldCode < 0) return;
+      d[DB_FIELDS[fieldCode].key] = parseFloat(c[ci]) || 0;
+    });
+    if (!d.name) return null;
+    return d;
+  }).filter(Boolean);
+}
+
+function showDBPreview(data) {
+  if (!data.length) { document.getElementById('dbPreviewSection').style.display = 'none'; return; }
+  document.getElementById('dbPreviewSection').style.display = '';
+  document.getElementById('dbPreviewCount').textContent = `（共 ${data.length} 筆）`;
+  document.getElementById('dbPreviewBody').innerHTML = data.map(d =>
+    `<tr><td>${escH(d.name)||'－'}</td><td>${d.cal}</td><td>${d.protein}</td><td>${d.fat}</td><td>${d.satFat}</td><td>${d.transFat}</td><td>${d.carb}</td><td>${d.sugar}</td><td>${d.sodium}</td></tr>`
+  ).join('');
+}
+
+async function confirmDBPaste() {
+  if (!dbParsedPaste.length) { showToast('沒有可匯入的資料！'); return; }
+  const db = _dbCache || loadDB_local();
+  _dbCache = db;
+  let added = 0, updated = 0, skipped = 0;
+  const mode = confirm(
+    `偵測到 ${dbParsedPaste.length} 筆原物料。\n\n確定 → 若名稱重複則覆蓋更新\n取消 → 名稱重複時略過（只新增）`
+  );
+  dbParsedPaste.forEach(d => {
+    if (!d.name) return;
+    const idx = db.findIndex(x => x.name.toLowerCase() === d.name.toLowerCase());
+    if (idx >= 0) {
+      if (mode) { db[idx] = d; updated++; }
+      else skipped++;
+    } else {
+      db.push(d); added++;
+    }
+  });
+  saveDB(db);
+  renderDB();
+  closeDBPasteModal();
+  showToast(`✅ 匯入完成：新增 ${added} 筆，更新 ${updated} 筆，略過 ${skipped} 筆`);
+}
+
+// ══════════════════════════════════
+// INIT — run after full DOM is ready
+// ══════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Modal overlay click-to-close
+  ['pasteModal','dbModal','transDBModal','expandModal','dbPasteModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', e => { if (e.target.id === id) el.classList.remove('open'); });
+  });
+  // Test Supabase connection
+  showSBStatus('🔄 連線中...', 'ok');
+  testSBConnection().then(ok => {
+    showSBStatus(ok ? '🟢 資料庫已連線' : '🔴 連線失敗', ok ? 'ok' : 'err');
+  });
+  addRow();
+  renderDB();
+  renderTransDB();
+  renderExpandDB();
+  loadApiKey();
+});
+</script>
+
+<!-- ══ 新增/編輯翻譯詞條 Modal ══ -->
+<div class="modal-overlay" id="transDBModal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="closeTransDBModal()">✕</button>
+    <div class="modal-title" id="transDBModalTitle">＋ 新增詞條</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+      <div class="form-group">
+        <label>中文成分名稱</label>
+        <input type="text" id="tdbF_zh" placeholder="例：樹薯粉">
+      </div>
+      <div class="form-group">
+        <label>英文翻譯</label>
+        <input type="text" id="tdbF_en" placeholder="例：Tapioca Starch">
+      </div>
+      <div class="form-group">
+        <label>備註（選填）</label>
+        <input type="text" id="tdbF_note" placeholder="例：台灣慣用名稱">
+      </div>
+    </div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveTransDBItem()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="closeTransDBModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 新增/編輯展開記錄 Modal ══ -->
+<div class="modal-overlay" id="expandModal">
+  <div class="modal" style="width:min(680px,96vw)">
+    <button class="modal-close" onclick="closeExpandModal()">✕</button>
+    <div class="modal-title" id="expandModalTitle">＋ 新增展開記錄</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+      <div class="form-group">
+        <label>原料簡稱（配方表中使用的名稱）</label>
+        <input type="text" id="expF_name" placeholder="例：香菇素蠔油">
+      </div>
+      <div class="form-group">
+        <label>展開內容（完整成分標示文字，含括號格式）</label>
+        <textarea id="expF_expanded" style="min-height:100px" placeholder="例：香菇素蠔油[水、轉化液糖(蔗糖、水)、非基因改造脫脂大豆片、小麥、食鹽、黏稠劑(乙醯化己二酸二澱粉、玉米糖膠)、酵母抽出物、苯甲酸鈉(防腐劑)、香菇粉]"></textarea>
+        <div style="font-size:.76rem;color:var(--text3);margin-top:4px">格式：原料名稱[子成分1、子成分2、...] 或 原料名稱(子成分1、子成分2、...)</div>
+      </div>
+      <div class="form-group">
+        <label>備註（選填）</label>
+        <input type="text" id="expF_note" placeholder="例：廠商 A 提供">
+      </div>
+    </div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveExpandItem()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="closeExpandModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 原物料批次貼上 Modal ══ -->
+<div class="modal-overlay" id="dbPasteModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDBPasteModal()">✕</button>
+    <div class="modal-title">📋 批次貼上匯入原物料</div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px">支援兩種格式，請選擇後貼上。</p>
+
+    <div class="fmt-tabs">
+      <button class="fmt-tab active" id="dbFmtBtn-col" onclick="setDBFmt('col')">📄 直行格式（每項一行）</button>
+      <button class="fmt-tab" id="dbFmtBtn-row" onclick="setDBFmt('row')">📊 橫列格式（Excel 橫排複製）</button>
+    </div>
+
+    <div id="dbHintCol" class="hint-box">
+      <strong>📌 直行格式 — 一筆原物料佔多行，每行一個值</strong>
+      名稱行是唯一非數字的行，多筆之間可以有空行。<br>
+      順序：<span class="col-tag">成分名稱</span><span class="col-tag">熱量</span><span class="col-tag">蛋白質</span><span class="col-tag">脂肪</span><span class="col-tag">飽和脂肪</span><span class="col-tag">反式脂肪</span><span class="col-tag">碳水化合物</span><span class="col-tag">糖</span><span class="col-tag">鈉</span>
+    </div>
+    <div id="dbHintRow" class="hint-box" style="display:none">
+      <strong>📌 橫列格式 — 從 Excel 橫向複製（每列一筆，Tab 分隔）</strong>
+      欄位順序：<span class="col-tag">成分名稱</span><span class="col-tag">熱量</span><span class="col-tag">蛋白質</span><span class="col-tag">脂肪</span><span class="col-tag">飽和脂肪</span><span class="col-tag">反式脂肪</span><span class="col-tag">碳水化合物</span><span class="col-tag">糖</span><span class="col-tag">鈉</span>
+    </div>
+
+    <!-- 直行：行順序設定 -->
+    <div id="dbRowOrderSection" class="colmap-section">
+      <div class="colmap-title">🔢 行順序設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（成分名稱後，第幾行對應哪個欄位）</span></div>
+      <div class="row-order-grid" id="dbRowOrderGrid"></div>
+    </div>
+
+    <!-- 橫列：欄位對應設定 -->
+    <div id="dbColMapSection" class="colmap-section" style="display:none">
+      <div class="colmap-title">🗂️ 欄位對應設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（第幾欄對應哪個欄位）</span></div>
+      <div class="colmap-grid" id="dbColMapGrid"></div>
+    </div>
+
+    <label style="font-size:.85rem;font-weight:600;color:var(--text2)">📂 貼上資料（Ctrl+V）</label>
+    <textarea class="paste-area" id="dbPasteArea" placeholder="在此貼上資料..." oninput="parseDBPaste()"></textarea>
+
+    <div id="dbPreviewSection" style="display:none;margin-top:12px">
+      <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">👀 資料預覽 <span id="dbPreviewCount" style="color:var(--text3);font-weight:400"></span></div>
+      <div class="preview-wrap">
+        <table class="preview-tbl">
+          <thead><tr><th>成分名稱</th><th>熱量</th><th>蛋白質</th><th>脂肪</th><th>飽和脂肪</th><th>反式脂肪</th><th>碳水</th><th>糖</th><th>鈉</th></tr></thead>
+          <tbody id="dbPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="confirmDBPaste()">✅ 匯入至原物料庫</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('dbPasteArea').value='';parseDBPaste()">🗑️ 清除</button>
+      <button class="btn btn-secondary" onclick="closeDBPasteModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
