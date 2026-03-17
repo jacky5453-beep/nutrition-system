@@ -1,4 +1,4 @@
-[index.html](https://github.com/user-attachments/files/26055446/index.html)
+[index_fixed.html](https://github.com/user-attachments/files/26056295/index_fixed.html)
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -1173,7 +1173,7 @@ async function importDB(input) {
     try {
       const data = JSON.parse(e.target.result);
       if (!Array.isArray(data)) throw '';
-      const existing = loadDB(); let added = 0, skipped = 0;
+      const existing = await loadDB(); let added = 0, skipped = 0;
       const newItems = [];
       data.forEach(item => {
         if (!item.name) return;
