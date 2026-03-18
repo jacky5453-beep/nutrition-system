@@ -233,6 +233,7 @@
   @media(max-width:800px){.form-grid{grid-template-columns:1fr;}.label-wrapper{flex-direction:column;}}
   @media print{.tabs,.card:not(.print-target),.btn-group,.header{display:none!important;}.nutrition-label{border-color:#000;}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -381,6 +382,8 @@
       <div class="btn-group">
         <button class="btn btn-secondary" onclick="addRow()">＋ 新增成分</button>
         <button class="btn btn-secondary" onclick="openPasteModal()">📋 批次貼上匯入</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('xlsxImportFile').click()">📂 匯入 Excel 格式</button>
+        <input type="file" id="xlsxImportFile" accept=".xlsx,.xls" style="display:none" onchange="importFromXlsx(this)">
         <button class="btn btn-secondary" onclick="importSample('zhanzin')">📥 範例（臻品肉絲粽）</button>
         <button class="btn btn-secondary" onclick="importSample('triangle')">📥 範例（三角圓）</button>
         <button class="btn btn-primary" onclick="calculate()">🔢 計算營養標示</button>
@@ -2054,6 +2057,137 @@ async function deleteHistory(id, name) {
   _histCache = null;
   renderHistory();
   showToast('🗑️ 已刪除');
+}
+
+
+// ══════════════════════════════════
+// XLSX 直接匯入（八大營養標示公式格式）
+// ══════════════════════════════════
+function importFromXlsx(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      // Try first sheet
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+
+      // ── Detect structure ──
+      // Row 0 or 1: 配方比例 header
+      // Row with '重量' label in col 5 = weight row
+      // Row with '原料名稱' in col 5 = name row
+      // Rows with 熱量/蛋白質/脂肪... in col 0 = nutrient rows
+
+      let weightRowIdx = -1, nameRowIdx = -1;
+      let calRowIdx=-1, proteinRowIdx=-1, fatRowIdx=-1;
+      let satFatRowIdx=-1, transFatRowIdx=-1, carbRowIdx=-1;
+      let sugarRowIdx=-1, sodiumRowIdx=-1;
+      let productRowStart = -1;
+
+      data.forEach((row, i) => {
+        if (!row) return;
+        const c0 = String(row[0] || '').trim();
+        const c5 = String(row[5] || '').trim();
+        if (c5 === '重量') weightRowIdx = i;
+        if (c5 === '原料名稱') nameRowIdx = i;
+        if (c0 === '熱量') calRowIdx = i;
+        if (c0 === '蛋白質') proteinRowIdx = i;
+        if (c0.includes('脂肪') && !c0.includes('飽') && !c0.includes('反')) fatRowIdx = i;
+        if (c0.includes('飽和')) satFatRowIdx = i;
+        if (c0.includes('反式')) transFatRowIdx = i;
+        if (c0 === '碳水化合物') carbRowIdx = i;
+        if (c0.includes('糖') && c0 !== '碳水化合物') sugarRowIdx = i;
+        if (c0 === '鈉') sodiumRowIdx = i;
+        if (String(row[4] || '').startsWith('品名')) productRowStart = i;
+      });
+
+      if (weightRowIdx < 0 || nameRowIdx < 0) {
+        showToast('⚠️ 無法識別此 Excel 格式，請確認是八大營養標示公式格式');
+        return;
+      }
+
+      const weightRow = data[weightRowIdx];
+      const nameRow = data[nameRowIdx];
+
+      // Find ingredient columns (col 6 onwards where name row has a value)
+      const ingCols = [];
+      for (let c = 6; c < (nameRow.length || 40); c++) {
+        if (nameRow[c] != null && String(nameRow[c]).trim() !== '') {
+          ingCols.push(c);
+        }
+      }
+
+      if (!ingCols.length) {
+        showToast('⚠️ 找不到成分資料，請確認格式');
+        return;
+      }
+
+      const getVal = (rowIdx, col) => {
+        if (rowIdx < 0) return 0;
+        const v = data[rowIdx]?.[col];
+        return (v == null || isNaN(v)) ? 0 : parseFloat(v) || 0;
+      };
+
+      const imported = ingCols.map(c => ({
+        name:     String(nameRow[c]).trim(),
+        weight:   getVal(weightRowIdx, c),
+        cal:      getVal(calRowIdx, c),
+        protein:  getVal(proteinRowIdx, c),
+        fat:      getVal(fatRowIdx, c),
+        satFat:   getVal(satFatRowIdx, c),
+        transFat: getVal(transFatRowIdx, c),
+        carb:     getVal(carbRowIdx, c),
+        sugar:    getVal(sugarRowIdx, c),
+        sodium:   getVal(sodiumRowIdx, c),
+      })).filter(d => d.name && (d.weight > 0 || d.cal > 0));
+
+      if (!imported.length) {
+        showToast('⚠️ 沒有找到有效的成分資料');
+        return;
+      }
+
+      // ── Extract product info ──
+      if (productRowStart >= 0) {
+        for (let i = productRowStart; i < Math.min(productRowStart + 6, data.length); i++) {
+          const row = data[i];
+          if (!row) continue;
+          const c4 = String(row[4] || '').trim();
+          if (c4.startsWith('品名')) {
+            const v = c4.replace(/^品名[：:]\s*/, '').trim();
+            if (v) document.getElementById('productName').value = v;
+          }
+          if (c4.startsWith('過敏原')) {
+            const v = c4.replace(/^過敏原[：:]\s*/, '').trim();
+            if (v) document.getElementById('productAllergen').value = v;
+          }
+          if (c4.startsWith('內容物')) {
+            const v = c4.replace(/^內容物[：:]\s*/, '').trim();
+            if (v) document.getElementById('productContent').value = v;
+          }
+          if (c4.startsWith('原料')) {
+            const v = c4.replace(/^原料[：:]\s*/, '').trim();
+            if (v) document.getElementById('productIngredientLabel').value = v;
+          }
+        }
+      }
+
+      // ── Load into table ──
+      ingredients = [];
+      document.getElementById('ingredientBody').innerHTML = '';
+      imported.forEach(d => addRow(d));
+
+      showToast(`✅ 成功匯入 ${imported.length} 筆成分！`);
+      input.value = '';
+
+    } catch(err) {
+      console.error('XLSX import error:', err);
+      showToast('⚠️ 匯入失敗：' + err.message);
+      input.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ══════════════════════════════════
