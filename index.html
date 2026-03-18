@@ -900,10 +900,14 @@ function applyDB(idx, name) {
 // ══════════════════════════════════
 // CALCULATE
 // ══════════════════════════════════
-function calculate() {
+async function calculate() {
   if (!ingredients.length) { showToast('請先新增成分！'); return; }
   const totalWeight = ingredients.reduce((s, r) => s + (r.weight || 0), 0);
   if (!totalWeight) { showToast('請填入成分重量！'); return; }
+  // 確保展開庫已從 Supabase 載入
+  if (!_expCache) { const remote = await loadExpandDB_remote(); if (remote) _expCache = remote; }
+  // 確保翻譯詞庫已從 Supabase 載入（排序輸出用）
+  if (!_tdbCache) { const remote = await loadTransDB_remote(); if (remote) _tdbCache = remote; }
 
   const sum = { protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
   ingredients.forEach(r => {
@@ -912,7 +916,8 @@ function calculate() {
   });
   const p = {};
   Object.keys(sum).forEach(k => p[k] = sum[k] / totalWeight * 100);
-  p.cal = p.protein * 4 + p.fat * 9 + p.carb * 4; // Atwater
+  // 熱量用 Atwater 係數：蛋白質×4 + 脂肪×9 + 碳水化合物×4
+  p.cal = p.protein * 4 + p.fat * 9 + p.carb * 4;
 
   renderResult(p, totalWeight);
   renderSort(ingredients, totalWeight);
