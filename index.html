@@ -213,6 +213,23 @@
   .exp-badge { display:inline-block; padding:1px 7px; background:#fff3e0; border:1px solid #e8aa60; border-radius:10px; font-size:.7rem; color:#7a4800; font-weight:700; }
   .expand-preview { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:10px 14px; font-size:.85rem; line-height:1.9; margin-top:10px; }
   .expand-preview .ex-hit { background:#fffde7; border-bottom:2px solid #e8cc60; }
+
+  /* ── Product History ── */
+  .hist-toolbar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+  .hist-toolbar input { flex:1; min-width:160px; }
+  .hist-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+  .hist-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; cursor:pointer; transition:box-shadow .2s,border-color .2s; position:relative; }
+  .hist-card:hover { box-shadow:var(--shadow); border-color:var(--border2); }
+  .hist-card-name { font-family:'Noto Serif TC',serif; font-size:1rem; font-weight:700; color:var(--accent); margin-bottom:6px; }
+  .hist-card-meta { font-size:.78rem; color:var(--text3); margin-bottom:8px; }
+  .hist-card-label { font-size:.8rem; color:var(--text2); line-height:1.6; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hist-card-nutrition { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .hist-nut-tag { background:var(--accent-light); border:1px solid var(--border2); border-radius:5px; padding:2px 8px; font-size:.75rem; color:var(--accent); }
+  .hist-card-btns { display:flex; gap:6px; }
+  .hist-del-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--text3); cursor:pointer; font-size:1rem; padding:2px 6px; border-radius:4px; }
+  .hist-del-btn:hover { color:var(--red); background:#fff0f0; }
+  .hist-empty { text-align:center; padding:40px; color:var(--text3); font-size:.9rem; font-style:italic; grid-column:1/-1; }
+  .save-btn-group { display:flex; gap:8px; margin-top:14px; }
   @media(max-width:800px){.form-grid{grid-template-columns:1fr;}.label-wrapper{flex-direction:column;}}
   @media print{.tabs,.card:not(.print-target),.btn-group,.header{display:none!important;}.nutrition-label{border-color:#000;}}
 </style>
@@ -323,6 +340,7 @@
     <button class="tab-btn" onclick="switchTab('trans',this)">🌐 成分中翻英</button>
     <button class="tab-btn" onclick="switchTab('transdb',this)">📖 翻譯詞庫</button>
     <button class="tab-btn" onclick="switchTab('expand',this)">🔍 原料展開庫</button>
+    <button class="tab-btn" onclick="switchTab('history',this)">📦 產品歷史記錄</button>
   </div>
 
   <!-- ─── TAB 1 配方輸入 ─── -->
@@ -529,6 +547,23 @@
       </div>
       <div id="expEmpty" class="empty-state" style="display:none">尚無記錄，點「新增展開記錄」開始建立</div>
       <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="expCount">0</span> 筆 · 儲存於本機瀏覽器</p>
+    </div>
+  </div>
+
+
+  <!-- ─── TAB 8 產品歷史記錄 ─── -->
+  <div class="tab-panel" id="tab-history">
+    <div class="card">
+      <div class="card-title">📦 產品歷史記錄
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 儲存過的產品配方與營養標示</span>
+      </div>
+      <div class="hist-toolbar">
+        <input type="text" id="histSearch" placeholder="🔍 搜尋產品名稱..." oninput="renderHistory()">
+        <span id="histCount" style="font-size:.82rem;color:var(--text3)"></span>
+      </div>
+      <div class="hist-grid" id="histGrid">
+        <div class="hist-empty">尚無儲存記錄</div>
+      </div>
     </div>
   </div>
 
@@ -753,6 +788,7 @@ function switchTab(name, btn) {
   document.getElementById('tab-'+name).classList.add('active');
   if (btn) btn.classList.add('active');
   if (name === 'db') renderDB();
+  if (name === 'history') renderHistory();
 }
 
 // ══════════════════════════════════
@@ -944,6 +980,7 @@ function renderResult(p, totalWeight) {
         <div class="btn-group">
           <button class="btn btn-success" onclick="window.print()">🖨️ 列印標示</button>
           <button class="btn btn-secondary" onclick="copyResult()">📋 複製文字</button>
+          <button class="btn btn-primary" onclick="saveToHistory()">💾 儲存此產品</button>
         </div>
       </div>
     </div>`;
@@ -1878,6 +1915,147 @@ async function confirmDBPaste() {
   showToast(`✅ 匯入完成：新增 ${added} 筆，更新 ${updated} 筆，略過 ${skipped} 筆`);
 }
 
+
+// ══════════════════════════════════
+// PRODUCT HISTORY
+// ══════════════════════════════════
+const HIST_KEY = 'productHistory_v1';
+let _histCache = null;
+
+function loadHistory_local() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; } }
+function saveHistory_local(db) { localStorage.setItem(HIST_KEY, JSON.stringify(db)); }
+
+async function loadHistory_remote() {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  try {
+    const rows = await sbFetch('product_history?order=created_at.desc');
+    if (rows !== null) {
+      const db = rows.map(r => ({
+        id: r.id,
+        product_name: r.product_name,
+        allergen: r.allergen,
+        content: r.content,
+        ingredient_label: r.ingredient_label,
+        ingredients: r.ingredients,
+        nutrition: r.nutrition,
+        created_at: r.created_at
+      }));
+      saveHistory_local(db);
+      return db;
+    }
+  } catch(e) { console.warn('History remote load failed', e); }
+  return null;
+}
+
+async function saveToHistory() {
+  if (!window._lastResult) { showToast('請先計算營養標示！'); return; }
+  const { name, finalLabel, allergen, content, p } = window._lastResult;
+  if (!name || name === '－') { showToast('請先填寫產品品名！'); return; }
+
+  const record = {
+    product_name: name,
+    allergen: allergen,
+    content: content,
+    ingredient_label: finalLabel,
+    ingredients: ingredients.map(r => ({...r})),
+    nutrition: { cal: p.cal, protein: p.protein, fat: p.fat, satFat: p.satFat, transFat: p.transFat, carb: p.carb, sugar: p.sugar, sodium: p.sodium }
+  };
+
+  // Save to Supabase
+  const { url, key } = getSBConfig();
+  let savedId = null;
+  if (url && key) {
+    try {
+      const row = await sbFetch('product_history', { method: 'POST', body: JSON.stringify(record) });
+      if (row && row[0]) savedId = row[0].id;
+    } catch(e) { console.warn('Supabase history save failed', e); }
+  }
+
+  // Save to local
+  const local = loadHistory_local();
+  const localRecord = { ...record, id: savedId || Date.now(), created_at: new Date().toISOString() };
+  local.unshift(localRecord);
+  saveHistory_local(local);
+  _histCache = null;
+
+  showToast(`✅ 已儲存「${name}」到歷史記錄！`);
+}
+
+async function renderHistory() {
+  const q = document.getElementById('histSearch')?.value.toLowerCase() || '';
+  if (!_histCache) {
+    const remote = await loadHistory_remote();
+    _histCache = remote || loadHistory_local();
+  }
+  let data = _histCache;
+  if (q) data = data.filter(r => r.product_name.toLowerCase().includes(q));
+
+  document.getElementById('histCount').textContent = `共 ${_histCache.length} 筆`;
+  const grid = document.getElementById('histGrid');
+  if (!grid) return;
+
+  if (!data.length) {
+    grid.innerHTML = '<div class="hist-empty">尚無儲存記錄，計算完成後點「💾 儲存此產品」即可存入</div>';
+    return;
+  }
+
+  grid.innerHTML = data.map(r => {
+    const date = new Date(r.created_at).toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const n = r.nutrition || {};
+    const label = r.ingredient_label || '';
+    return `<div class="hist-card">
+      <button class="hist-del-btn" onclick="deleteHistory(${r.id},'${escH(r.product_name)}')" title="刪除">✕</button>
+      <div class="hist-card-name">${escH(r.product_name)}</div>
+      <div class="hist-card-meta">📅 ${date} &nbsp;·&nbsp; ${(r.ingredients||[]).length} 種成分 &nbsp;·&nbsp; ${r.content||''}</div>
+      <div class="hist-card-label" title="${escH(label)}">原料：${escH(label)}</div>
+      <div class="hist-card-nutrition">
+        <span class="hist-nut-tag">熱量 ${n.cal ? n.cal.toFixed(1) : 0} 大卡</span>
+        <span class="hist-nut-tag">蛋白質 ${n.protein ? n.protein.toFixed(1) : 0}g</span>
+        <span class="hist-nut-tag">脂肪 ${n.fat ? n.fat.toFixed(1) : 0}g</span>
+        <span class="hist-nut-tag">碳水 ${n.carb ? n.carb.toFixed(1) : 0}g</span>
+        <span class="hist-nut-tag">鈉 ${n.sodium ? n.sodium.toFixed(0) : 0}mg</span>
+      </div>
+      <div class="hist-card-btns">
+        <button class="btn btn-secondary btn-sm" onclick="loadFromHistory(${r.id})">📂 載入配方</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadFromHistory(id) {
+  const data = _histCache || loadHistory_local();
+  const r = data.find(d => d.id === id);
+  if (!r) return;
+
+  // Fill product info
+  document.getElementById('productName').value = r.product_name || '';
+  document.getElementById('productAllergen').value = r.allergen || '';
+  document.getElementById('productContent').value = r.content || '';
+  document.getElementById('productIngredientLabel').value = '';
+
+  // Load ingredients
+  ingredients = [];
+  document.getElementById('ingredientBody').innerHTML = '';
+  (r.ingredients || []).forEach(d => addRow(d));
+
+  switchTab('input', document.querySelectorAll('.tab-btn')[0]);
+  showToast(`✅ 已載入「${r.product_name}」的配方，請按「計算營養標示」重新計算`);
+}
+
+async function deleteHistory(id, name) {
+  if (!confirm(`確定要刪除「${name}」的歷史記錄嗎？`)) return;
+  const { url, key } = getSBConfig();
+  if (url && key) {
+    await sbFetch(`product_history?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(()=>{});
+  }
+  const local = loadHistory_local().filter(r => r.id !== id);
+  saveHistory_local(local);
+  _histCache = null;
+  renderHistory();
+  showToast('🗑️ 已刪除');
+}
+
 // ══════════════════════════════════
 // INIT — run after full DOM is ready
 // ══════════════════════════════════
@@ -1896,6 +2074,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDB();
   renderTransDB();
   renderExpandDB();
+  renderHistory();
   loadApiKey();
 });
 </script>
