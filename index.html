@@ -2171,10 +2171,8 @@ function importFromXlsx(input) {
             const v = c4.replace(/^內容物[：:]\s*/, '').trim();
             if (v) document.getElementById('productContent').value = v;
           }
-          if (c4.startsWith('原料')) {
-            const v = c4.replace(/^原料[：:]\s*/, '').trim();
-            if (v) document.getElementById('productIngredientLabel').value = v;
-          }
+          // 原料標示由系統自動產生（套用展開庫），不從 Excel 匯入
+          // if (c4.startsWith('原料')) { ... }
         }
       }
 
