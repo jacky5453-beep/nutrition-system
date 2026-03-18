@@ -220,13 +220,12 @@
 <body>
 
 
-<!-- ══ Supabase 設定 Banner ══ -->
-<div id="supabaseBanner" style="background:#1a3060;color:#e8f0ff;padding:10px 24px;font-size:0.82rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-  <span style="font-weight:700;white-space:nowrap">🔗 Supabase 連線設定</span>
-  <input id="sbUrl" type="text" placeholder="Project URL：https://xxxx.supabase.co" style="flex:2;min-width:220px;padding:5px 10px;border-radius:5px;border:1px solid #4a6a9a;background:#0f2040;color:#e8f0ff;font-size:0.82rem;font-family:inherit">
-  <input id="sbKey" type="password" placeholder="Anon Key：eyJ..." style="flex:2;min-width:220px;padding:5px 10px;border-radius:5px;border:1px solid #4a6a9a;background:#0f2040;color:#e8f0ff;font-size:0.82rem;font-family:inherit">
-  <button onclick="saveSBConfig()" style="padding:5px 14px;background:#c4961a;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">儲存連線</button>
-  <span id="sbStatus" style="font-size:0.78rem;opacity:0.8"></span>
+<!-- ══ Supabase 狀態 Banner ══ -->
+<div id="supabaseBanner" style="background:#1a3060;color:#e8f0ff;padding:8px 24px;font-size:0.82rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <span style="font-weight:700;white-space:nowrap">🔗 Supabase 雲端資料庫</span>
+  <input id="sbUrl" type="text" style="display:none">
+  <input id="sbKey" type="text" style="display:none">
+  <span id="sbStatus" style="font-size:0.82rem;">🔄 連線中...</span>
   <button onclick="document.getElementById('supabaseBanner').style.display='none'" style="margin-left:auto;background:none;border:none;color:#9ab;cursor:pointer;font-size:1.1rem">✕</button>
 </div>
 
@@ -560,8 +559,8 @@ const SB_KEY_KEY = 'sb_key';
 
 function getSBConfig() {
   return {
-    url: localStorage.getItem(SB_URL_KEY) || 'https://btnyditozvaqcxthomjk.supabase.co',
-    key: localStorage.getItem(SB_KEY_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bnlkaXRvenZhcWN4dGhvbWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MzAwOTgsImV4cCI6MjA4OTMwNjA5OH0.LfJdyZMIzShZMsip0UWNF6BfLfFsu--d_h0G4-Unq-w'
+    url: 'https://btnyditozvaqcxthomjk.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bnlkaXRvenZhcWN4dGhvbWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MzAwOTgsImV4cCI6MjA4OTMwNjA5OH0.LfJdyZMIzShZMsip0UWNF6BfLfFsu--d_h0G4-Unq-w'
   };
 }
 
@@ -1101,7 +1100,7 @@ function confirmPaste() {
 // ══════════════════════════════════
 function openDBModal(idx) {
   editingDBIdx = idx;
-  const db = loadDB();
+  const db = _dbCache || loadDB_local();
   document.getElementById('dbModalTitle').textContent = idx < 0 ? '＋ 新增原物料' : '✏️ 編輯原物料';
   const item = idx >= 0 ? db[idx] : null;
   document.getElementById('dbF_name').value = item ? item.name : '';
@@ -1117,7 +1116,7 @@ async function saveDBItem() {
   const name = document.getElementById('dbF_name').value.trim();
   if (!name) { showToast('請輸入成分名稱！'); return; }
   const item = { name, cal:+document.getElementById('dbF_cal').value||0, protein:+document.getElementById('dbF_protein').value||0, fat:+document.getElementById('dbF_fat').value||0, satFat:+document.getElementById('dbF_satFat').value||0, transFat:+document.getElementById('dbF_transFat').value||0, carb:+document.getElementById('dbF_carb').value||0, sugar:+document.getElementById('dbF_sugar').value||0, sodium:+document.getElementById('dbF_sodium').value||0 };
-  const db = loadDB();
+  const db = _dbCache || loadDB_local();
   const isEdit = editingDBIdx >= 0;
   const editName = isEdit ? db[editingDBIdx]?.name : null;
   if (!isEdit && db.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('⚠️ 此名稱已存在！'); return; }
@@ -1127,7 +1126,7 @@ async function saveDBItem() {
 }
 
 async function deleteDBItem(idx) {
-  const db = loadDB();
+  const db = _dbCache || loadDB_local();
   if (!db[idx] || !confirm(`確定要刪除「${db[idx].name}」嗎？`)) return;
   await deleteDB_sb(db[idx].name);
   renderDB(); showToast('🗑️ 已刪除');
@@ -1160,34 +1159,35 @@ async function renderDB() {
 }
 
 function exportDB() {
-  const db = loadDB();
+  const db = _dbCache || loadDB_local();
   if (!db.length) { showToast('資料庫是空的！'); return; }
   const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = '原物料資料庫.json'; a.click();
 }
-function importDB(input) {
+async function importDB(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
       if (!Array.isArray(data)) throw '';
-      const existing = loadDB(); let added = 0, skipped = 0;
+      const existing = loadDB_local(); let added = 0, skipped = 0;
       const newItems = [];
       data.forEach(item => {
         if (!item.name) return;
         if (existing.find(d => d.name === item.name)) { skipped++; return; }
         existing.push(item); newItems.push(item); added++;
       });
-      saveDB(existing);
-      const { url: sbU, key: sbK } = getSBConfig();
-      if (sbU && sbK && newItems.length > 0) {
-        const rows = newItems.map(item => ({ name:item.name, cal:item.cal, protein:item.protein, fat:item.fat, sat_fat:item.satFat, trans_fat:item.transFat, carb:item.carb, sugar:item.sugar, sodium:item.sodium }));
-        await sbFetch('nutrition_db', { method: 'POST', body: JSON.stringify(rows) }).catch(()=>{});
-      }
+      saveDB_local(existing);
+      _dbCache = null;
       renderDB();
       showToast(`✅ 匯入完成：新增 ${added} 筆，略過重複 ${skipped} 筆`);
+      // Sync to Supabase in background
+      if (newItems.length > 0) {
+        const rows = newItems.map(item => ({ name:item.name, cal:item.cal, protein:item.protein, fat:item.fat, sat_fat:item.satFat, trans_fat:item.transFat, carb:item.carb, sugar:item.sugar, sodium:item.sodium }));
+        sbFetch('nutrition_db', { method: 'POST', body: JSON.stringify(rows) }).catch(()=>{});
+      }
     } catch { showToast('⚠️ 格式錯誤，請使用系統匯出的 JSON'); }
   };
   reader.readAsText(file); input.value = '';
@@ -1779,7 +1779,7 @@ function showDBPreview(data) {
 
 async function confirmDBPaste() {
   if (!dbParsedPaste.length) { showToast('沒有可匯入的資料！'); return; }
-  const db = await loadDB();
+  const db = _dbCache || loadDB_local();
   _dbCache = db;
   let added = 0, updated = 0, skipped = 0;
   const mode = confirm(
@@ -1805,18 +1805,15 @@ async function confirmDBPaste() {
 // INIT — run after full DOM is ready
 // ══════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // Modal overlay click-to-close (elements exist now)
+  // Modal overlay click-to-close
   ['pasteModal','dbModal','transDBModal','expandModal','dbPasteModal'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', e => { if (e.target.id === id) el.classList.remove('open'); });
   });
-  // Config is built-in, auto-connect on load
-  document.getElementById('sbUrl').value = 'https://btnyditozvaqcxthomjk.supabase.co';
-  document.getElementById('sbKey').value = '（已內建）';
+  // Test Supabase connection
   showSBStatus('🔄 連線中...', 'ok');
   testSBConnection().then(ok => {
-    showSBStatus(ok ? '🟢 資料庫已連線' : '🔴 連線失敗，請檢查網路', ok ? 'ok' : 'err');
-    if (ok) { renderDB(); renderTransDB(); renderExpandDB(); }
+    showSBStatus(ok ? '🟢 資料庫已連線' : '🔴 連線失敗', ok ? 'ok' : 'err');
   });
   addRow();
   renderDB();
