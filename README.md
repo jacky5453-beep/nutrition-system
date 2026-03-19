@@ -1,2592 +1,1937 @@
-[index.html](https://github.com/user-attachments/files/26119518/index.html)
+[index_fixed.html](https://github.com/user-attachments/files/26056295/index_fixed.html)
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>食品成本計算系統</title>
+<title>食品營養標示計算系統</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f4f1ea;
-  --surface:#fff;
-  --s2:#faf8f3;
-  --s3:#f2ede2;
-  --border:#ddd5c0;
-  --border2:#c8bfa8;
-  --ink:#1a1814;
-  --ink2:#3a3530;
-  --ink3:#7a7060;
-  --ink4:#b0a898;
-  --gold:#8a6500;
-  --gold2:#b88a00;
-  --gold-bg:#fdf8e8;
-  --gold-bd:#e8d080;
-  --red:#a82020;
-  --green:#1a5c30;
-  --blue:#183060;
-  --r:3px;
-  --sh:0 1px 4px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.05);
-}
-body{background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-size:13px;min-height:100vh}
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap');
+  :root {
+    --bg:#f5f2eb;--surface:#fffdf7;--surface2:#f0ece0;
+    --border:#d4c9a8;--border2:#c2b68a;
+    --accent:#8b6914;--accent2:#c4961a;--accent-light:#f5e8c0;
+    --text:#2c2416;--text2:#5a4a2a;--text3:#8a7550;
+    --red:#c0392b;--green:#27632a;
+    --shadow:0 2px 12px rgba(139,105,20,0.10);--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
 
-/* ─── TOPBAR ─── */
-header{
-  background:linear-gradient(135deg,#1e1708 0%,#3a2e10 60%,#1e1708 100%);
-  border-bottom:2px solid var(--gold2);
-  display:flex;align-items:center;height:50px;padding:0 0 0 18px;
-  position:sticky;top:0;z-index:400;
-  box-shadow:0 2px 16px rgba(0,0,0,.4);
-}
-.logo{color:#f0e0a0;font-weight:900;font-size:15px;letter-spacing:.05em;
-  padding-right:18px;border-right:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:8px}
-.logo-icon{font-size:18px}
-.nav{display:flex;height:100%}
-.nav-btn{background:none;border:none;border-bottom:3px solid transparent;
-  color:rgba(240,224,160,.5);cursor:pointer;font-family:inherit;font-size:12px;
-  font-weight:600;height:100%;padding:0 16px;letter-spacing:.04em;transition:all .15s;white-space:nowrap}
-.nav-btn:hover{color:rgba(240,224,160,.85);background:rgba(255,255,255,.04)}
-.nav-btn.on{color:#f0e0a0;border-bottom-color:var(--gold2)}
-.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 16px}
-.hdr-save{font-size:10px;color:rgba(240,224,160,.35);font-family:'DM Mono',monospace;letter-spacing:.04em}
-.hdr-save.ok{color:#80c880}
+  .header{background:linear-gradient(135deg,#6b4f10 0%,#9a7020 60%,#c4961a 100%);color:#fff8e8;padding:18px 32px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 16px rgba(0,0,0,0.18);}
+  .header-icon{font-size:2rem;}
+  .header h1{font-family:'Noto Serif TC',serif;font-size:1.35rem;font-weight:700;letter-spacing:2px;}
+  .header p{font-size:0.8rem;opacity:.8;margin-top:2px;}
 
-/* ─── LAYOUT ─── */
-.wrap{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 50px)}
+  .container{max-width:1420px;margin:0 auto;padding:24px 20px 60px;}
+  .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border2);}
+  .tab-btn{padding:10px 26px;background:var(--surface2);border:1px solid var(--border);border-bottom:none;cursor:pointer;font-size:.95rem;font-family:inherit;color:var(--text2);border-radius:var(--radius) var(--radius) 0 0;transition:all .2s;margin-right:4px;font-weight:500;}
+  .tab-btn.active{background:var(--surface);color:var(--accent);border-color:var(--border2);border-bottom:2px solid var(--surface);margin-bottom:-2px;font-weight:700;}
+  .tab-btn:hover:not(.active){background:var(--accent-light);}
+  .tab-panel{display:none;}.tab-panel.active{display:block;}
 
-/* ─── SIDEBAR ─── */
-.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sb-hd{padding:12px 12px 10px;background:linear-gradient(160deg,var(--gold-bg),var(--surface));border-bottom:1px solid var(--gold-bd)}
-.sb-hd-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:7px}
-.sb-search{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:inherit;font-size:12px;padding:5px 9px;outline:none;transition:border-color .15s}
-.sb-search:focus{border-color:var(--gold)}
-.sb-body{flex:1;overflow-y:auto;padding:7px}
-.prod-card{border:1px solid var(--border);border-radius:var(--r);cursor:pointer;
-  margin-bottom:5px;padding:8px 10px;background:var(--surface);transition:all .15s}
-.prod-card:hover{border-color:var(--gold-bd);background:var(--gold-bg)}
-.prod-card.on{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 2px rgba(138,101,0,.1)}
-.pc-name{font-weight:700;font-size:12px}
-.pc-spec{font-size:10px;color:var(--ink3);margin-top:1px}
-.pc-cost{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);margin-top:3px}
-.sb-ft{padding:9px;border-top:1px solid var(--border)}
-.btn-add-prod{width:100%;background:var(--gold);border:none;border-radius:var(--r);
-  color:#fff;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;
-  padding:8px;letter-spacing:.04em;transition:background .15s}
-.btn-add-prod:hover{background:var(--gold2)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow);}
+  .card-title{font-family:'Noto Serif TC',serif;font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);}
 
-/* ─── MAIN SCROLL ─── */
-.main-area{overflow-y:auto;background:var(--bg)}
-.page{display:none}
-.page.on{display:block}
-.inner{padding:22px 26px;max-width:1200px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:.82rem;color:var(--text2);font-weight:500;}
+  input[type=text],input[type=number],textarea,select{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.88rem;color:var(--text);background:#fdfaf2;transition:border-color .2s,box-shadow .2s;width:100%;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(196,150,26,.15);}
+  textarea{resize:vertical;min-height:60px;}
 
-/* ─── SECTION HEADER ─── */
-.sec{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--ink3);display:flex;align-items:center;gap:8px;margin:0 0 10px}
-.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.83rem;}
+  thead th{background:linear-gradient(180deg,#8b6914 0%,#7a5c10 100%);color:#fff8e8;padding:8px 10px;text-align:center;font-weight:600;white-space:nowrap;border:1px solid #6b4f10;}
+  tbody tr:nth-child(even){background:#faf7ee;}
+  tbody tr:hover{background:var(--accent-light);}
+  tbody td{padding:6px 8px;border:1px solid var(--border);text-align:center;vertical-align:middle;}
+  tbody td:first-child{text-align:left;}
+  tbody td input{border:none;background:transparent;text-align:right;width:100%;padding:2px 4px;font-family:inherit;font-size:.83rem;color:var(--text);}
+  tbody td input[type=text]{text-align:left;}
+  tbody td input:focus{outline:1px solid var(--accent2);border-radius:3px;background:#fff;}
+  .th-name{width:130px;text-align:left!important;}
+  .th-weight{width:88px;}
+  .th-pct{width:60px;}
+  .th-nutrient{width:70px;}
+  .th-del{width:42px;}
 
-/* ─── PRODUCT HEADER ─── */
-.prod-hd{background:linear-gradient(135deg,#fdf8e8,#fffef8);border:1px solid var(--gold-bd);
-  border-radius:5px;padding:16px 18px;margin-bottom:18px;box-shadow:var(--sh)}
-.prod-hd-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.pname-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px}
-.pname-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
-.pname-input{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:inherit;font-size:16px;font-weight:700;padding:7px 10px;outline:none;
-  transition:border-color .15s}
-.pname-input:focus{border-color:var(--gold)}
-.prod-hd-row{display:flex;gap:10px;flex-wrap:wrap}
-.fld{display:flex;flex-direction:column;gap:3px}
-.fld label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
-.fld input,.fld select{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:inherit;font-size:12px;padding:5px 8px;outline:none;transition:border-color .15s}
-.fld input:focus,.fld select:focus{border-color:var(--gold)}
+  /* Autocomplete */
+  .name-wrap{position:relative;}
+  .ac-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:0 0 6px 6px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;max-height:200px;overflow-y:auto;display:none;}
+  .ac-dropdown.open{display:block;}
+  .ac-item{padding:7px 12px;cursor:pointer;font-size:.84rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+  .ac-item:hover{background:var(--accent-light);}
+  .ac-name{font-weight:600;}
+  .ac-preview{font-size:.72rem;color:var(--text3);}
 
-/* ─── COST SUMMARY ─── */
-.cost-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:18px}
-.cb{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  padding:11px 12px;position:relative;overflow:hidden;box-shadow:var(--sh)}
-.cb::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.cb.ing::before{background:#8a4010}.cb.pkg::before{background:#183060}
-.cb.lab::before{background:#1a5c30}.cb.fee::before{background:#5a2a7a}
-.cb.tot::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
-.cb-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
-.cb-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500}
-.cb.tot .cb-val{font-size:20px;color:var(--gold)}
-.cb-pct{font-size:10px;color:var(--ink3);margin-top:3px}
-.ratio-bar{height:3px;background:#e8e0d0;border-radius:2px;margin-top:7px;display:flex;overflow:hidden;gap:1px}
-.rb{height:100%;transition:width .3s ease}
+  /* Row DB match highlight */
+  tr.db-match td{background:#f0fff2!important;}
 
-/* ─── TABLE CARD ─── */
-.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  overflow:hidden;margin-bottom:16px;box-shadow:var(--sh)}
-.tcard-hd{background:linear-gradient(135deg,var(--s2),var(--surface));border-bottom:1px solid var(--border);
-  padding:9px 14px;display:flex;align-items:center;justify-content:space-between}
-.tcard-title{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink2)}
-.tcard-sub{font-size:10px;color:var(--ink3)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .18s;border:none;}
+  .btn-primary{background:var(--accent);color:#fff8e8;}
+  .btn-primary:hover{background:#7a5c10;transform:translateY(-1px);box-shadow:0 4px 12px rgba(139,105,20,.3);}
+  .btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+  .btn-secondary:hover{background:var(--accent-light);color:var(--accent);}
+  .btn-danger{background:#e74c3c;color:#fff;font-size:.75rem;padding:4px 8px;border-radius:4px;}
+  .btn-danger:hover{background:var(--red);}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-success:hover{background:#1e4d21;}
+  .btn-sm{padding:4px 10px;font-size:.78rem;}
+  .btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
 
-/* ─── THE MAIN TABLE ─── */
-.T{width:100%;border-collapse:collapse;font-size:12px}
-.T th{background:var(--s2);color:var(--ink3);font-size:9px;font-weight:700;
-  letter-spacing:.08em;text-transform:uppercase;padding:7px 8px;text-align:left;
-  border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1}
-.T td{padding:0;border-bottom:1px solid var(--s3);vertical-align:middle}
-.T tr:last-child td{border-bottom:none}
-.T tr:hover td{background:var(--gold-bg)}
-/* cell inner */
-.ci{padding:6px 8px;display:block}
-.mono{font-family:'DM Mono',monospace}
-.tr{text-align:right}
-.muted{color:var(--ink3)}
-.bold{font-weight:600}
-/* inline cell input */
-.ci-inp{
-  background:transparent;border:none;color:var(--ink);font-family:inherit;font-size:12px;
-  padding:6px 8px;outline:none;width:100%;display:block;
-}
-.ci-inp:focus{background:var(--gold-bg);outline:2px solid var(--gold);outline-offset:-1px;border-radius:2px}
-.ci-inp.mono{font-family:'DM Mono',monospace}
-.ci-inp.tr{text-align:right}
-.ci-inp::placeholder{color:var(--ink4)}
-/* the cost cell */
-.cost-cell{font-family:'DM Mono',monospace;font-weight:600;padding:6px 8px;display:block;text-align:right}
+  /* Nutrition label */
+  .label-wrapper{display:flex;gap:24px;flex-wrap:wrap;}
+  .nutrition-label{width:320px;border:2px solid #111;padding:0;background:#fff;font-family:'Noto Sans TC',Arial,sans-serif;flex-shrink:0;}
+  .nl-title{font-size:1.5rem;font-weight:900;border-bottom:8px solid #111;padding:6px 8px 4px;}
+  .nl-serving{font-size:.75rem;border-bottom:1px solid #111;padding:4px 8px;}
+  .nl-cal-row{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:4px solid #111;padding:4px 8px;}
+  .nl-cal-lbl{font-size:.7rem;font-weight:700;}
+  .nl-cal-val{font-size:2rem;font-weight:900;line-height:1;}
+  .nl-cal-unit{font-size:.75rem;align-self:center;margin-left:2px;}
+  .nl-row{display:flex;justify-content:space-between;align-items:center;padding:3px 8px;border-bottom:.5px solid #ccc;font-size:.78rem;}
+  .nl-row.bold{font-weight:700;font-size:.82rem;}
+  .nl-row.sub{padding-left:22px;}
+  .nl-row .right{text-align:right;white-space:nowrap;}
+  .nl-footer{font-size:.65rem;padding:4px 8px;border-top:4px solid #111;line-height:1.4;}
 
-/* ─── AUTOCOMPLETE ─── */
-.ac-wrap{position:relative;display:block}
-.ac-dd{position:absolute;top:100%;left:0;right:0;z-index:300;
-  background:var(--surface);border:1px solid var(--gold-bd);border-top:none;
-  border-radius:0 0 var(--r) var(--r);box-shadow:0 8px 24px rgba(0,0,0,.18);
-  max-height:240px;overflow-y:auto;display:none}
-.ac-dd.open{display:block}
-.ac-row{padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
-.ac-row:last-child{border-bottom:none}
-.ac-row:hover,.ac-row.hi{background:var(--gold-bg)}
-.ac-row-name{font-weight:600;font-size:12px}
-.ac-row-meta{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;margin-top:1px}
-.ac-create{padding:7px 10px;cursor:pointer;color:var(--gold);font-size:11px;font-weight:700;
-  border-top:1px solid var(--border);display:flex;align-items:center;gap:5px}
-.ac-create:hover{background:var(--gold-bg)}
+  /* Sort */
+  .sort-item{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;}
+  .sort-rank{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;}
+  .sort-rank.top3{background:#c4961a;}
+  .sort-name{flex:1;font-weight:600;}
+  .sort-bar-wrap{flex:2;height:10px;background:#e8e0cc;border-radius:5px;overflow:hidden;}
+  .sort-bar{height:100%;background:linear-gradient(90deg,#c4961a,#8b6914);border-radius:5px;}
+  .sort-weight{font-size:.82rem;color:var(--text2);white-space:nowrap;width:80px;text-align:right;}
+  .sort-pct{font-size:.78rem;color:var(--text3);white-space:nowrap;width:48px;text-align:right;}
+  .label-result{background:var(--accent-light);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin-top:14px;font-size:.9rem;line-height:1.8;}
 
-/* ─── ADD ROW ─── */
-.add-trigger-row td{background:var(--s2)!important}
-.add-trigger-row:hover td{background:var(--gold-bg)!important}
-.add-trigger-btn{width:100%;background:none;border:none;color:var(--ink3);cursor:pointer;
-  font-family:inherit;font-size:11px;font-weight:600;padding:7px 14px;text-align:left;
-  letter-spacing:.04em;transition:color .15s}
-.add-trigger-btn:hover{color:var(--gold)}
+  .info-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .info-box{background:var(--accent-light);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;min-width:180px;}
+  .info-box .lbl{font-size:.75rem;color:var(--text3);margin-bottom:2px;}
+  .info-box .val{font-size:1.1rem;font-weight:700;color:var(--accent);}
+  .prod-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px;font-size:.88rem;line-height:2;}
+  .prod-info strong{color:var(--accent);min-width:72px;display:inline-block;}
 
-/* ─── SUBTOTAL ROW ─── */
-.sub-row td{background:var(--s2)!important;border-top:1px solid var(--border)}
-.sub-row:hover td{background:var(--gold-bg)!important}
+  .toast{position:fixed;bottom:30px;right:30px;background:var(--accent);color:#fff;padding:12px 22px;border-radius:8px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .empty-state{text-align:center;padding:30px;color:var(--text3);font-size:.9rem;font-style:italic;}
 
-/* ─── PRICING TABLE ─── */
-.price-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.price-tbl th{background:var(--s2);color:var(--ink3);font-size:9px;font-weight:700;
-  letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border)}
-.price-tbl td{padding:0;border-bottom:1px solid var(--s3)}
-.price-tbl tr:hover td{background:var(--gold-bg)}
-.price-tbl tr:last-child td{border-bottom:none}
-.profit-pos{color:var(--green);font-weight:600}
-.profit-neg{color:var(--red);font-weight:600}
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:12px;padding:26px 30px;width:min(820px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;}
+  .modal-sm{width:min(500px,96vw);}
+  .modal-title{font-family:'Noto Serif TC',serif;font-size:1.05rem;font-weight:700;color:var(--accent);margin-bottom:8px;}
+  .modal-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text3);}
+  .modal-close:hover{color:var(--red);}
 
-/* ─── LIBRARY PAGES ─── */
-.lib-hd{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
-.lib-title{font-size:18px;font-weight:900}
-.lib-sub{font-size:11px;color:var(--ink3);margin-top:2px}
-.lib-actions{display:flex;gap:8px;flex-wrap:wrap}
-.search-inp{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:inherit;font-size:12px;padding:7px 10px;outline:none;
-  transition:border-color .15s;min-width:220px}
-.search-inp:focus{border-color:var(--gold)}
-.lib-count{font-size:11px;color:var(--ink3);margin-top:-8px;margin-bottom:12px}
+  /* Paste */
+  .fmt-tabs{display:flex;gap:6px;margin-bottom:10px;}
+  .fmt-tab{padding:6px 16px;border-radius:6px;font-size:.83rem;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:inherit;transition:all .15s;}
+  .fmt-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .hint-box{background:#f0f6ff;border:1px solid #a8c4f0;border-radius:7px;padding:10px 14px;font-size:.82rem;color:#1a3060;margin-bottom:12px;line-height:1.8;}
+  .hint-box strong{display:block;margin-bottom:3px;color:#1a4a8b;}
+  .col-tag{display:inline-block;background:var(--accent-light);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.75rem;color:var(--accent);font-family:monospace;margin:1px;}
+  .paste-area{width:100%;min-height:130px;border:2px dashed var(--border2);border-radius:8px;padding:12px 14px;font-family:'Courier New',monospace;font-size:.82rem;resize:vertical;background:#fdfaf2;color:var(--text);transition:border-color .2s;}
+  .paste-area:focus{outline:none;border-color:var(--accent2);background:#fff;}
+  .preview-wrap{max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:6px;margin:8px 0;}
+  .preview-tbl{font-size:.78rem;width:100%;border-collapse:collapse;}
+  .preview-tbl th{background:var(--accent);color:#fff8e8;padding:5px 8px;white-space:nowrap;position:sticky;top:0;}
+  .preview-tbl td{padding:4px 8px;border:1px solid var(--border);white-space:nowrap;}
+  .preview-tbl tr:nth-child(even) td{background:#faf7ee;}
 
-/* ─── BUTTONS ─── */
-.btn{border:none;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:11px;
-  font-weight:700;letter-spacing:.04em;padding:6px 13px;transition:all .15s}
-.btn:hover{opacity:.82}.btn:active{transform:scale(.97)}
-.btn-gold{background:var(--gold);color:#fff}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-red{background:var(--red);color:#fff}
-.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--ink3)}
-.btn-ghost:hover{border-color:var(--ink);color:var(--ink);opacity:1}
-.btn-ink{background:var(--ink);color:#f0e0a0}
-.btn-sm{padding:4px 9px;font-size:10px}
-.btn-del{background:none;border:none;color:var(--ink4);cursor:pointer;font-size:13px;
-  padding:4px 7px;border-radius:2px;line-height:1;transition:all .12s}
-.btn-del:hover{background:#fee8e8;color:var(--red)}
+  /* DB */
+  .db-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .db-toolbar input{flex:1;min-width:160px;}
+  .db-wrap{max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;}
+  .db-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+  .db-tbl th{background:var(--accent);color:#fff8e8;padding:7px 10px;white-space:nowrap;position:sticky;top:0;text-align:center;}
+  .db-tbl th:first-child{text-align:left;}
+  .db-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;}
+  .db-tbl td:first-child{text-align:left;font-weight:600;}
+  .db-tbl tr:hover td{background:var(--accent-light);}
 
-/* ─── MODAL ─── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;
-  display:none;align-items:center;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:5px;width:560px;max-width:96vw;
-  box-shadow:0 24px 64px rgba(0,0,0,.35);border-top:3px solid var(--gold2)}
-.modal-hd{padding:16px 18px 12px;border-bottom:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center}
-.modal-title{font-weight:700;font-size:14px}
-.modal-x{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:3px}
-.modal-x:hover{background:var(--s2)}
-.modal-body{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
-.modal-ft{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-.frow{display:grid;gap:9px}
-.frow.c2{grid-template-columns:1fr 1fr}
-.frow.c3{grid-template-columns:1fr 1fr 1fr}
-.frow.c4{grid-template-columns:1fr 1fr 1fr 1fr}
-.frow.c1{grid-template-columns:1fr}
-.fi{display:flex;flex-direction:column;gap:3px}
-.fi label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
-.fi input,.fi select{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:inherit;font-size:13px;padding:6px 9px;outline:none;
-  transition:border-color .15s;width:100%}
-.fi input:focus,.fi select:focus{border-color:var(--gold)}
-.fi input::placeholder{color:var(--ink4)}
-.calc-hint{font-size:11px;color:var(--gold);font-family:'DM Mono',monospace;min-height:15px}
 
-/* scrollbar */
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#d8d0c0;border-radius:3px}
+  /* ── Column Mapping UI ── */
+  .colmap-section { margin: 12px 0; }
+  .colmap-title { font-size:.84rem; font-weight:600; color:var(--text2); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .colmap-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .colmap-item { display:flex; flex-direction:column; gap:3px; }
+  .colmap-item label { font-size:.72rem; color:var(--text3); font-weight:500; }
+  .colmap-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#fdfaf2; color:var(--text); }
+  .colmap-item select:focus { outline:none; border-color:var(--accent2); }
+  .row-order-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .row-order-item { display:flex; flex-direction:column; gap:3px; }
+  .row-order-item label { font-size:.72rem; color:var(--text3); font-weight:500; }
+  .row-order-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#fdfaf2; color:var(--text); }
 
-/* empty */
-.empty-state{display:flex;align-items:center;justify-content:center;height:65vh;flex-direction:column;gap:10px;color:var(--ink3)}
-.empty-icon{font-size:48px;opacity:.35}
 
-/* overflow-x scroll for wide tables */
-.tbl-scroll{overflow-x:auto}
+  /* ── Translation ── */
+  .trans-input-area { display:flex; gap:16px; margin-bottom:16px; }
+  .trans-box { flex:1; display:flex; flex-direction:column; gap:8px; }
+  .trans-box label { font-size:.82rem; font-weight:600; color:var(--text2); }
+  .trans-textarea { width:100%; min-height:220px; border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:inherit; font-size:.88rem; resize:vertical; background:#fdfaf2; color:var(--text); line-height:1.8; }
+  .trans-textarea:focus { outline:none; border-color:var(--accent2); box-shadow:0 0 0 3px rgba(196,150,26,.15); }
+  .trans-textarea[readonly] { background:var(--surface2); cursor:default; }
+  .trans-arrow { display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--border2); flex-shrink:0; padding-top:32px; }
+  .trans-result-item { display:flex; align-items:center; gap:10px; padding:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; }
+  .trans-zh { flex:1; font-weight:600; color:var(--text); }
+  .trans-en { flex:1; color:var(--accent); font-weight:500; }
+  .trans-copy-btn { font-size:.72rem; padding:3px 8px; }
+  .trans-loading { display:flex; align-items:center; gap:8px; color:var(--text3); font-size:.88rem; padding:16px 0; }
+  .spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .api-key-row { display:flex; gap:10px; align-items:flex-end; margin-bottom:16px; background:var(--accent-light); border:1px solid var(--border2); border-radius:8px; padding:12px 16px; }
+  .api-key-row .form-group { flex:1; margin:0; }
+  .api-key-hint { font-size:.76rem; color:var(--text3); margin-top:4px; }
 
-@media print{header,.sidebar,.btn,.btn-del,.modal-bg{display:none!important}
-  .wrap{display:block}.main-area{overflow:visible}.page.on{display:block!important;padding:8px}}
 
-/* ─── DB MANAGEMENT PAGE ─── */
-.db-page{padding:22px 26px;max-width:1400px}
-.db-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.db-toolbar .search-inp{flex:1;min-width:180px;max-width:280px}
-.db-tab-row{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
-.db-tab{background:none;border:none;border-bottom:3px solid transparent;color:var(--ink3);
-  cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;padding:9px 18px;
-  letter-spacing:.04em;transition:all .15s;margin-bottom:-2px;white-space:nowrap}
-.db-tab:hover{color:var(--ink);background:var(--gold-bg)}
-.db-tab.on{color:var(--gold);border-bottom-color:var(--gold)}
-.db-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  padding:12px 14px;box-shadow:var(--sh)}
-.stat-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--gold)}
-.stat-lbl{font-size:10px;color:var(--ink3);margin-top:3px;font-weight:600;letter-spacing:.04em}
+  /* ── TransDB ── */
+  .tdb-toolbar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .tdb-toolbar input { flex:1; min-width:160px; }
+  .tdb-wrap { max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; }
+  .tdb-tbl { width:100%; border-collapse:collapse; font-size:.85rem; }
+  .tdb-tbl th { background:var(--accent); color:#fff8e8; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
+  .tdb-tbl td { padding:7px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .tdb-tbl tr:hover td { background:var(--accent-light); }
+  .tdb-tbl td:nth-child(2) { color:var(--accent); font-weight:500; }
+  .tdb-badge-db { display:inline-block; padding:1px 7px; background:#e8f5e9; border:1px solid #90d090; border-radius:10px; font-size:.7rem; color:var(--green); font-weight:700; margin-left:4px; }
+  .tdb-badge-ai { display:inline-block; padding:1px 7px; background:#e8f0ff; border:1px solid #a0b8f0; border-radius:10px; font-size:.7rem; color:#1a4a8b; font-weight:700; margin-left:4px; }
+  .trans-stat { display:flex; gap:10px; margin-bottom:12px; }
+  .trans-stat-box { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:8px 14px; font-size:.82rem; }
+  .trans-stat-box strong { color:var(--accent); font-size:1.1rem; }
 
-/* ─── PASTE IMPORT MODAL ─── */
-.paste-modal .modal{width:780px;max-width:97vw}
-.paste-area{width:100%;min-height:180px;background:var(--bg);border:2px dashed var(--border2);
-  border-radius:var(--r);color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;
-  padding:12px;outline:none;resize:vertical;transition:border-color .15s;line-height:1.6}
-.paste-area:focus{border-color:var(--gold);border-style:solid}
-.paste-area::placeholder{color:var(--ink4);font-family:'Noto Sans TC',sans-serif;font-size:12px}
-.preview-table{width:100%;border-collapse:collapse;font-size:11px;max-height:280px;overflow-y:auto;display:block}
-.preview-table th{background:var(--ink);color:#f0e0a0;padding:5px 8px;text-align:left;
-  font-size:9px;font-weight:700;letter-spacing:.06em;white-space:nowrap;position:sticky;top:0}
-.preview-table td{padding:4px 8px;border-bottom:1px solid var(--s3);white-space:nowrap}
-.preview-table tr:nth-child(even) td{background:var(--s2)}
-.preview-table tr.err td{background:#fff0f0;color:var(--red)}
-.preview-table tr.ok td{background:#f0fff4}
-.col-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:10px}
-.col-map-item{display:flex;flex-direction:column;gap:3px}
-.col-map-item label{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--ink3);text-transform:uppercase}
-.col-map-item select{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:inherit;font-size:11px;padding:4px 6px;outline:none}
-.col-map-item select:focus{border-color:var(--gold)}
-.import-result{padding:10px 12px;border-radius:var(--r);font-size:12px;font-weight:600;margin-top:4px}
-.import-result.ok{background:#e8f8ec;color:var(--green);border:1px solid #b8e8c8}
-.import-result.warn{background:#fff8e0;color:#7a5a00;border:1px solid var(--gold-bd)}
-.import-result.err{background:#fee;color:var(--red);border:1px solid #f0c0c0}
-.step-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
-  border-radius:50%;background:var(--gold);color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0}
-.step-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
-.step-body{flex:1}
-
-/* ─── NL IMPORT ─── */
-.nl-modal .modal{width:760px;max-width:97vw}
-.nl-textarea{
-  width:100%;min-height:160px;background:var(--bg);
-  border:2px solid var(--border2);border-radius:var(--r);
-  color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-size:14px;
-  line-height:1.8;padding:12px 14px;outline:none;resize:vertical;
-  transition:border-color .15s;
-}
-.nl-textarea:focus{border-color:var(--gold);border-style:solid}
-.nl-textarea::placeholder{color:var(--ink4);font-size:13px}
-.nl-result-row{
-  display:flex;align-items:center;gap:8px;padding:8px 10px;
-  border-bottom:1px solid var(--s3);transition:background .1s;
-}
-.nl-result-row:last-child{border-bottom:none}
-.nl-result-row:hover{background:var(--gold-bg)}
-.nl-badge{
-  font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;
-  white-space:nowrap;flex-shrink:0;
-}
-.nl-badge.match{background:#e8f8ec;color:var(--green)}
-.nl-badge.fuzzy{background:#fff8e0;color:#7a5a00}
-.nl-badge.new{background:#e8eeff;color:var(--blue)}
-.nl-badge.skip{background:#f0f0f0;color:var(--ink3)}
-.nl-name{font-weight:600;font-size:13px;flex:1}
-.nl-qty{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);white-space:nowrap}
-.nl-match-name{font-size:11px;color:var(--ink3);white-space:nowrap}
-.nl-cost{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);white-space:nowrap;min-width:80px;text-align:right}
-.nl-thinking{display:flex;align-items:center;gap:10px;padding:20px;color:var(--ink3);font-size:13px}
-.nl-spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+  /* ── Expand DB ── */
+  .exp-wrap { max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; }
+  .exp-tbl { width:100%; border-collapse:collapse; font-size:.84rem; }
+  .exp-tbl th { background:var(--accent); color:#fff8e8; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
+  .exp-tbl td { padding:8px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .exp-tbl tr:hover td { background:var(--accent-light); }
+  .exp-tbl td:first-child { font-weight:700; white-space:nowrap; width:160px; }
+  .exp-expanded { color:var(--text2); font-size:.82rem; line-height:1.6; word-break:break-all; }
+  .exp-badge { display:inline-block; padding:1px 7px; background:#fff3e0; border:1px solid #e8aa60; border-radius:10px; font-size:.7rem; color:#7a4800; font-weight:700; }
+  .expand-preview { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:10px 14px; font-size:.85rem; line-height:1.9; margin-top:10px; }
+  .expand-preview .ex-hit { background:#fffde7; border-bottom:2px solid #e8cc60; }
+  @media(max-width:800px){.form-grid{grid-template-columns:1fr;}.label-wrapper{flex-direction:column;}}
+  @media print{.tabs,.card:not(.print-target),.btn-group,.header{display:none!important;}.nutrition-label{border-color:#000;}}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-<header>
-  <div class="logo"><span class="logo-icon">🏷️</span>食品成本計算系統</div>
-  <nav class="nav">
-    <button class="nav-btn on"  onclick="showPage('pg-prod',this)">📋 產品成本</button>
-    <button class="nav-btn"     onclick="showPage('pg-raw',this)">🌾 原料資料庫</button>
-    <button class="nav-btn"     onclick="showPage('pg-pkg',this)">📦 物料包材庫</button>
-    <button class="nav-btn"     onclick="showPage('pg-lab',this)">👷 人工費率</button>
-    <button class="nav-btn"     onclick="showPage('pg-db',this)">🗄️ 資料庫管理</button>
-  </nav>
-  <div class="hdr-right">
-    <span class="hdr-save ok" id="save-status">● 已儲存</span>
-    <button class="btn btn-sm" style="background:#1a6e3a;color:#fff;border:none" onclick="exportExcel()">⬇ 匯出 Excel</button>
-    <button class="btn btn-sm btn-ghost" style="color:#aaa;border-color:#444;font-size:10px" onclick="exportJSON()" title="匯出 JSON 備份">JSON備份</button>
-    <label class="btn btn-sm btn-ghost" style="color:#aaa;border-color:#444;cursor:pointer;font-size:10px" title="從 JSON 還原">還原<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+
+
+<!-- ══ Supabase 狀態 Banner ══ -->
+<div id="supabaseBanner" style="background:#1a3060;color:#e8f0ff;padding:8px 24px;font-size:0.82rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <span style="font-weight:700;white-space:nowrap">🔗 Supabase 雲端資料庫</span>
+  <input id="sbUrl" type="text" style="display:none">
+  <input id="sbKey" type="text" style="display:none">
+  <span id="sbStatus" style="font-size:0.82rem;">🔄 連線中...</span>
+  <button onclick="document.getElementById('supabaseBanner').style.display='none'" style="margin-left:auto;background:none;border:none;color:#9ab;cursor:pointer;font-size:1.1rem">✕</button>
+</div>
+
+<div class="header">
+  <div class="header-icon">🏷️</div>
+  <div>
+    <h1>食品營養標示計算系統</h1>
+    <p>輸入成分配方 · 自動計算營養標示 · 成分重量排序 · 原物料資料庫</p>
   </div>
-</header>
+</div>
 
-<div class="wrap">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sb-hd">
-      <div class="sb-hd-lbl">產品列表</div>
-      <input class="sb-search" id="sb-search" placeholder="搜尋產品…" oninput="renderSidebar()">
-    </div>
-    <div class="sb-body" id="sb-body"></div>
-    <div class="sb-ft">
-      <button class="btn-add-prod" onclick="openNewProd()">＋ 新增產品</button>
-    </div>
-  </aside>
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('input',this)">📝 配方輸入</button>
+    <button class="tab-btn" onclick="switchTab('result',this)">📊 營養標示結果</button>
+    <button class="tab-btn" onclick="switchTab('sort',this)">📋 成分排序</button>
+    <button class="tab-btn" onclick="switchTab('db',this)">🗄️ 原物料資料庫</button>
+    <button class="tab-btn" onclick="switchTab('trans',this)">🌐 成分中翻英</button>
+    <button class="tab-btn" onclick="switchTab('transdb',this)">📖 翻譯詞庫</button>
+    <button class="tab-btn" onclick="switchTab('expand',this)">🔍 原料展開庫</button>
+  </div>
 
-  <div class="main-area">
-
-    <!-- ════ PAGE: 產品成本 ════ -->
-    <div class="page on" id="pg-prod">
-      <div id="no-prod" class="empty-state">
-        <div class="empty-icon">📦</div>
-        <div style="font-size:14px;font-weight:700">請選擇或新增產品</div>
-        <div style="font-size:11px">點選左側「新增產品」開始建立配方</div>
-      </div>
-      <div id="prod-editor" style="display:none">
-        <div class="inner">
-
-          <!-- 品名 / 規格 -->
-          <div class="prod-hd">
-            <div class="prod-hd-top">
-              <div class="pname-field">
-                <div class="pname-label">品名</div>
-                <input class="pname-input" id="pe-name" placeholder="輸入品名…" oninput="autosave()">
-              </div>
-              <div class="fld" style="flex:1;min-width:160px">
-                <label>規格 / 內容物</label>
-                <input id="pe-spec" placeholder="例：1300g/包" oninput="autosave()">
-              </div>
-              <div class="fld" style="flex:0 0 80px">
-                <label>每批產出數</label>
-                <input type="number" id="pe-oq" placeholder="1" min="0.001" step="any" oninput="autosave();recalc()">
-              </div>
-              <div class="fld" style="flex:0 0 70px">
-                <label>產出單位</label>
-                <select id="pe-ou" onchange="autosave();recalc()">
-                  <option>包</option><option>個</option><option>盒</option><option>份</option>
-                  <option>斤</option><option>公斤</option><option>g</option><option>支</option>
-                </select>
-              </div>
-              <div style="display:flex;gap:6px;margin-top:18px">
-                <button class="btn btn-ghost btn-sm" onclick="deleteProd()">刪除</button>
-                <button class="btn btn-ink btn-sm" onclick="exportCSV()">CSV</button>
-                <button class="btn btn-ink btn-sm" onclick="window.print()">列印</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- COST BAR -->
-          <div class="cost-bar">
-            <div class="cb ing"><div class="cb-lbl">料｜食材</div><div class="cb-val">$<span id="cv-ing">0.00</span></div><div class="cb-pct" id="cp-ing">0%</div></div>
-            <div class="cb pkg"><div class="cb-lbl">料｜包材</div><div class="cb-val">$<span id="cv-pkg">0.00</span></div><div class="cb-pct" id="cp-pkg">0%</div></div>
-            <div class="cb lab"><div class="cb-lbl">工｜人工</div><div class="cb-val">$<span id="cv-lab">0.00</span></div><div class="cb-pct" id="cp-lab">0%</div></div>
-            <div class="cb fee"><div class="cb-lbl">費｜管銷</div><div class="cb-val">$<span id="cv-fee">0.00</span></div><div class="cb-pct" id="cp-fee">0%</div></div>
-            <div class="cb tot">
-              <div class="cb-lbl">每<span id="cv-unit">包</span>總成本</div>
-              <div class="cb-val">$<span id="cv-tot">0.00</span></div>
-              <div class="ratio-bar">
-                <div class="rb" id="rb-ing" style="background:#8a4010"></div>
-                <div class="rb" id="rb-pkg" style="background:#183060"></div>
-                <div class="rb" id="rb-lab" style="background:#1a5c30"></div>
-                <div class="rb" id="rb-fee" style="background:#5a2a7a"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ① 食材原料 -->
-          <div class="tcard">
-            <div class="tcard-hd">
-              <span class="tcard-title">① 食材原料成本</span>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span class="tcard-sub" id="ing-subtotal-hd">小計：$0.00</span>
-                <button class="btn btn-ink btn-sm" style="font-size:10px" onclick="openNLImport('ing')" title="自然語言快速輸入">✨ 自然語言輸入</button>
-              </div>
-            </div>
-            <div class="tbl-scroll">
-              <table class="T">
-                <thead><tr>
-                  <th style="width:90px">編碼</th>
-                  <th style="min-width:150px">品名</th>
-                  <th class="tr" style="width:90px">進價(含稅)</th>
-                  <th style="width:70px">進貨單位</th>
-                  <th class="tr" style="width:90px">單價(含稅)</th>
-                  <th style="width:60px">單價單位</th>
-                  <th class="tr" style="width:70px">用量</th>
-                  <th style="width:60px">用量單位</th>
-                  <th class="tr" style="width:90px">製造成本</th>
-                  <th style="width:32px"></th>
-                </tr></thead>
-                <tbody id="ing-body"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ② 包材物料 -->
-          <div class="tcard">
-            <div class="tcard-hd">
-              <span class="tcard-title">② 包材物料成本</span>
-              <span class="tcard-sub" id="pkg-subtotal-hd">小計：$0.00</span>
-            </div>
-            <div class="tbl-scroll">
-              <table class="T">
-                <thead><tr>
-                  <th style="width:90px">編碼</th>
-                  <th style="min-width:150px">品名</th>
-                  <th class="tr" style="width:90px">進價(含稅)</th>
-                  <th style="width:70px">進貨單位</th>
-                  <th class="tr" style="width:90px">單價(含稅)</th>
-                  <th style="width:60px">單價單位</th>
-                  <th class="tr" style="width:70px">用量</th>
-                  <th style="width:60px">用量單位</th>
-                  <th class="tr" style="width:90px">製造成本</th>
-                  <th style="width:32px"></th>
-                </tr></thead>
-                <tbody id="pkg-body"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ③ 人工費 -->
-          <div class="tcard">
-            <div class="tcard-hd">
-              <span class="tcard-title">③ 工資 / 人工費</span>
-              <span class="tcard-sub" id="lab-subtotal-hd">小計：$0.00</span>
-            </div>
-            <div class="tbl-scroll">
-              <table class="T">
-                <thead><tr>
-                  <th style="width:90px">編碼</th>
-                  <th style="min-width:150px">工項名稱</th>
-                  <th class="tr" style="width:90px">時薪</th>
-                  <th style="width:70px">時薪單位</th>
-                  <th class="tr" style="width:90px">單價(含稅)</th>
-                  <th style="width:60px">單價單位</th>
-                  <th class="tr" style="width:70px">用量</th>
-                  <th style="width:60px">用量單位</th>
-                  <th class="tr" style="width:90px">製造成本</th>
-                  <th style="width:32px"></th>
-                </tr></thead>
-                <tbody id="lab-body"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ④ 管銷費用 -->
-          <div class="tcard">
-            <div class="tcard-hd">
-              <span class="tcard-title">④ 管銷費用攤提</span>
-              <span class="tcard-sub" id="fee-subtotal-hd">小計：$0.00</span>
-            </div>
-            <div class="tbl-scroll">
-              <table class="T">
-                <thead><tr>
-                  <th style="min-width:160px">費用項目</th>
-                  <th class="tr" style="width:110px">金額（元）</th>
-                  <th style="min-width:180px">備註</th>
-                  <th style="width:32px"></th>
-                </tr></thead>
-                <tbody id="fee-body"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ⑤ 客戶定價 -->
-          <div class="tcard">
-            <div class="tcard-hd">
-              <span class="tcard-title">⑤ 客戶定價</span>
-              <span class="tcard-sub">填入末端售價，自動計算毛利與毛利率</span>
-            </div>
-            <div class="tbl-scroll">
-              <table class="price-tbl">
-                <thead><tr>
-                  <th style="min-width:160px">客戶名稱</th>
-                  <th class="tr" style="width:120px">產品成本</th>
-                  <th class="tr" style="width:140px">末端售價（自填）</th>
-                  <th class="tr" style="width:120px">毛利</th>
-                  <th class="tr" style="width:110px">毛利率</th>
-                  <th style="width:32px"></th>
-                </tr></thead>
-                <tbody id="price-body"></tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
+  <!-- ─── TAB 1 配方輸入 ─── -->
+  <div class="tab-panel active" id="tab-input">
+    <div class="card">
+      <div class="card-title">🏭 產品基本資料</div>
+      <div class="form-grid">
+        <div class="form-group"><label>品名</label><input type="text" id="productName" placeholder="例：麻香油飯粽"></div>
+        <div class="form-group"><label>內容物（規格）</label><input type="text" id="productContent" placeholder="例：180公克/顆"></div>
+        <div class="form-group full"><label>過敏原</label><input type="text" id="productAllergen" placeholder="例：大豆、小麥、芝麻及其製品"></div>
+        <div class="form-group full"><label>原料（留空則系統自動依排序產生）</label><textarea id="productIngredientLabel" placeholder="若留空，系統將自動依照成分重量由多到少產生原料標示"></textarea></div>
       </div>
     </div>
 
-    <!-- ════ PAGE: 原料資料庫 ════ -->
-    <div class="page" id="pg-raw">
-      <div class="inner">
-        <div class="lib-hd">
-          <div><div class="lib-title">🌾 原料資料庫</div><div class="lib-sub">建立後，在產品配方輸入品名可自動帶入所有欄位</div></div>
-          <div class="lib-actions">
-            <input class="search-inp" id="raw-search" placeholder="搜尋編碼或品名…" oninput="renderRawLib()">
-            <button class="btn btn-gold" onclick="openMatModal('raw',null)">＋ 新增食材</button>
-          </div>
-        </div>
-        <div class="lib-count" id="raw-count">共 0 筆</div>
-        <div class="tcard tbl-scroll">
-          <table class="T">
-            <thead><tr>
-              <th style="width:90px">編碼</th><th style="min-width:140px">品名</th>
-              <th style="min-width:120px">包裝規格</th>
-              <th class="tr" style="width:90px">進價(含稅)</th>
-              <th style="width:70px">進貨單位</th>
-              <th class="tr" style="width:90px">單價(含稅)</th>
-              <th style="width:60px">單價單位</th>
-              <th class="tr" style="width:60px">用量</th>
-              <th style="width:60px">用量單位</th>
-              <th style="min-width:100px">備註</th>
-              <th style="width:60px">規格</th>
-              <th style="width:60px"></th>
-            </tr></thead>
-            <tbody id="raw-tbody"></tbody>
-          </table>
-        </div>
+    <div class="card">
+      <div class="card-title">⚖️ 成分配方表
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 輸入成分名稱可自動帶入資料庫數值 🟢</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="th-name">成分名稱</th>
+            <th class="th-weight">配方重量<br>(g)</th>
+            <th class="th-pct">佔比<br>(%)</th>
+            <th class="th-nutrient">熱量<br>(kcal/100g)</th>
+            <th class="th-nutrient">蛋白質<br>(g/100g)</th>
+            <th class="th-nutrient">脂肪<br>(g/100g)</th>
+            <th class="th-nutrient">飽和脂肪<br>(g/100g)</th>
+            <th class="th-nutrient">反式脂肪<br>(g/100g)</th>
+            <th class="th-nutrient">碳水化合物<br>(g/100g)</th>
+            <th class="th-nutrient">糖<br>(g/100g)</th>
+            <th class="th-nutrient">鈉<br>(mg/100g)</th>
+            <th class="th-del">刪除</th>
+          </tr></thead>
+          <tbody id="ingredientBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="addRow()">＋ 新增成分</button>
+        <button class="btn btn-secondary" onclick="openPasteModal()">📋 批次貼上匯入</button>
+        <button class="btn btn-secondary" onclick="importSample('zhanzin')">📥 範例（臻品肉絲粽）</button>
+        <button class="btn btn-secondary" onclick="importSample('triangle')">📥 範例（三角圓）</button>
+        <button class="btn btn-primary" onclick="calculate()">🔢 計算營養標示</button>
       </div>
     </div>
+  </div>
 
-    <!-- ════ PAGE: 物料包材庫 ════ -->
-    <div class="page" id="pg-pkg">
-      <div class="inner">
-        <div class="lib-hd">
-          <div><div class="lib-title">📦 物料包材庫</div><div class="lib-sub">包材資料庫，在配方包材欄位輸入品名可自動帶入</div></div>
-          <div class="lib-actions">
-            <input class="search-inp" id="pkg-search" placeholder="搜尋編碼或品名…" oninput="renderPkgLib()">
-            <button class="btn btn-blue" onclick="openMatModal('pkg',null)">＋ 新增包材</button>
-          </div>
-        </div>
-        <div class="lib-count" id="pkg-count">共 0 筆</div>
-        <div class="tcard tbl-scroll">
-          <table class="T">
-            <thead><tr>
-              <th style="width:90px">編碼</th><th style="min-width:140px">品名</th>
-              <th style="min-width:120px">包裝規格</th>
-              <th class="tr" style="width:90px">進價(含稅)</th>
-              <th style="width:70px">進貨單位</th>
-              <th class="tr" style="width:90px">單價(含稅)</th>
-              <th style="width:60px">單價單位</th>
-              <th class="tr" style="width:60px">用量</th>
-              <th style="width:60px">用量單位</th>
-              <th style="min-width:100px">備註</th>
-              <th style="width:60px">規格</th>
-              <th style="width:60px"></th>
-            </tr></thead>
-            <tbody id="pkg-tbody"></tbody>
-          </table>
-        </div>
-      </div>
+  <!-- ─── TAB 2 結果 ─── -->
+  <div class="tab-panel" id="tab-result">
+    <div class="card"><div class="card-title">📊 計算結果</div>
+      <div id="resultContent"><div class="empty-state">請先在「配方輸入」頁面填寫資料並按下「計算」</div></div>
     </div>
+  </div>
 
-    <!-- ════ PAGE: 人工費率 ════ -->
-    <div class="page" id="pg-lab">
-      <div class="inner">
-        <div class="lib-hd">
-          <div><div class="lib-title">👷 人工費率</div><div class="lib-sub">設定各工種時薪或計件費率</div></div>
-          <button class="btn btn-gold" onclick="openLabModal(null)">＋ 新增工項</button>
-        </div>
-        <div class="tcard tbl-scroll">
-          <table class="T">
-            <thead><tr>
-              <th style="width:90px">編碼</th>
-              <th style="min-width:160px">品名</th>
-              <th style="min-width:100px">包裝規格</th>
-              <th class="tr" style="width:80px">時薪</th>
-              <th style="width:70px">時薪單位</th>
-              <th class="tr" style="width:80px">單價(含稅)</th>
-              <th style="width:60px">單價單位</th>
-              <th class="tr" style="width:70px">用量</th>
-              <th style="width:60px">用量單位</th>
-              <th style="min-width:120px">備註</th>
-              <th style="width:60px"></th>
-            </tr></thead>
-            <tbody id="lab-lib-tbody"></tbody>
-          </table>
-        </div>
-      </div>
+  <!-- ─── TAB 3 排序 ─── -->
+  <div class="tab-panel" id="tab-sort">
+    <div class="card"><div class="card-title">📋 成分排序結果（由多到少）</div>
+      <div id="sortContent"><div class="empty-state">請先在「配方輸入」頁面填寫資料並按下「計算」</div></div>
     </div>
+  </div>
 
-    <!-- ════ PAGE: 資料庫管理 ════ -->
-    <div class="page" id="pg-db">
-      <div class="db-page">
-
-        <!-- 統計卡片 -->
-        <div class="db-stats">
-          <div class="stat-card"><div class="stat-num" id="db-cnt-raw">0</div><div class="stat-lbl">🌾 食材原料筆數</div></div>
-          <div class="stat-card"><div class="stat-num" id="db-cnt-pkg">0</div><div class="stat-lbl">📦 包材物料筆數</div></div>
-          <div class="stat-card"><div class="stat-num" id="db-cnt-lab">0</div><div class="stat-lbl">👷 人工工項筆數</div></div>
-          <div class="stat-card"><div class="stat-num" id="db-cnt-prod">0</div><div class="stat-lbl">📋 產品配方筆數</div></div>
-        </div>
-
-        <!-- 分頁 tabs -->
-        <div class="db-tab-row">
-          <button class="db-tab on" onclick="dbSwitchTab('dbt-raw',this)">🌾 食材原料</button>
-          <button class="db-tab"    onclick="dbSwitchTab('dbt-pkg',this)">📦 包材物料</button>
-          <button class="db-tab"    onclick="dbSwitchTab('dbt-lab',this)">👷 人工費率</button>
-          <button class="db-tab"    onclick="dbSwitchTab('dbt-prod',this)">📋 產品配方</button>
-        </div>
-
-        <!-- 食材原料 tab -->
-        <div id="dbt-raw">
-          <div class="db-toolbar">
-            <input class="search-inp" id="db-raw-search" placeholder="🔍 搜尋編碼或品名…" oninput="dbRenderRaw()">
-            <button class="btn btn-gold" onclick="openMatModal('raw',null)">＋ 新增食材</button>
-            <button class="btn btn-ink" onclick="openPasteModal('raw')">📋 貼上匯入</button>
-            <button class="btn btn-ghost btn-sm" onclick="dbExportCSV('raw')">⬇ 匯出CSV</button>
-            <button class="btn btn-red btn-sm" onclick="dbClearConfirm('raw')" style="margin-left:auto">清空食材庫</button>
-          </div>
-          <div class="tcard tbl-scroll">
-            <table class="T">
-              <thead><tr>
-                <th style="width:90px">編碼</th><th style="min-width:150px">品名</th>
-                <th style="min-width:110px">包裝規格</th>
-                <th class="tr" style="width:85px">進價(含稅)</th>
-                <th style="width:68px">進貨單位</th>
-                <th class="tr" style="width:100px">單價(含稅)</th>
-                <th style="width:58px">單價單位</th>
-                <th style="min-width:90px">備註</th>
-                <th style="width:68px">操作</th>
-              </tr></thead>
-              <tbody id="db-raw-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- 包材物料 tab -->
-        <div id="dbt-pkg" style="display:none">
-          <div class="db-toolbar">
-            <input class="search-inp" id="db-pkg-search" placeholder="🔍 搜尋編碼或品名…" oninput="dbRenderPkg()">
-            <button class="btn btn-blue" onclick="openMatModal('pkg',null)">＋ 新增包材</button>
-            <button class="btn btn-ink" onclick="openPasteModal('pkg')">📋 貼上匯入</button>
-            <button class="btn btn-ghost btn-sm" onclick="dbExportCSV('pkg')">⬇ 匯出CSV</button>
-            <button class="btn btn-red btn-sm" onclick="dbClearConfirm('pkg')" style="margin-left:auto">清空包材庫</button>
-          </div>
-          <div class="tcard tbl-scroll">
-            <table class="T">
-              <thead><tr>
-                <th style="width:90px">編碼</th><th style="min-width:150px">品名</th>
-                <th style="min-width:110px">包裝規格</th>
-                <th class="tr" style="width:85px">進價(含稅)</th>
-                <th style="width:68px">進貨單位</th>
-                <th class="tr" style="width:100px">單價(含稅)</th>
-                <th style="width:58px">單價單位</th>
-                <th style="min-width:90px">備註</th>
-                <th style="width:68px">操作</th>
-              </tr></thead>
-              <tbody id="db-pkg-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- 人工費率 tab -->
-        <div id="dbt-lab" style="display:none">
-          <div class="db-toolbar">
-            <button class="btn btn-gold" onclick="openLabModal(null)">＋ 新增工項</button>
-            <button class="btn btn-ink" onclick="openPasteModal('lab')">📋 貼上匯入</button>
-            <button class="btn btn-ghost btn-sm" onclick="dbExportCSV('lab')">⬇ 匯出CSV</button>
-          </div>
-          <div class="tcard tbl-scroll">
-            <table class="T">
-              <thead><tr>
-                <th style="width:90px">編碼</th><th style="min-width:160px">品名</th>
-                <th class="tr" style="width:80px">時薪</th>
-                <th style="width:68px">時薪單位</th>
-                <th class="tr" style="width:80px">單價(含稅)</th>
-                <th style="width:58px">單價單位</th>
-                <th style="min-width:100px">備註</th>
-                <th style="width:68px">操作</th>
-              </tr></thead>
-              <tbody id="db-lab-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- 產品配方 tab -->
-        <div id="dbt-prod" style="display:none">
-          <div class="db-toolbar">
-            <input class="search-inp" id="db-prod-search" placeholder="🔍 搜尋產品名稱…" oninput="dbRenderProd()">
-            <button class="btn btn-gold" onclick="openNewProd()">＋ 新增產品</button>
-            <button class="btn btn-ghost btn-sm" onclick="dbExportCSV('prod')">⬇ 匯出CSV</button>
-          </div>
-          <div class="tcard tbl-scroll">
-            <table class="T">
-              <thead><tr>
-                <th style="min-width:160px">品名</th>
-                <th style="min-width:120px">規格</th>
-                <th class="tr" style="width:90px">每批產出</th>
-                <th style="width:60px">單位</th>
-                <th class="tr" style="width:90px">每單位成本</th>
-                <th style="width:60px">食材行數</th>
-                <th style="width:60px">包材行數</th>
-                <th style="width:68px">操作</th>
-              </tr></thead>
-              <tbody id="db-prod-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
+  <!-- ─── TAB 4 原物料資料庫 ─── -->
+  <div class="tab-panel" id="tab-db">
+    <div class="card">
+      <div class="card-title">🗄️ 原物料資料庫
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 建立後在配方表輸入名稱可自動帶入</span>
       </div>
-    </div>
-
-  </div><!-- main-area -->
-</div><!-- wrap -->
-
-<!-- ════ MODAL: 新增產品 ════ -->
-<div class="modal-bg" id="modal-new-prod">
-  <div class="modal">
-    <div class="modal-hd"><div class="modal-title">新增產品</div><button class="modal-x" onclick="CM('modal-new-prod')">✕</button></div>
-    <div class="modal-body">
-      <div class="frow c2">
-        <div class="fi"><label>品名 *</label><input id="np-name" placeholder="例：蟲草藥膳湯"></div>
-        <div class="fi"><label>規格 / 內容物</label><input id="np-spec" placeholder="例：1300g/包"></div>
+      <div class="db-toolbar">
+        <input type="text" id="dbSearch" placeholder="🔍 搜尋原物料名稱..." oninput="renderDB()">
+        <button class="btn btn-primary" onclick="openDBModal(-1)">＋ 新增原物料</button>
+        <button class="btn btn-secondary" onclick="openDBPasteModal()">📋 批次貼上匯入</button>
+        <button class="btn btn-secondary" onclick="exportDB()">⬇️ 匯出 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importDBFile').click()">⬆️ 匯入 JSON</button>
+        <input type="file" id="importDBFile" accept=".json" style="display:none" onchange="importDB(this)">
       </div>
-      <div class="frow c4">
-        <div class="fi"><label>每批產出數</label><input type="number" id="np-oq" placeholder="1" min="0.001" step="any"></div>
-        <div class="fi"><label>產出單位</label>
-          <select id="np-ou"><option>包</option><option>個</option><option>盒</option><option>份</option>
-            <option>斤</option><option>公斤</option><option>g</option><option>支</option></select></div>
-        <div class="fi"><label>客戶售價（選填）</label><input type="number" id="np-p1" placeholder="0" min="0" step="any"></div>
-        <div class="fi"><label>零售售價（選填）</label><input type="number" id="np-p2" placeholder="0" min="0" step="any"></div>
+      <div class="db-wrap">
+        <table class="db-tbl">
+          <thead><tr>
+            <th style="width:150px">成分名稱</th>
+            <th>熱量<br>kcal/100g</th><th>蛋白質<br>g/100g</th><th>脂肪<br>g/100g</th>
+            <th>飽和脂肪<br>g/100g</th><th>反式脂肪<br>g/100g</th><th>碳水<br>g/100g</th>
+            <th>糖<br>g/100g</th><th>鈉<br>mg/100g</th>
+            <th style="width:110px">操作</th>
+          </tr></thead>
+          <tbody id="dbBody"></tbody>
+        </table>
       </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost btn-sm" onclick="CM('modal-new-prod')">取消</button>
-      <button class="btn btn-gold btn-sm" onclick="createProd()">建立產品</button>
+      <div id="dbEmpty" class="empty-state" style="display:none">尚無資料，點「新增原物料」開始建立</div>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="dbCount">0</span> 筆 · 資料儲存於本機瀏覽器，重新整理後仍保留</p>
     </div>
   </div>
 </div>
 
-<!-- ════ MODAL: 原料 / 包材 ════ -->
-<div class="modal-bg" id="modal-mat">
-  <div class="modal">
-    <div class="modal-hd"><div class="modal-title" id="mat-modal-title">新增食材</div><button class="modal-x" onclick="CM('modal-mat')">✕</button></div>
-    <div class="modal-body">
-      <div class="frow c2">
-        <div class="fi"><label>編碼</label><input id="mm-code" placeholder="例：DEA04"></div>
-        <div class="fi"><label>品名 *</label><input id="mm-name" placeholder=""></div>
+  <!-- ─── TAB 5 成分中翻英 ─── -->
+  <div class="tab-panel" id="tab-trans">
+    <div class="card">
+      <div class="card-title">🌐 成分名稱中翻英
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 使用 AI 翻譯食品成分名稱</span>
       </div>
-      <div class="frow c1">
-        <div class="fi"><label>包裝規格</label><input id="mm-spec" placeholder="例：1kg/25包/袋"></div>
-      </div>
-      <div class="frow c3">
-        <div class="fi"><label>進價(含稅)</label><input type="number" id="mm-buyprice" placeholder="0" min="0" step="any" oninput="calcMM()"></div>
-        <div class="fi"><label>採購數量</label><input type="number" id="mm-buyqty" placeholder="1" min="0.001" step="any" oninput="calcMM()"></div>
-        <div class="fi"><label>進貨單位</label><input id="mm-buyunit" placeholder="袋"></div>
-      </div>
-      <div class="frow c3">
-        <div class="fi"><label>單價(含稅)</label><input type="number" id="mm-unitprice" placeholder="自動計算" step="any" oninput="calcMM2()"></div>
-        <div class="fi"><label>單價單位</label><input id="mm-priceunit" placeholder="g"></div>
-        <div class="fi"><label>規格換算</label><input type="number" id="mm-spec2" placeholder="1000" step="any" oninput="calcMM()"></div>
-      </div>
-      <div class="calc-hint" id="mm-hint"></div>
-      <div class="frow c2">
-        <div class="fi"><label>備註</label><input id="mm-note" placeholder=""></div>
-        <div class="fi"><label>規格欄</label><input id="mm-spec3" placeholder=""></div>
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost btn-sm" onclick="CM('modal-mat')">取消</button>
-      <button class="btn btn-gold btn-sm" id="mm-save-btn" onclick="saveMat()">儲存</button>
-    </div>
-  </div>
-</div>
 
-<!-- ════ MODAL: 人工 ════ -->
-<div class="modal-bg" id="modal-lab">
-  <div class="modal">
-    <div class="modal-hd"><div class="modal-title" id="lab-modal-title">新增工項</div><button class="modal-x" onclick="CM('modal-lab')">✕</button></div>
-    <div class="modal-body">
-      <div class="frow c2">
-        <div class="fi"><label>編碼</label><input id="lm-code" placeholder="例：B0001"></div>
-        <div class="fi"><label>品名 *</label><input id="lm-name" placeholder="例：人力成本(主廚)"></div>
-      </div>
-      <div class="frow c1">
-        <div class="fi"><label>包裝規格</label><input id="lm-spec" placeholder="例：hr"></div>
-      </div>
-      <div class="frow c4">
-        <div class="fi"><label>時薪</label><input type="number" id="lm-rate" placeholder="0" min="0" step="any"></div>
-        <div class="fi"><label>時薪單位</label><input id="lm-rateunit" placeholder="1hr"></div>
-        <div class="fi"><label>單價(含稅)</label><input type="number" id="lm-unitprice" placeholder="同時薪" step="any"></div>
-        <div class="fi"><label>單價單位</label><input id="lm-priceunit" placeholder="hr"></div>
-      </div>
-      <div class="frow c1">
-        <div class="fi"><label>備註</label><input id="lm-note" placeholder=""></div>
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost btn-sm" onclick="CM('modal-lab')">取消</button>
-      <button class="btn btn-gold btn-sm" id="lm-save-btn" onclick="saveLab()">儲存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════ MODAL: 自然語言輸入 ════ -->
-<div class="modal-bg nl-modal" id="modal-nl">
-  <div class="modal">
-    <div class="modal-hd">
-      <div class="modal-title">✨ 自然語言快速建檔</div>
-      <button class="modal-x" onclick="CM('modal-nl')">✕</button>
-    </div>
-    <div class="modal-body" style="max-height:82vh;overflow-y:auto">
-
-      <!-- 輸入區 -->
-      <div style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--ink3);margin-bottom:8px;line-height:1.6">
-          直接輸入食材清單，每行一項，格式自由。系統會自動比對資料庫，找到的直接帶入單價，找不到的標記為待補建。
-        </div>
-        <textarea class="nl-textarea" id="nl-input" placeholder="範例：&#10;杏鮑菇200斤&#10;麥片絲20斤（干）&#10;鹽44兩&#10;控肉精72兩&#10;素肉醬36兩&#10;香油48兩&#10;&#10;格式支援：品名+數量+單位、中文數字、括號備註等"></textarea>
-        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-          <button class="btn btn-gold" id="nl-parse-btn" onclick="runNLParse()">✨ AI 解析</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nl-input').value=''">清除</button>
-          <span style="font-size:11px;color:var(--ink3)" id="nl-api-status"></span>
+      <div class="api-key-row">
+        <div class="form-group">
+          <label>Anthropic API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="saveApiKey(this.value)">
+          <div class="api-key-hint">API Key 僅儲存於本機瀏覽器，不會上傳。可至 <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a> 取得。</div>
         </div>
       </div>
 
-      <!-- 解析結果 -->
-      <div id="nl-result-wrap" style="display:none">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;display:flex;align-items:center;gap:10px">
-          解析結果
-          <span style="flex:1;height:1px;background:var(--border)"></span>
-          <span id="nl-legend" style="display:flex;gap:10px;font-weight:400;text-transform:none;letter-spacing:0">
-            <span><span class="nl-badge match">●</span> 完全比對</span>
-            <span><span class="nl-badge fuzzy">●</span> 模糊比對</span>
-            <span><span class="nl-badge new">●</span> 新品項</span>
-          </span>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface)">
-          <div id="nl-result-list"></div>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--ink3)" id="nl-result-summary"></div>
-      </div>
-
-      <!-- 思考中 -->
-      <div id="nl-thinking" style="display:none">
-        <div class="nl-thinking">
-          <div class="nl-spinner"></div>
-          <span>AI 正在解析您的食材清單並比對資料庫…</span>
-        </div>
-      </div>
-
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost btn-sm" onclick="CM('modal-nl')">取消</button>
-      <button class="btn btn-gold btn-sm" id="nl-import-btn" style="display:none" onclick="executeNLImport()">✓ 加入配方</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════ MODAL: 貼上匯入 ════ -->
-<div class="modal-bg paste-modal" id="modal-paste">
-  <div class="modal" style="width:820px;max-width:97vw">
-    <div class="modal-hd">
-      <div class="modal-title">📋 貼上匯入 — <span id="paste-modal-type">食材原料</span></div>
-      <button class="modal-x" onclick="CM('modal-paste')">✕</button>
-    </div>
-    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
-
-      <!-- Step 1 -->
-      <div class="step-row">
-        <span class="step-badge">1</span>
-        <div class="step-body">
-          <div style="font-weight:700;font-size:12px;margin-bottom:6px">從 Excel 複製資料，貼到下方框</div>
-          <div style="font-size:11px;color:var(--ink3);margin-bottom:8px">
-            支援直接從 Excel / Google Sheets 複製整欄貼上。系統會自動辨識欄位順序。<br>
-            <strong>建議欄位順序：</strong> 編碼 | 品名 | 包裝規格 | 進價(含稅) | 進貨單位 | 單價(含稅) | 單價單位 | 備註
+      <div class="trans-input-area">
+        <div class="trans-box">
+          <label>中文成分（每行一個，或貼上逗號/頓號分隔的清單）</label>
+          <textarea class="trans-textarea" id="transInput" placeholder="樹薯粉&#10;大豆沙拉油&#10;香菇頭&#10;醬油&#10;黑胡椒粉&#10;..."></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn btn-secondary btn-sm" onclick="loadFromIngredients()">📥 從配方表載入成分</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('transInput').value=''">🗑️ 清除</button>
           </div>
-          <textarea class="paste-area" id="paste-textarea" placeholder="在此貼上從 Excel 複製的資料（Ctrl+V / Cmd+V）&#10;&#10;範例：&#10;DEA04	高級精鹽	1kg/25包/袋	199.5	袋	0.00798	g	&#10;DEA05	鮮味多	1kg/包	241.5	包	0.2415	g	" oninput="parsePaste()"></textarea>
         </div>
-      </div>
-
-      <!-- Step 2: 欄位對應 -->
-      <div class="step-row" id="paste-step2" style="display:none">
-        <span class="step-badge">2</span>
-        <div class="step-body">
-          <div style="font-weight:700;font-size:12px;margin-bottom:8px">確認欄位對應 <span style="font-size:10px;color:var(--ink3);font-weight:400">（系統已自動辨識，可手動調整）</span></div>
-          <div class="col-map" id="paste-col-map"></div>
-        </div>
-      </div>
-
-      <!-- Step 3: 預覽 -->
-      <div class="step-row" id="paste-step3" style="display:none">
-        <span class="step-badge">3</span>
-        <div class="step-body">
-          <div style="font-weight:700;font-size:12px;margin-bottom:8px">預覽 <span style="font-size:10px;color:var(--ink3);font-weight:400" id="paste-preview-count"></span></div>
-          <div style="overflow-x:auto;max-height:240px;border:1px solid var(--border);border-radius:var(--r)">
-            <table class="preview-table" id="paste-preview-tbl">
-              <thead><tr id="paste-preview-head"></tr></thead>
-              <tbody id="paste-preview-body"></tbody>
-            </table>
+        <div class="trans-arrow">→</div>
+        <div class="trans-box">
+          <label>英文翻譯結果</label>
+          <textarea class="trans-textarea" id="transOutput" readonly placeholder="翻譯結果將顯示在這裡..."></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn btn-secondary btn-sm" onclick="copyTransOutput()">📋 複製全部</button>
           </div>
-          <div id="paste-result-msg" style="margin-top:8px"></div>
         </div>
       </div>
 
-      <!-- 重複處理選項 -->
-      <div id="paste-dup-opt" style="display:none;margin-top:4px">
-        <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:var(--ink2)">遇到相同編碼時：</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
-            <input type="radio" name="dup-mode" value="skip" checked> 跳過（保留原有）</label>
-          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
-            <input type="radio" name="dup-mode" value="overwrite"> 覆蓋（更新數值）</label>
-          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
-            <input type="radio" name="dup-mode" value="both"> 全部新增（允許重複）</label>
+      <div class="btn-group" style="margin-top:0">
+        <button class="btn btn-primary" onclick="translateIngredients()" id="transBtn">🌐 開始翻譯</button>
+      </div>
+
+      <div id="transLoading" class="trans-loading" style="display:none">
+        <div class="spinner"></div>
+        <span>翻譯中，請稍候...</span>
+      </div>
+
+      <div id="transStats" class="trans-stat" style="display:none">
+        <div class="trans-stat-box">詞庫命中 <strong id="statDB">0</strong> 筆 <span class="tdb-badge-db">詞庫</span></div>
+        <div class="trans-stat-box">AI 翻譯 <strong id="statAI">0</strong> 筆 <span class="tdb-badge-ai">AI</span></div>
+        <div class="trans-stat-box" id="statSaveBox" style="display:none">
+          <button class="btn btn-secondary btn-sm" onclick="saveNewToTransDB()" style="padding:3px 10px">💾 將 AI 結果存入詞庫</button>
         </div>
       </div>
 
+      <div id="transResultList" style="margin-top:4px;display:none">
+        <div class="card-title" style="border:none;padding-bottom:8px;margin-bottom:8px">📋 逐條對照</div>
+        <div id="transItems"></div>
+      </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost btn-sm" onclick="CM('modal-paste')">取消</button>
-      <button class="btn btn-ghost btn-sm" onclick="clearPaste()">清除</button>
-      <button class="btn btn-gold btn-sm" id="paste-import-btn" style="display:none" onclick="executePasteImport()">✓ 匯入</button>
+  </div>
+
+  <!-- ─── TAB 6 翻譯詞庫 ─── -->
+  <div class="tab-panel" id="tab-transdb">
+    <div class="card">
+      <div class="card-title">📖 成分翻譯詞庫
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 翻譯時優先從詞庫取，詞庫沒有的再用 AI 補齊</span>
+      </div>
+      <div class="tdb-toolbar">
+        <input type="text" id="tdbSearch" placeholder="🔍 搜尋中文或英文..." oninput="renderTransDB()">
+        <button class="btn btn-primary" onclick="openTransDBModal(-1)">＋ 新增詞條</button>
+        <button class="btn btn-secondary" onclick="exportTransDB()">⬇️ 匯出 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importTDBFile').click()">⬆️ 匯入 JSON</button>
+        <input type="file" id="importTDBFile" accept=".json" style="display:none" onchange="importTransDB(this)">
+      </div>
+      <div class="tdb-wrap">
+        <table class="tdb-tbl">
+          <thead><tr>
+            <th style="width:200px">中文成分名稱</th>
+            <th style="width:260px">英文翻譯</th>
+            <th>備註</th>
+            <th style="width:110px">操作</th>
+          </tr></thead>
+          <tbody id="tdbBody"></tbody>
+        </table>
+      </div>
+      <div id="tdbEmpty" class="empty-state" style="display:none">尚無詞條，點「新增詞條」或先翻譯後存入</div>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="tdbCount">0</span> 筆詞條 · 儲存於本機瀏覽器</p>
+    </div>
+  </div>
+
+
+  <!-- ─── TAB 7 原料展開庫 ─── -->
+  <div class="tab-panel" id="tab-expand">
+    <div class="card">
+      <div class="card-title">🔍 原料展開資料庫
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 設定複合原料的展開內容，成分標示自動套用</span>
+      </div>
+      <div class="tdb-toolbar">
+        <input type="text" id="expSearch" placeholder="🔍 搜尋原料名稱..." oninput="renderExpandDB()">
+        <button class="btn btn-primary" onclick="openExpandModal(-1)">＋ 新增展開記錄</button>
+        <button class="btn btn-secondary" onclick="exportExpandDB()">⬇️ 匯出 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importExpFile').click()">⬆️ 匯入 JSON</button>
+        <input type="file" id="importExpFile" accept=".json" style="display:none" onchange="importExpandDB(this)">
+      </div>
+      <div class="exp-wrap">
+        <table class="exp-tbl">
+          <thead><tr>
+            <th style="width:180px">原料名稱（簡稱）</th>
+            <th>展開內容（成分標示用文字）</th>
+            <th style="width:120px">操作</th>
+          </tr></thead>
+          <tbody id="expBody"></tbody>
+        </table>
+      </div>
+      <div id="expEmpty" class="empty-state" style="display:none">尚無記錄，點「新增展開記錄」開始建立</div>
+      <p style="margin-top:10px;font-size:.78rem;color:var(--text3)">共 <span id="expCount">0</span> 筆 · 儲存於本機瀏覽器</p>
+    </div>
+  </div>
+
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ 批次貼上 Modal ══ -->
+<div class="modal-overlay" id="pasteModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closePasteModal()">✕</button>
+    <div class="modal-title">📋 批次貼上匯入成分</div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px">請選擇您資料的格式，然後貼上。</p>
+
+    <div class="fmt-tabs">
+      <button class="fmt-tab active" id="fmtBtn-col" onclick="setFmt('col')">📄 直行格式（每項一行）</button>
+      <button class="fmt-tab" id="fmtBtn-row" onclick="setFmt('row')">📊 橫列格式（Excel 橫排複製）</button>
+    </div>
+
+    <div id="hintCol" class="hint-box">
+      <strong>📌 直行格式 — 一個成分佔多行，每行一個數值</strong>
+      名稱行是唯一非數字的行，多個成分之間可以有空行。<br>
+      若您的數值行順序不同，可在下方「行順序設定」調整。
+    </div>
+    <div id="hintRow" class="hint-box" style="display:none">
+      <strong>📌 橫列格式 — 從 Excel 橫向複製（每列一個成分，Tab 分隔）</strong>
+      若您的欄位順序不同，可在下方「欄位對應設定」調整。
+    </div>
+
+    <!-- 直行格式：行順序設定 -->
+    <div id="rowOrderSection" class="colmap-section">
+      <div class="colmap-title">🔢 行順序設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（第幾行對應哪個欄位，從成分名稱後的第1行算起）</span></div>
+      <div class="row-order-grid" id="rowOrderGrid"></div>
+    </div>
+
+    <!-- 橫列格式：欄位對應設定 -->
+    <div id="colMapSection" class="colmap-section" style="display:none">
+      <div class="colmap-title">🗂️ 欄位對應設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（第幾欄對應哪個欄位）</span></div>
+      <div class="colmap-grid" id="colMapGrid"></div>
+    </div>
+
+    <label style="font-size:.85rem;font-weight:600;color:var(--text2)">📂 貼上資料（Ctrl+V）</label>
+    <textarea class="paste-area" id="pasteArea" placeholder="在此貼上資料..." oninput="parsePaste()"></textarea>
+
+    <div id="previewSection" style="display:none;margin-top:12px">
+      <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">👀 資料預覽 <span id="previewCount" style="color:var(--text3);font-weight:400"></span></div>
+      <div class="preview-wrap">
+        <table class="preview-tbl">
+          <thead><tr><th>成分名稱</th><th>重量(g)</th><th>熱量</th><th>蛋白質</th><th>脂肪</th><th>飽和脂肪</th><th>反式脂肪</th><th>碳水</th><th>糖</th><th>鈉</th></tr></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="confirmPaste()">✅ 匯入</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('pasteArea').value='';parsePaste()">🗑️ 清除</button>
+      <button class="btn btn-secondary" onclick="closePasteModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 新增/編輯原物料 Modal ══ -->
+<div class="modal-overlay" id="dbModal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="closeDBModal()">✕</button>
+    <div class="modal-title" id="dbModalTitle">＋ 新增原物料</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>成分名稱</label>
+        <input type="text" id="dbF_name" placeholder="例：樹薯粉">
+      </div>
+      <div class="form-group"><label>熱量 (kcal/100g)</label><input type="number" id="dbF_cal" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>蛋白質 (g/100g)</label><input type="number" id="dbF_protein" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>脂肪 (g/100g)</label><input type="number" id="dbF_fat" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>飽和脂肪 (g/100g)</label><input type="number" id="dbF_satFat" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>反式脂肪 (g/100g)</label><input type="number" id="dbF_transFat" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>碳水化合物 (g/100g)</label><input type="number" id="dbF_carb" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>糖 (g/100g)</label><input type="number" id="dbF_sugar" min="0" step="any" value="0"></div>
+      <div class="form-group"><label>鈉 (mg/100g)</label><input type="number" id="dbF_sodium" min="0" step="any" value="0"></div>
+    </div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveDBItem()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="closeDBModal()">取消</button>
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// DB & STORAGE
-// ═══════════════════════════════════════════════════════
-const SK = 'fcs_v4';
-let DB = { raw:[], pkg:[], lab:[], prods:[], _id:1 };
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let ingredients = [];
+let pasteFormat = 'col';
+let parsedPaste = [];
+let editingDBIdx = -1;
 
-function loadDB(){ try{ const s=localStorage.getItem(SK); if(s) Object.assign(DB,JSON.parse(s)); }catch(e){} }
-function saveDB(){ try{ localStorage.setItem(SK,JSON.stringify(DB)); setSave(true); }catch(e){} }
-function setSave(ok){
-  const el=document.getElementById('save-status');
-  el.textContent = ok ? '● 已儲存' : '● 儲存中…';
-  el.className = 'hdr-save' + (ok?' ok':'');
-}
-function uid(){ return DB._id++; }
-function f2(n,d=2){ return typeof n==='number'&&isFinite(n) ? n.toFixed(d) : '—'; }
+// ══════════════════════════════════
+// LOCAL STORAGE DB
+// ══════════════════════════════════
+// ══════════════════════════════════
+// SUPABASE CONFIG
+// ══════════════════════════════════
+const SB_URL_KEY = 'sb_url';
+const SB_KEY_KEY = 'sb_key';
 
-// ═══════════════════════════════════════════════════════
-// SEED DATA (from Excel)
-// ═══════════════════════════════════════════════════════
-const RAW_SEED = [
-  {code:'BAA01',name:'木耳',spec:'3斤/包',buyPrice:133.3,buyQty:1800,buyUnit:'包',unitPrice:0.0741,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'BAA02',name:'炒香菇頭(2斤)',spec:'2斤/包',buyPrice:310,buyQty:2,buyUnit:'包',unitPrice:155,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:''},
-  {code:'DAA02',name:'紅蘿蔔',spec:'1公斤',buyPrice:21,buyQty:1000,buyUnit:'公斤',unitPrice:0.021,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DAA04',name:'九層塔',spec:'1斤',buyPrice:120.75,buyQty:600,buyUnit:'斤',unitPrice:0.20125,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DAA09',name:'大辣椒',spec:'1斤',buyPrice:78.75,buyQty:600,buyUnit:'斤',unitPrice:0.13125,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA10',name:'鮮香菇(下菇)',spec:'5斤',buyPrice:85.05,buyQty:600,buyUnit:'斤',unitPrice:0.14175,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DAA11',name:'杏鮑菇(D級)',spec:'3kg/包',buyPrice:189,buyQty:3,buyUnit:'包',unitPrice:63,priceUnit:'公斤',useQty:'',useUnit:'公斤',note:'20斤',spec2:''},
-  {code:'DAA14',name:'薑片',spec:'1斤',buyPrice:73.5,buyQty:600,buyUnit:'斤',unitPrice:0.1225,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA15',name:'菜脯',spec:'12kg/箱',buyPrice:262.5,buyQty:20,buyUnit:'箱',unitPrice:13.125,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:''},
-  {code:'DAA19',name:'金針菇A級',spec:'1公斤',buyPrice:78.75,buyQty:1000,buyUnit:'公斤',unitPrice:0.07875,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA20',name:'溼木耳(小耳)',spec:'1斤',buyPrice:78.75,buyQty:600,buyUnit:'斤',unitPrice:0.13125,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA20-1',name:'大耳',spec:'1斤',buyPrice:73.5,buyQty:600,buyUnit:'斤',unitPrice:0.1225,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA26',name:'髮菜',spec:'1斤',buyPrice:787.5,buyQty:600,buyUnit:'斤',unitPrice:1.3125,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA28',name:'杏鮑菇(B級)',spec:'3kg/包',buyPrice:94.5,buyQty:1000,buyUnit:'公斤',unitPrice:0.0945,priceUnit:'g',useQty:'',useUnit:'g',note:'80斤',spec2:'1000'},
-  {code:'DAA29',name:'台式大白菜',spec:'1斤',buyPrice:31.5,buyQty:600,buyUnit:'斤',unitPrice:0.0525,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA30',name:'白蘿蔔',spec:'1斤',buyPrice:21.7,buyQty:160,buyUnit:'斤',unitPrice:0.1362,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA33',name:'玉米筍',spec:'1斤',buyPrice:94.5,buyQty:600,buyUnit:'斤',unitPrice:0.1575,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA34',name:'青椒',spec:'1斤',buyPrice:44.1,buyQty:600,buyUnit:'斤',unitPrice:0.0735,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DAA35',name:'水蓮',spec:'1斤',buyPrice:117.6,buyQty:600,buyUnit:'斤',unitPrice:0.196,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA01',name:'糯米',spec:'50斤/包',buyPrice:33.6,buyQty:0.6,buyUnit:'斤',unitPrice:56.01,priceUnit:'公斤',useQty:'',useUnit:'公斤',note:'',spec2:'1.667'},
-  {code:'DBA03',name:'扣子菇(鈕扣菇)',spec:'1公斤',buyPrice:1008,buyQty:1000,buyUnit:'公斤',unitPrice:1.008,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA04',name:'香菇頭(乾)',spec:'1公斤',buyPrice:262.5,buyQty:0.6,buyUnit:'公斤',unitPrice:151.2,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:''},
-  {code:'DBA05',name:'木耳(乾)',spec:'15斤/箱',buyPrice:183.75,buyQty:600,buyUnit:'斤',unitPrice:0.30625,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA06',name:'松子',spec:'1公斤',buyPrice:1332,buyQty:1000,buyUnit:'公斤',unitPrice:1.332,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA08',name:'碎肉(大豆蛋白GN-37)',spec:'20kg/袋',buyPrice:63,buyQty:1.67,buyUnit:'公斤',unitPrice:37.72,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:'1.67'},
-  {code:'DBA10',name:'素肉片(V-600片)',spec:'5kg/箱',buyPrice:90,buyQty:1000,buyUnit:'公斤',unitPrice:0.09,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA11',name:'小麥肉片(V-G790)',spec:'5kg/包',buyPrice:135,buyQty:5,buyUnit:'包',unitPrice:27,priceUnit:'公斤',useQty:'',useUnit:'公斤',note:'',spec2:'5'},
-  {code:'DBA18',name:'筍絲',spec:'1公斤',buyPrice:30.7,buyQty:1000,buyUnit:'公斤',unitPrice:0.0307,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA24',name:'香菇絲',spec:'1公斤',buyPrice:892.5,buyQty:1000,buyUnit:'公斤',unitPrice:0.8925,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DBA26',name:'巴西蘑菇',spec:'斤',buyPrice:750,buyQty:1,buyUnit:'斤',unitPrice:750,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:''},
-  {code:'DCA01',name:'冷凍栗子',spec:'1kg/包',buyPrice:157.5,buyQty:1000,buyUnit:'包',unitPrice:0.1575,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DCA03-1',name:'黃金十全藥膳包',spec:'300g/包',buyPrice:72,buyQty:1,buyUnit:'包',unitPrice:72,priceUnit:'包',useQty:'',useUnit:'包',note:'加猴菇及腰果',spec2:''},
-  {code:'DCA37',name:'黃豆皮(四角皮)',spec:'100張/包',buyPrice:240,buyQty:100,buyUnit:'包',unitPrice:2.4,priceUnit:'張',useQty:'',useUnit:'張',note:'千張-非基改',spec2:'100'},
-  {code:'DCA37-1',name:'黃豆皮(已裁切)',spec:'800張/包',buyPrice:504,buyQty:800,buyUnit:'包',unitPrice:0.63,priceUnit:'張',useQty:'',useUnit:'張',note:'12cm*22cm',spec2:'800'},
-  {code:'DCA38',name:'猴頭菇(純素)',spec:'3斤/包',buyPrice:450,buyQty:1800,buyUnit:'包',unitPrice:0.25,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1800'},
-  {code:'DCA39',name:'芋頭角',spec:'5斤/箱',buyPrice:60,buyQty:600,buyUnit:'斤',unitPrice:0.1,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DCA41',name:'豆包扁魚',spec:'300g/8片/包',buyPrice:94.5,buyQty:1,buyUnit:'包',unitPrice:94.5,priceUnit:'包',useQty:'',useUnit:'包',note:'',spec2:''},
-  {code:'DCA42',name:'火腿切片',spec:'3kg/約150片/包',buyPrice:425.25,buyQty:150,buyUnit:'包',unitPrice:2.835,priceUnit:'片',useQty:'',useUnit:'片',note:'',spec2:''},
-  {code:'DDA01',name:'太白粉(三朵花)',spec:'33.33斤/包',buyPrice:483,buyQty:20000,buyUnit:'包',unitPrice:0.02415,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'20000'},
-  {code:'DDA01-1',name:'太白粉(片力粉)',spec:'25kg/包',buyPrice:1365,buyQty:25,buyUnit:'包',unitPrice:54.6,priceUnit:'kg',useQty:'',useUnit:'kg',note:'',spec2:'25'},
-  {code:'DDA02',name:'玉米粉',spec:'25公斤/包',buyPrice:580,buyQty:25000,buyUnit:'包',unitPrice:0.0232,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'25000'},
-  {code:'DDA03',name:'起司脆酥粉',spec:'1000g/包',buyPrice:89,buyQty:1000,buyUnit:'包',unitPrice:0.089,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DDA04',name:'酥脆粉WD-L006',spec:'1公斤',buyPrice:262.5,buyQty:1000,buyUnit:'公斤',unitPrice:0.2625,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DDB01',name:'中筋麵粉(泰和)',spec:'22kg/包',buyPrice:556.5,buyQty:22,buyUnit:'包',unitPrice:25.3,priceUnit:'公斤',useQty:'',useUnit:'公斤',note:'',spec2:'22'},
-  {code:'DDD11',name:'小麥蛋白',spec:'25Kg/包',buyPrice:3600,buyQty:25000,buyUnit:'包',unitPrice:0.144,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'25000'},
-  {code:'DEA01',name:'黑胡椒粉(小磨坊)',spec:'600g/包',buyPrice:315,buyQty:600,buyUnit:'包',unitPrice:0.525,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DEA03',name:'二砂糖',spec:'1斤/包',buyPrice:17.0625,buyQty:600,buyUnit:'包',unitPrice:0.028438,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DEA04',name:'高級精鹽',spec:'1kg/25包/袋',buyPrice:199.5,buyQty:25000,buyUnit:'袋',unitPrice:0.00798,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'25000'},
-  {code:'DEA05',name:'鮮味多',spec:'1kg/包',buyPrice:241.5,buyQty:1000,buyUnit:'包',unitPrice:0.2415,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DEA06',name:'五香粉(小磨坊)',spec:'600g/盒',buyPrice:183.75,buyQty:600,buyUnit:'盒',unitPrice:0.30625,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DEA07',name:'甘草粉(小磨坊)',spec:'300g/盒',buyPrice:136.5,buyQty:300,buyUnit:'盒',unitPrice:0.455,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'300'},
-  {code:'DEA17',name:'糖粉',spec:'1斤/包',buyPrice:36.75,buyQty:600,buyUnit:'包',unitPrice:0.16125,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DEA20',name:'大豆蛋白粉',spec:'20kg/袋',buyPrice:105,buyQty:1000,buyUnit:'公斤',unitPrice:0.105,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DEA23',name:'海藻糖',spec:'1000g/包',buyPrice:180,buyQty:1000,buyUnit:'包',unitPrice:0.18,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DEA24',name:'白冰糖',spec:'1斤/包',buyPrice:55,buyQty:600,buyUnit:'包',unitPrice:0.0917,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DEA27',name:'素黏膠',spec:'1公斤',buyPrice:682.5,buyQty:1000,buyUnit:'公斤',unitPrice:0.6825,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DFA01',name:'香椿原醬',spec:'30斤/桶',buyPrice:2047.5,buyQty:30,buyUnit:'桶',unitPrice:68.25,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:'30'},
-  {code:'DFA02',name:'紅糟',spec:'5斤/箱',buyPrice:210,buyQty:3000,buyUnit:'箱',unitPrice:0.07,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DFB01',name:'香油',spec:'4.5斤/桶',buyPrice:298.34,buyQty:2700,buyUnit:'桶',unitPrice:0.1105,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'2700'},
-  {code:'DFB02',name:'沙拉油',spec:'18公升/桶',buyPrice:1018.5,buyQty:14400,buyUnit:'桶',unitPrice:0.07073,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'14400'},
-  {code:'DFB05',name:'仲味麻油3L',spec:'3L/桶',buyPrice:415,buyQty:2400,buyUnit:'桶',unitPrice:0.173,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DFC02',name:'素蠔油',spec:'6kg/桶',buyPrice:254.625,buyQty:6000,buyUnit:'桶',unitPrice:0.042438,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'6000'},
-  {code:'DFC03',name:'素肉醬',spec:'1kg/罐',buyPrice:651,buyQty:1000,buyUnit:'罐',unitPrice:0.651,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DFC05',name:'爌肉精-大罐',spec:'1400g/罐',buyPrice:766.5,buyQty:1400,buyUnit:'罐',unitPrice:0.5475,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1400'},
-  {code:'DFC06',name:'素沙茶(愛之味)',spec:'18kg/桶',buyPrice:2850,buyQty:1800,buyUnit:'桶',unitPrice:1.5833,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1800'},
-  {code:'DFC08',name:'番茄醬(可果美)',spec:'3.15kg/桶',buyPrice:192.5,buyQty:3150,buyUnit:'桶',unitPrice:0.06111,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'3150'},
-  {code:'DFC10',name:'味醂',spec:'1.8L/罐',buyPrice:145,buyQty:1584,buyUnit:'罐',unitPrice:0.09167,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DFC11',name:'素烏醋(工研)',spec:'5L/桶',buyPrice:210,buyQty:5000,buyUnit:'桶',unitPrice:0.042,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DFC14',name:'萬家香醬油',spec:'5公升/桶',buyPrice:278.25,buyQty:5000,buyUnit:'桶',unitPrice:0.05565,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'5000'},
-  {code:'DFC16',name:'紅麴養生醬',spec:'3kg/桶',buyPrice:525,buyQty:3000,buyUnit:'桶',unitPrice:0.175,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'3000'},
-  {code:'DGA01',name:'乳瑪琳(遠東)',spec:'2.6kg/罐',buyPrice:521.5,buyQty:2600,buyUnit:'罐',unitPrice:0.20058,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'2600'},
-  {code:'DGA02',name:'鮮奶油(無糖)',spec:'1000g/罐',buyPrice:168,buyQty:1000,buyUnit:'罐',unitPrice:0.168,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'1000'},
-  {code:'DHA01',name:'紅棗',spec:'600g/包',buyPrice:65,buyQty:600,buyUnit:'包',unitPrice:0.10833,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DHA02',name:'黑棗',spec:'600g/包',buyPrice:110,buyQty:709,buyUnit:'包',unitPrice:0.1417,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA03',name:'桂枝',spec:'600g/包',buyPrice:55,buyQty:600,buyUnit:'包',unitPrice:0.0917,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA04',name:'枸杞',spec:'600g/包',buyPrice:168,buyQty:600,buyUnit:'包',unitPrice:0.28,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DHA08',name:'肉桂粉(油桂粉)',spec:'600g/包',buyPrice:204.75,buyQty:600,buyUnit:'包',unitPrice:0.34125,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA10',name:'肉桂片',spec:'600g/包',buyPrice:210,buyQty:600,buyUnit:'包',unitPrice:0.35,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA11',name:'甘草片',spec:'600g/盒',buyPrice:158,buyQty:600,buyUnit:'盒',unitPrice:0.2634,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA12',name:'當歸片',spec:'600g/包',buyPrice:600,buyQty:600,buyUnit:'包',unitPrice:1,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DHA13',name:'黨參片',spec:'600g/包',buyPrice:550,buyQty:600,buyUnit:'包',unitPrice:0.91667,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DHA14',name:'熟地片',spec:'600g/包',buyPrice:190,buyQty:600,buyUnit:'包',unitPrice:0.3167,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA15',name:'川芎片',spec:'600g/包',buyPrice:210,buyQty:600,buyUnit:'包',unitPrice:0.35,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'DHA16',name:'黃耆片',spec:'600g/包',buyPrice:168,buyQty:600,buyUnit:'包',unitPrice:0.28,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:'600'},
-  {code:'DHA18',name:'北蟲草',spec:'斤',buyPrice:430,buyQty:1,buyUnit:'斤',unitPrice:430,priceUnit:'斤',useQty:'',useUnit:'斤',note:'',spec2:''},
-  {code:'EZA04',name:'荷葉',spec:'1斤',buyPrice:157.5,buyQty:600,buyUnit:'斤',unitPrice:0.2625,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'未建8',name:'腰果',spec:'18.9斤/箱',buyPrice:3497,buyQty:11340,buyUnit:'箱',unitPrice:0.3084,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'未建21',name:'白木耳',spec:'10斤/箱',buyPrice:230,buyQty:600,buyUnit:'斤',unitPrice:0.3834,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'未建22',name:'鳳眼果(真空包)',spec:'1斤/包',buyPrice:330,buyQty:600,buyUnit:'斤',unitPrice:0.55,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'未建25',name:'冬菜',spec:'1斤',buyPrice:157.5,buyQty:600,buyUnit:'斤',unitPrice:0.2625,priceUnit:'g',useQty:'',useUnit:'g',note:'',spec2:''},
-  {code:'A0001',name:'水',spec:'1噸(1000kg)',buyPrice:15,buyQty:1000000,buyUnit:'噸',unitPrice:0.000015,priceUnit:'cc',useQty:'',useUnit:'cc',note:'',spec2:''},
-  {code:'A0002',name:'麻油爆薑(自配)',spec:'600g/包',buyPrice:156,buyQty:1000,buyUnit:'包',unitPrice:0.26,priceUnit:'g',useQty:'',useUnit:'g',note:'自行調配',spec2:''},
-  {code:'A0003',name:'胡椒鹽-調配',spec:'6g/包',buyPrice:2.5085,buyQty:1,buyUnit:'包',unitPrice:2.5085,priceUnit:'包',useQty:'',useUnit:'包',note:'自行調配',spec2:''},
-  {code:'A0004',name:'水餃漿',spec:'1g',buyPrice:0.0534,buyQty:1,buyUnit:'g',unitPrice:0.0534,priceUnit:'g',useQty:'',useUnit:'g',note:'自行調配',spec2:''},
-  {code:'A0005',name:'餛飩漿',spec:'1g',buyPrice:0.125,buyQty:1,buyUnit:'g',unitPrice:0.125,priceUnit:'g',useQty:'',useUnit:'g',note:'自行調配',spec2:''},
-];
-const PKG_SEED = [
-  {code:'EAB01',name:'餛飩3H盒(白)',spec:'100入/箱',buyPrice:0.7035,buyQty:1,buyUnit:'個',unitPrice:0.7035,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:'1'},
-  {code:'EBA01',name:'無標袋(PE袋/水餃袋)',spec:'1kg/袋(100個)',buyPrice:69.3,buyQty:100,buyUnit:'KG',unitPrice:0.693,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EBA01-1',name:'無標袋-真空22cm*32cm',spec:'100入*25包',buyPrice:190,buyQty:100,buyUnit:'包',unitPrice:1.9,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EBA01-3',name:'無標袋-真空20cm*27cm',spec:'100入*25包',buyPrice:170,buyQty:100,buyUnit:'包',unitPrice:1.7,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EBA02',name:'無標袋-真空17cm*27cm',spec:'100入*30包',buyPrice:130,buyQty:100,buyUnit:'包',unitPrice:1.3,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EBC21',name:'有標袋-卡脆G腿包裝袋',spec:'230*270mm',buyPrice:2.96,buyQty:1,buyUnit:'個',unitPrice:2.96,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EBB01',name:'PE透明平口袋-素螺',spec:'1kg約500個',buyPrice:73.5,buyQty:500,buyUnit:'KG',unitPrice:0.147,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EBD01',name:'通用袋-得來素',spec:'190*265mm',buyPrice:2.4,buyQty:1,buyUnit:'個',unitPrice:2.4,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'ECB01',name:'胡椒鹽封膜(鋁膜)',spec:'1捲6500包',buyPrice:1105,buyQty:6500,buyUnit:'捲',unitPrice:0.17,priceUnit:'包',useQty:'',useUnit:'包',note:'',spec2:'6500'},
-  {code:'EEA01',name:'空白紙箱(2才)',spec:'448*298*402mm',buyPrice:26.25,buyQty:1,buyUnit:'個',unitPrice:26.25,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'EEB01',name:'DLS紙箱(尺寸90)',spec:'408*280*210mm',buyPrice:12.6,buyQty:1,buyUnit:'個',unitPrice:12.6,priceUnit:'個',useQty:'',useUnit:'個',note:'有印刷',spec2:''},
-  {code:'EEB02',name:'DLS紙箱(尺寸60)',spec:'285*205*130mm',buyPrice:6.3,buyQty:1,buyUnit:'個',unitPrice:6.3,priceUnit:'個',useQty:'',useUnit:'個',note:'有印刷',spec2:''},
-  {code:'EEB03',name:'DLS紙箱(團購)',spec:'330*240*130mm',buyPrice:7.875,buyQty:1,buyUnit:'個',unitPrice:7.875,priceUnit:'個',useQty:'',useUnit:'個',note:'有印刷',spec2:''},
-  {code:'EEB04',name:'DLS紙箱(尺寸90加厚)',spec:'408*290*210mm',buyPrice:21,buyQty:1,buyUnit:'個',unitPrice:21,priceUnit:'個',useQty:'',useUnit:'個',note:'外銷',spec2:''},
-  {code:'EZA05',name:'冰棒棍',spec:'20000入/包',buyPrice:2287,buyQty:2000,buyUnit:'包',unitPrice:1.1435,priceUnit:'支',useQty:'',useUnit:'支',note:'淘寶買',spec2:'2000'},
-  {code:'YAC02-1',name:'食品膜(南亞)',spec:'400cm*500米/支',buyPrice:556.5,buyQty:1000,buyUnit:'支',unitPrice:0.5565,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:'1000'},
-  {code:'C0001',name:'珠光亮標籤貼紙(10*5cm)',spec:'500張/卷',buyPrice:346.5,buyQty:500,buyUnit:'卷',unitPrice:0.693,priceUnit:'張',useQty:'',useUnit:'張',note:'',spec2:''},
-  {code:'C0002',name:'碳帶-標籤貼紙(10cm)',spec:'300m/卷',buyPrice:997.5,buyQty:2500,buyUnit:'卷',unitPrice:0.399,priceUnit:'張',useQty:'',useUnit:'張',note:'',spec2:''},
-  {code:'未建c2',name:'鋁泊袋',spec:'',buyPrice:4,buyQty:1,buyUnit:'個',unitPrice:4,priceUnit:'個',useQty:'',useUnit:'個',note:'髮菜、佛跳牆',spec2:''},
-  {code:'未建c3',name:'青龍耐熱袋(半斤)',spec:'200個/袋',buyPrice:31,buyQty:200,buyUnit:'袋',unitPrice:0.155,priceUnit:'個',useQty:'',useUnit:'個',note:'',spec2:''},
-  {code:'未建c6',name:'麻油猴菇貼紙',spec:'1000張',buyPrice:1701,buyQty:1000,buyUnit:'包',unitPrice:1.701,priceUnit:'張',useQty:'',useUnit:'張',note:'',spec2:''},
-  {code:'未建c7',name:'夾鍊袋4號',spec:'100個',buyPrice:27,buyQty:100,buyUnit:'包',unitPrice:0.27,priceUnit:'個',useQty:'',useUnit:'個',note:'香酥G腿用',spec2:''},
-];
-const LAB_SEED = [
-  {code:'B0001',name:'人力成本(主廚)',spec:'hr',rate:258,rateUnit:'1hr',unitPrice:258,priceUnit:'hr',useQty:'',useUnit:'hr',note:''},
-  {code:'B0002',name:'人力成本(備料)',spec:'hr',rate:196,rateUnit:'1hr',unitPrice:196,priceUnit:'hr',useQty:'',useUnit:'hr',note:''},
-  {code:'B0003',name:'人力成本(包裝)',spec:'hr',rate:196,rateUnit:'1hr',unitPrice:196,priceUnit:'hr',useQty:'',useUnit:'hr',note:''},
-  {code:'B0004',name:'論件計酬-三角圓',spec:'斤',rate:18,rateUnit:'斤',unitPrice:18,priceUnit:'斤',useQty:'',useUnit:'斤',note:''},
-];
-
-function seedIfEmpty(){
-  if(!DB.raw.length){ RAW_SEED.forEach(d=>{ d.id=uid(); DB.raw.push(d); }); }
-  if(!DB.pkg.length){ PKG_SEED.forEach(d=>{ d.id=uid(); DB.pkg.push(d); }); }
-  if(!DB.lab.length){ LAB_SEED.forEach(d=>{ d.id=uid(); DB.lab.push(d); }); }
-  saveDB();
+function getSBConfig() {
+  return {
+    url: 'https://btnyditozvaqcxthomjk.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bnlkaXRvenZhcWN4dGhvbWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MzAwOTgsImV4cCI6MjA4OTMwNjA5OH0.LfJdyZMIzShZMsip0UWNF6BfLfFsu--d_h0G4-Unq-w'
+  };
 }
 
-// ═══════════════════════════════════════════════════════
-// SIDEBAR
-// ═══════════════════════════════════════════════════════
-let activeProd = null;
+function saveSBConfig() {
+  const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, '');
+  const key = document.getElementById('sbKey').value.trim();
+  if (!url || !key) { showSBStatus('⚠️ 請填寫 URL 和 Key', 'warn'); return; }
+  localStorage.setItem(SB_URL_KEY, url);
+  localStorage.setItem(SB_KEY_KEY, key);
+  showSBStatus('✅ 已儲存，測試連線中...', 'ok');
+  testSBConnection().then(ok => {
+    showSBStatus(ok ? '🟢 連線成功！資料庫已就緒' : '🔴 連線失敗，請確認 URL / Key', ok ? 'ok' : 'err');
+    if (ok) { renderDB(); renderTransDB(); renderExpandDB(); }
+  });
+}
 
-function renderSidebar(){
-  const q=(document.getElementById('sb-search').value||'').toLowerCase();
-  const el=document.getElementById('sb-body');
-  const list=DB.prods.filter(p=>!q||p.name.toLowerCase().includes(q));
-  if(!list.length){ el.innerHTML=`<div style="padding:14px;text-align:center;font-size:11px;color:var(--ink3)">${q?'找不到':'尚無產品'}</div>`; return; }
-  el.innerHTML=list.map(p=>{
-    const t=prodTotal(p);
-    return `<div class="prod-card${p.id===activeProd?' on':''}" onclick="loadProd(${p.id})">
-      <div class="pc-name">${p.name||'未命名'}</div>
-      <div class="pc-spec">${p.spec||'—'}</div>
-      <div class="pc-cost">$${f2(t)} / ${p.ou||'包'}</div>
+function showSBStatus(msg, type) {
+  const el = document.getElementById('sbStatus');
+  if (el) { el.textContent = msg; el.style.color = type === 'err' ? '#f08080' : type === 'warn' ? '#f5c060' : '#90e090'; }
+}
+
+async function sbFetch(path, opts = {}) {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  const res = await fetch(url + '/rest/v1/' + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': key,
+      'Authorization': 'Bearer ' + key,
+      'Prefer': opts.prefer || 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) { console.error('Supabase error:', res.status, await res.text()); return null; }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function testSBConnection() {
+  try {
+    const r = await sbFetch('nutrition_db?limit=1');
+    return r !== null;
+  } catch { return false; }
+}
+
+// ── Nutrition DB (原物料) ──
+const DB_KEY = 'nutritionDB_v2';
+function loadDB_local() { try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch { return []; } }
+function saveDB_local(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+let _dbCache = null;
+
+async function loadDB() {
+  const { url, key } = getSBConfig();
+  if (url && key) {
+    try {
+      const rows = await sbFetch('nutrition_db?order=name');
+      if (rows !== null) {
+        _dbCache = rows.map(r => ({ name: r.name, cal: r.cal, protein: r.protein, fat: r.fat, satFat: r.sat_fat, transFat: r.trans_fat, carb: r.carb, sugar: r.sugar, sodium: r.sodium }));
+        saveDB_local(_dbCache);
+        return _dbCache;
+      }
+    } catch(e) { console.warn('Supabase loadDB failed, using local', e); }
+  }
+  return loadDB_local();
+}
+
+async function saveDBItem_sb(item, isEdit, editName) {
+  const { url, key } = getSBConfig();
+  const row = { name: item.name, cal: item.cal, protein: item.protein, fat: item.fat, sat_fat: item.satFat, trans_fat: item.transFat, carb: item.carb, sugar: item.sugar, sodium: item.sodium };
+  if (url && key) {
+    if (isEdit) {
+      await sbFetch(`nutrition_db?name=eq.${encodeURIComponent(editName)}`, { method: 'PATCH', body: JSON.stringify(row), prefer: 'return=minimal' });
+    } else {
+      await sbFetch('nutrition_db', { method: 'POST', body: JSON.stringify(row) });
+    }
+  }
+  const db = loadDB_local();
+  if (isEdit) { const i = db.findIndex(d => d.name === editName); if (i >= 0) db[i] = item; }
+  else db.push(item);
+  saveDB_local(db);
+  _dbCache = null;
+}
+
+async function deleteDB_sb(name) {
+  const { url, key } = getSBConfig();
+  if (url && key) await sbFetch(`nutrition_db?name=eq.${encodeURIComponent(name)}`, { method: 'DELETE', prefer: 'return=minimal' });
+  const db = loadDB_local();
+  const i = db.findIndex(d => d.name === name);
+  if (i >= 0) { db.splice(i, 1); saveDB_local(db); }
+  _dbCache = null;
+}
+
+function findDB(name) {
+  const db = _dbCache || loadDB_local();
+  return db.find(d => d.name.toLowerCase() === name.trim().toLowerCase()) || null;
+}
+function searchDB(q) {
+  const db = _dbCache || loadDB_local();
+  if (!q) return db;
+  const lq = q.toLowerCase();
+  return db.filter(d => d.name.toLowerCase().includes(lq));
+}
+function saveDB(db) { saveDB_local(db); _dbCache = null; }
+
+// ══════════════════════════════════
+// TABS
+// ══════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'db') renderDB();
+}
+
+// ══════════════════════════════════
+// INGREDIENT TABLE
+// ══════════════════════════════════
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function addRow(data) {
+  const d = { name:'', weight:0, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0, ...data };
+  const idx = ingredients.length;
+  ingredients.push({ ...d });
+
+  const tbody = document.getElementById('ingredientBody');
+  const tr = document.createElement('tr');
+  tr.id = 'row-' + idx;
+
+  // Name cell with autocomplete dropdown
+  const nameTd = document.createElement('td');
+  nameTd.innerHTML = `
+    <div class="name-wrap">
+      <input type="text" id="name-${idx}" value="${escH(d.name)}" placeholder="輸入成分名稱"
+        oninput="onNameInput(${idx},this)" onblur="hideAC(${idx})" autocomplete="off" style="width:100%">
+      <div class="ac-dropdown" id="ac-${idx}"></div>
     </div>`;
+  tr.appendChild(nameTd);
+
+  // Weight
+  const wTd = document.createElement('td');
+  wTd.innerHTML = `<input type="number" id="weight-${idx}" value="${d.weight}" min="0" step="any"
+    oninput="updateF(${idx},'weight',parseFloat(this.value)||0);updatePct()">`;
+  tr.appendChild(wTd);
+
+  // Pct
+  const pTd = document.createElement('td');
+  pTd.id = 'pct-' + idx;
+  pTd.style.cssText = 'color:var(--text3);font-size:.78rem;';
+  pTd.textContent = '0%';
+  tr.appendChild(pTd);
+
+  // Nutrients
+  [['cal',d.cal],['protein',d.protein],['fat',d.fat],['satFat',d.satFat],['transFat',d.transFat],['carb',d.carb],['sugar',d.sugar],['sodium',d.sodium]].forEach(([f, v]) => {
+    const td = document.createElement('td');
+    td.innerHTML = `<input type="number" id="${f}-${idx}" value="${v}" min="0" step="any" oninput="updateF(${idx},'${f}',parseFloat(this.value)||0)">`;
+    tr.appendChild(td);
+  });
+
+  // Delete
+  const delTd = document.createElement('td');
+  delTd.innerHTML = `<button class="btn btn-danger" onclick="removeRow(${idx})">✕</button>`;
+  tr.appendChild(delTd);
+
+  tbody.appendChild(tr);
+  updatePct();
+  if (d.name && findDB(d.name)) tr.classList.add('db-match');
+}
+
+function updateF(idx, field, val) { if (ingredients[idx]) ingredients[idx][field] = val; }
+function removeRow(idx) { ingredients.splice(idx, 1); rebuildTable(); }
+function rebuildTable() {
+  document.getElementById('ingredientBody').innerHTML = '';
+  const s = [...ingredients]; ingredients = [];
+  s.forEach(d => addRow(d));
+}
+function updatePct() {
+  const total = ingredients.reduce((s, r) => s + (r.weight || 0), 0);
+  ingredients.forEach((r, i) => {
+    const cell = document.getElementById('pct-' + i);
+    if (cell) cell.textContent = total > 0 ? (r.weight / total * 100).toFixed(2) + '%' : '0%';
+  });
+}
+
+// ── Autocomplete ──
+function onNameInput(idx, input) {
+  updateF(idx, 'name', input.value);
+  const q = input.value.trim();
+  const ac = document.getElementById('ac-' + idx);
+  if (!q) { ac.classList.remove('open'); return; }
+  const hits = searchDB(q).slice(0, 8);
+  if (!hits.length) { ac.classList.remove('open'); return; }
+  ac.innerHTML = hits.map(r => `
+    <div class="ac-item" onmousedown="applyDB(${idx},'${escH(r.name)}')">
+      <span class="ac-name">${r.name}</span>
+      <span class="ac-preview">熱量 ${r.cal} · 蛋白 ${r.protein} · 脂肪 ${r.fat} · 碳水 ${r.carb}</span>
+    </div>`).join('');
+  ac.classList.add('open');
+}
+function hideAC(idx) { setTimeout(() => { const a = document.getElementById('ac-'+idx); if(a) a.classList.remove('open'); }, 200); }
+
+function applyDB(idx, name) {
+  const item = findDB(name);
+  if (!item) return;
+  const ni = document.getElementById('name-' + idx);
+  if (ni) ni.value = item.name;
+  ingredients[idx].name = item.name;
+  ['cal','protein','fat','satFat','transFat','carb','sugar','sodium'].forEach(f => {
+    ingredients[idx][f] = item[f] || 0;
+    const inp = document.getElementById(f + '-' + idx);
+    if (inp) inp.value = item[f] || 0;
+  });
+  document.getElementById('ac-' + idx).classList.remove('open');
+  const row = document.getElementById('row-' + idx);
+  if (row) row.classList.add('db-match');
+  showToast('✅ 已帶入「' + item.name + '」的營養資料');
+}
+
+// ══════════════════════════════════
+// CALCULATE
+// ══════════════════════════════════
+function calculate() {
+  if (!ingredients.length) { showToast('請先新增成分！'); return; }
+  const totalWeight = ingredients.reduce((s, r) => s + (r.weight || 0), 0);
+  if (!totalWeight) { showToast('請填入成分重量！'); return; }
+
+  const sum = { protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+  ingredients.forEach(r => {
+    const w = r.weight || 0;
+    Object.keys(sum).forEach(k => sum[k] += w * (r[k] || 0) / 100);
+  });
+  const p = {};
+  Object.keys(sum).forEach(k => p[k] = sum[k] / totalWeight * 100);
+  p.cal = p.protein * 4 + p.fat * 9 + p.carb * 4; // Atwater
+
+  renderResult(p, totalWeight);
+  renderSort(ingredients, totalWeight);
+  showToast('✅ 計算完成！');
+  switchTab('result', document.querySelectorAll('.tab-btn')[1]);
+}
+
+// ══════════════════════════════════
+// RENDER
+// ══════════════════════════════════
+function renderResult(p, totalWeight) {
+  const name = document.getElementById('productName').value || '－';
+  const content = document.getElementById('productContent').value || '－';
+  const allergen = document.getElementById('productAllergen').value || '－';
+  const override = document.getElementById('productIngredientLabel').value.trim();
+  const sorted = [...ingredients].sort((a,b) => (b.weight||0)-(a.weight||0));
+  const autoLabel = sorted.filter(r=>r.name).map(r => applyExpand(r.name)).join('、');
+  const finalLabel = override || autoLabel;
+
+  document.getElementById('resultContent').innerHTML = `
+    <div class="prod-info">
+      <div><strong>品名：</strong>${escH(name)}</div>
+      <div><strong>原料：</strong>${escH(finalLabel)}</div>
+      <div><strong>過敏原：</strong>${escH(allergen)}</div>
+      <div><strong>內容物：</strong>${escH(content)}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-box"><div class="lbl">配方總重量</div><div class="val">${totalWeight.toLocaleString()} g</div></div>
+      <div class="info-box"><div class="lbl">成分種類數</div><div class="val">${ingredients.length} 種</div></div>
+    </div>
+    <div class="label-wrapper">
+      <div class="nutrition-label">
+        <div class="nl-title">營養標示</div>
+        <div class="nl-serving">每一份量 100 公克</div>
+        <div class="nl-cal-row">
+          <div class="nl-cal-lbl">每份<br>熱量</div>
+          <div style="display:flex;align-items:flex-end">
+            <div class="nl-cal-val">${p.cal.toFixed(1)}</div>
+            <div class="nl-cal-unit">大卡</div>
+          </div>
+        </div>
+        ${nlR('蛋白質',p.protein.toFixed(1),'g',true)}
+        ${nlR('脂肪',p.fat.toFixed(1),'g',true)}
+        ${nlR('飽和脂肪',p.satFat.toFixed(1),'g',false,true)}
+        ${nlR('反式脂肪',p.transFat.toFixed(2),'g',false,true)}
+        ${nlR('碳水化合物',p.carb.toFixed(1),'g',true)}
+        ${nlR('糖',p.sugar.toFixed(1),'g',false,true)}
+        ${nlR('鈉',p.sodium.toFixed(0),'mg',true)}
+        <div class="nl-footer">*每日參考值：熱量 2000大卡、蛋白質 60公克、脂肪 65公克、飽和脂肪 18公克、碳水化合物 300公克、鈉 2400毫克</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-family:'Noto Serif TC',serif;font-weight:700;color:var(--accent);margin-bottom:10px">📋 詳細數值（每100g）</div>
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+          <tr style="background:var(--accent-light)">
+            <th style="padding:7px 12px;text-align:left;border:1px solid var(--border)">項目</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid var(--border)">數值</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid var(--border)">單位</th>
+          </tr>
+          ${dR('熱量（Atwater）',p.cal.toFixed(2),'大卡')}
+          ${dR('蛋白質',p.protein.toFixed(3),'g')}
+          ${dR('脂肪',p.fat.toFixed(3),'g')}
+          ${dR('飽和脂肪',p.satFat.toFixed(3),'g')}
+          ${dR('反式脂肪',p.transFat.toFixed(4),'g')}
+          ${dR('碳水化合物',p.carb.toFixed(3),'g')}
+          ${dR('糖',p.sugar.toFixed(3),'g')}
+          ${dR('鈉',p.sodium.toFixed(3),'mg')}
+        </table>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="window.print()">🖨️ 列印標示</button>
+          <button class="btn btn-secondary" onclick="copyResult()">📋 複製文字</button>
+        </div>
+      </div>
+    </div>`;
+  window._lastResult = { name, finalLabel, allergen, content, p };
+}
+function nlR(label,val,unit,bold,sub) {
+  return `<div class="nl-row${bold?' bold':''}${sub?' sub':''}"><div>${label}</div><div class="right">${val} ${unit}</div></div>`;
+}
+function dR(label,val,unit) {
+  return `<tr><td style="padding:6px 12px;border:1px solid var(--border)">${label}</td><td style="padding:6px 12px;border:1px solid var(--border);text-align:right;font-weight:600">${val}</td><td style="padding:6px 12px;border:1px solid var(--border);text-align:right;color:var(--text3)">${unit}</td></tr>`;
+}
+
+function renderSort(rows, totalWeight) {
+  const sorted = [...rows].filter(r=>r.name).sort((a,b)=>(b.weight||0)-(a.weight||0));
+  const maxW = sorted[0]?.weight || 1;
+  let html = `<div style="margin-bottom:14px;font-size:.85rem;color:var(--text2)">共 ${sorted.length} 種，總重 ${totalWeight.toLocaleString()} g</div>`;
+  sorted.forEach((r,i) => {
+    const pct = totalWeight > 0 ? r.weight/totalWeight*100 : 0;
+    html += `<div class="sort-item">
+      <div class="sort-rank${i<3?' top3':''}">${i+1}</div>
+      <div class="sort-name">${r.name}</div>
+      <div class="sort-bar-wrap"><div class="sort-bar" style="width:${(r.weight/maxW*100).toFixed(1)}%"></div></div>
+      <div class="sort-weight">${(r.weight||0).toLocaleString()} g</div>
+      <div class="sort-pct">${pct.toFixed(2)}%</div>
+    </div>`;
+  });
+  const labelTxt = sorted.map(r=>r.name).join('、');
+  const labelExpanded = sorted.map(r => applyExpand(r.name)).join('、');
+  const hasExpanded = labelExpanded !== labelTxt;
+  html += `<div class="label-result">
+    <div style="margin-bottom:10px">
+      <strong>原料標示文字（依排序，含展開）：</strong>
+      <br><span id="sortedLabel">${labelExpanded}</span>
+    </div>
+    ${hasExpanded ? `<div style="margin-bottom:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <strong style="font-size:.8rem;color:var(--text3)">未展開版本：</strong>
+      <br><span style="font-size:.85rem;color:var(--text3)">${labelTxt}</span>
+    </div>` : ''}
+    <div class="btn-group" style="margin-top:6px">
+      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('sortedLabel').textContent).then(()=>showToast('✅ 已複製！'))">📋 複製展開版</button>
+      ${hasExpanded ? `<button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${labelTxt.replace(/'/g,"\\'")}').then(()=>showToast('✅ 已複製！'))">📋 複製未展開版</button>` : ''}
+    </div>
+  </div>`;
+  document.getElementById('sortContent').innerHTML = html;
+}
+
+function copyResult() {
+  if (!window._lastResult) return;
+  const {name,finalLabel,allergen,content,p} = window._lastResult;
+  navigator.clipboard.writeText(`品名：${name}\n原料：${finalLabel}\n過敏原：${allergen}\n內容物：${content}\n\n【營養標示 每100公克】\n熱量：${p.cal.toFixed(1)} 大卡\n蛋白質：${p.protein.toFixed(2)} g\n脂肪：${p.fat.toFixed(2)} g\n飽和脂肪：${p.satFat.toFixed(2)} g\n反式脂肪：${p.transFat.toFixed(3)} g\n碳水化合物：${p.carb.toFixed(2)} g\n糖：${p.sugar.toFixed(2)} g\n鈉：${p.sodium.toFixed(1)} mg`).then(()=>showToast('✅ 已複製！'));
+}
+
+// ══════════════════════════════════
+// PASTE MODAL
+// ══════════════════════════════════
+const FIELDS = [
+  { key:'weight',   label:'配方重量(g)' },
+  { key:'cal',      label:'熱量(kcal/100g)' },
+  { key:'protein',  label:'蛋白質(g/100g)' },
+  { key:'fat',      label:'脂肪(g/100g)' },
+  { key:'satFat',   label:'飽和脂肪(g/100g)' },
+  { key:'transFat', label:'反式脂肪(g/100g)' },
+  { key:'carb',     label:'碳水化合物(g/100g)' },
+  { key:'sugar',    label:'糖(g/100g)' },
+  { key:'sodium',   label:'鈉(mg/100g)' },
+];
+// rowOrder[i] = which FIELDS index is on line i (0-based after name line), -1 = skip
+let rowOrder = [0,1,2,3,4,5,6,7,8]; // default: weight,cal,protein...sodium
+// colMap[i] = which FIELDS index is in tab-col i (col 0 = name, col 1+ = nutrients), -1 = skip
+let colMap = [-99,0,1,2,3,4,5,6,7,8]; // col0=name(special), col1=weight...
+
+function openPasteModal() {
+  document.getElementById('pasteModal').classList.add('open');
+  buildRowOrderUI();
+  buildColMapUI();
+  document.getElementById('pasteArea').focus();
+}
+function closePasteModal() { document.getElementById('pasteModal').classList.remove('open'); }
+
+function setFmt(fmt) {
+  pasteFormat = fmt;
+  document.getElementById('fmtBtn-col').classList.toggle('active', fmt==='col');
+  document.getElementById('fmtBtn-row').classList.toggle('active', fmt==='row');
+  document.getElementById('hintCol').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('hintRow').style.display = fmt==='row' ? '' : 'none';
+  document.getElementById('rowOrderSection').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('colMapSection').style.display = fmt==='row' ? '' : 'none';
+  parsePaste();
+}
+
+// Build row-order dropdowns for col format (9 rows after name)
+function buildRowOrderUI() {
+  const grid = document.getElementById('rowOrderGrid');
+  grid.innerHTML = '';
+  const opts = ['（略過）', ...FIELDS.map(f => f.label)];
+  for (let i = 0; i < 9; i++) {
+    const div = document.createElement('div');
+    div.className = 'row-order-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 行`;
+    const sel = document.createElement('select');
+    sel.id = 'ro-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      op.value = oi - 1; // -1=skip, 0..8=field index
+      op.textContent = o;
+      if (oi - 1 === rowOrder[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { rowOrder[i] = parseInt(sel.value); parsePaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
+}
+
+// Build col-map dropdowns for row format (up to 10 cols)
+function buildColMapUI() {
+  const grid = document.getElementById('colMapGrid');
+  grid.innerHTML = '';
+  const opts = ['（成分名稱）','（略過）', ...FIELDS.map(f => f.label)];
+  for (let i = 0; i < 10; i++) {
+    const div = document.createElement('div');
+    div.className = 'colmap-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 欄`;
+    const sel = document.createElement('select');
+    sel.id = 'cm-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      // oi=0 -> name(-99), oi=1 -> skip(-1), oi=2..10 -> field 0..8
+      op.value = oi === 0 ? -99 : oi - 2;
+      op.textContent = o;
+      if (op.value == colMap[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { colMap[i] = parseInt(sel.value); parsePaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
+}
+
+function parsePaste() {
+  const raw = document.getElementById('pasteArea').value.trim();
+  if (!raw) { document.getElementById('previewSection').style.display = 'none'; parsedPaste=[]; return; }
+  parsedPaste = pasteFormat === 'col' ? parseCol(raw) : parseRow(raw);
+  showPreview(parsedPaste);
+}
+
+// ── 直行格式解析（依 rowOrder 設定） ──
+function parseCol(raw) {
+  const lines = raw.split('\n').map(l => l.trim());
+  const results = [];
+  let i = 0;
+
+  // 去除單位後取純數字（支援 120000g / 120,000g / 87.5% / 120000公克 等）
+  const stripUnit = v => v
+    .replace(/[,，]/g, '')
+    .replace(/\s*(g|kg|mg|kcal|公克|公斤|毫克|大卡|%)\s*$/i, '')
+    .trim();
+  const isNumLine = v => { if (!v) return false; const s = stripUnit(v); return s !== '' && !isNaN(s); };
+  const toNum = v => parseFloat(stripUnit(v)) || 0;
+
+  while (i < lines.length) {
+    if (!lines[i]) { i++; continue; }
+    if (isNumLine(lines[i])) { i++; continue; } // 跳過孤立數字行
+    const name = lines[i]; i++;
+    const nums = [];
+    while (i < lines.length && nums.length < 9) {
+      if (!lines[i]) break;
+      if (!isNumLine(lines[i])) break;
+      nums.push(toNum(lines[i]));
+      i++;
+    }
+    const d = { name, weight:0, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    rowOrder.forEach((fieldIdx, lineIdx) => {
+      if (fieldIdx < 0 || lineIdx >= nums.length) return;
+      d[FIELDS[fieldIdx].key] = nums[lineIdx];
+    });
+    results.push(d);
+  }
+  return results;
+}
+
+// ── 橫列格式解析（依 colMap 設定） ──
+function parseRow(raw) {
+  return raw.split('\n').map(line => {
+    const c = line.split('\t').map(v => v.trim().replace(/,/g,''));
+    if (c.every(v => !v)) return null;
+    const d = { name:'', weight:0, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    colMap.forEach((fieldCode, ci) => {
+      if (ci >= c.length) return;
+      if (fieldCode === -99) { d.name = c[ci] || ''; return; } // name
+      if (fieldCode < 0) return; // skip
+      const key = FIELDS[fieldCode].key;
+      d[key] = parseFloat(c[ci]) || 0;
+    });
+    if (!d.name && !d.weight) return null;
+    return d;
+  }).filter(Boolean);
+}
+
+function showPreview(data) {
+  if (!data.length) { document.getElementById('previewSection').style.display='none'; return; }
+  document.getElementById('previewSection').style.display = '';
+  document.getElementById('previewCount').textContent = `（共 ${data.length} 筆）`;
+  document.getElementById('previewBody').innerHTML = data.map(d =>
+    `<tr><td>${d.name||'－'}</td><td>${d.weight}</td><td>${d.cal}</td><td>${d.protein}</td><td>${d.fat}</td><td>${d.satFat}</td><td>${d.transFat}</td><td>${d.carb}</td><td>${d.sugar}</td><td>${d.sodium}</td></tr>`
+  ).join('');
+}
+
+function confirmPaste() {
+  if (!parsedPaste.length) { showToast('沒有可匯入的資料！'); return; }
+  const replace = confirm(`偵測到 ${parsedPaste.length} 筆成分。\n\n確定 → 清除現有成分並匯入\n取消 → 附加到後面`);
+  if (replace) { ingredients=[]; document.getElementById('ingredientBody').innerHTML=''; }
+  parsedPaste.forEach(d => {
+    // 若資料庫有相符的，自動補充空白的營養欄位
+    const dbItem = findDB(d.name);
+    if (dbItem && !d.cal && !d.protein && !d.fat && !d.carb) {
+      Object.assign(d, { cal:dbItem.cal, protein:dbItem.protein, fat:dbItem.fat, satFat:dbItem.satFat, transFat:dbItem.transFat, carb:dbItem.carb, sugar:dbItem.sugar, sodium:dbItem.sodium });
+    }
+    addRow(d);
+  });
+  closePasteModal();
+  showToast(`✅ 已匯入 ${parsedPaste.length} 筆！`);
+}
+
+
+
+// ══════════════════════════════════
+// DB MODAL
+// ══════════════════════════════════
+function openDBModal(idx) {
+  editingDBIdx = idx;
+  const db = _dbCache || loadDB_local();
+  document.getElementById('dbModalTitle').textContent = idx < 0 ? '＋ 新增原物料' : '✏️ 編輯原物料';
+  const item = idx >= 0 ? db[idx] : null;
+  document.getElementById('dbF_name').value = item ? item.name : '';
+  ['cal','protein','fat','satFat','transFat','carb','sugar','sodium'].forEach(f => {
+    document.getElementById('dbF_'+f).value = item ? (item[f]||0) : 0;
+  });
+  document.getElementById('dbModal').classList.add('open');
+  document.getElementById('dbF_name').focus();
+}
+function closeDBModal() { document.getElementById('dbModal').classList.remove('open'); }
+
+async function saveDBItem() {
+  const name = document.getElementById('dbF_name').value.trim();
+  if (!name) { showToast('請輸入成分名稱！'); return; }
+  const item = { name, cal:+document.getElementById('dbF_cal').value||0, protein:+document.getElementById('dbF_protein').value||0, fat:+document.getElementById('dbF_fat').value||0, satFat:+document.getElementById('dbF_satFat').value||0, transFat:+document.getElementById('dbF_transFat').value||0, carb:+document.getElementById('dbF_carb').value||0, sugar:+document.getElementById('dbF_sugar').value||0, sodium:+document.getElementById('dbF_sodium').value||0 };
+  const db = _dbCache || loadDB_local();
+  const isEdit = editingDBIdx >= 0;
+  const editName = isEdit ? db[editingDBIdx]?.name : null;
+  if (!isEdit && db.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('⚠️ 此名稱已存在！'); return; }
+  await saveDBItem_sb(item, isEdit, editName);
+  showToast(isEdit ? `✅ 已更新「${name}」` : `✅ 已新增「${name}」`);
+  closeDBModal(); renderDB();
+}
+
+async function deleteDBItem(idx) {
+  const db = _dbCache || loadDB_local();
+  if (!db[idx] || !confirm(`確定要刪除「${db[idx].name}」嗎？`)) return;
+  await deleteDB_sb(db[idx].name);
+  renderDB(); showToast('🗑️ 已刪除');
+}
+
+async function renderDB() {
+  const q = document.getElementById('dbSearch').value;
+  const allDB = await loadDB();
+  _dbCache = allDB;
+  const data = searchDB(q);
+  document.getElementById('dbCount').textContent = allDB.length;
+  const empty = document.getElementById('dbEmpty');
+  const tbody = document.getElementById('dbBody');
+  if (!allDB.length) { tbody.innerHTML=''; empty.style.display=''; return; }
+  empty.style.display = 'none';
+  if (!data.length) { tbody.innerHTML=`<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text3)">找不到符合「${q}」的原物料</td></tr>`; return; }
+  tbody.innerHTML = data.map(item => {
+    const realIdx = allDB.findIndex(d => d.name === item.name);
+    return `<tr>
+      <td>${item.name}</td>
+      <td>${item.cal}</td><td>${item.protein}</td><td>${item.fat}</td>
+      <td>${item.satFat}</td><td>${item.transFat}</td><td>${item.carb}</td>
+      <td>${item.sugar}</td><td>${item.sodium}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openDBModal(${realIdx})" style="margin-right:4px">✏️</button>
+        <button class="btn btn-danger" onclick="deleteDBItem(${realIdx})">✕</button>
+      </td>
+    </tr>`;
   }).join('');
 }
 
-function prodTotal(p){
-  const oq=parseFloat(p.oq)||1;
-  const s=arr=>arr.reduce((a,r)=>a+(parseFloat(r.cost)||0),0);
-  return (s(p.ing)+s(p.pkg)+s(p.lab)+s(p.fee))/oq;
+function exportDB() {
+  const db = _dbCache || loadDB_local();
+  if (!db.length) { showToast('資料庫是空的！'); return; }
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '原物料資料庫.json'; a.click();
+}
+async function importDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw '';
+      const existing = await loadDB(); let added = 0, skipped = 0;
+      const newItems = [];
+      data.forEach(item => {
+        if (!item.name) return;
+        if (existing.find(d => d.name === item.name)) { skipped++; return; }
+        existing.push(item); newItems.push(item); added++;
+      });
+      saveDB(existing);
+      const { url: sbU, key: sbK } = getSBConfig();
+      if (sbU && sbK && newItems.length > 0) {
+        const rows = newItems.map(item => ({ name:item.name, cal:item.cal, protein:item.protein, fat:item.fat, sat_fat:item.satFat, trans_fat:item.transFat, carb:item.carb, sugar:item.sugar, sodium:item.sodium }));
+        await sbFetch('nutrition_db', { method: 'POST', body: JSON.stringify(rows) }).catch(()=>{});
+      }
+      renderDB();
+      showToast(`✅ 匯入完成：新增 ${added} 筆，略過重複 ${skipped} 筆`);
+    } catch { showToast('⚠️ 格式錯誤，請使用系統匯出的 JSON'); }
+  };
+  reader.readAsText(file); input.value = '';
 }
 
-// ═══════════════════════════════════════════════════════
-// LOAD PRODUCT
-// ═══════════════════════════════════════════════════════
-function loadProd(id){
-  activeProd=id;
-  const p=DB.prods.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById('no-prod').style.display='none';
-  document.getElementById('prod-editor').style.display='block';
-  document.getElementById('pe-name').value=p.name||'';
-  document.getElementById('pe-spec').value=p.spec||'';
-  document.getElementById('pe-oq').value=p.oq||1;
-  document.getElementById('pe-ou').value=p.ou||'包';
-  renderSidebar();
-  renderIngTable(p);
-  renderPkgTable(p);
-  renderLabTable(p);
-  renderFeeTable(p);
-  renderPriceTable(p);
-  recalc();
+
+
+// ══════════════════════════════════
+// SAMPLE DATA
+// ══════════════════════════════════
+function importSample(type) {
+  ingredients=[]; document.getElementById('ingredientBody').innerHTML='';
+  const rows = type === 'zhanzin' ? [
+    ['糯米',308000,358,8.3,0.8,0.2,0,77.4,0,3],['新肉絲',88000,132,18.6,4.4,0.5,0,7,1.1,523],
+    ['栗子',40000,180,4.3,1.5,0.2,0,37.4,5.5,0.7],['香菇',4500,333,23.3,1.4,0.2,0,66.6,6.7,15],
+    ['菜脯',54000,16,1,0,0,0,3,0,1530],['大豆沙拉油',44000,828,0,92,15,1,0,0,0],
+    ['香椿',9600,394.3,2.6,42.3,6.9,0,1.3,0,503],['醬油露',16500,80,5,0,0,0,15,14,4320],
+    ['素蠔油',13200,140,5,0,0,0,30,25,3200],['鮮味多',4400,184,460,0,0,0,0,0,12583],
+    ['鹽',440,0,0,0,0,0,0,0,39143],['糖',450,398.4,0,0,0,0,99.2,99,3],
+    ['黑胡椒粉',1800,379,12,7,1,0,67,0,7],['素食調味料',300,417.8,38.8,4.3,0,0,74,4.8,1711],
+    ['甘草粉',300,364,9,4,1,0,73,0,109],['爌肉精',900,276,17,9,8,0,32,31,3628],
+    ['香油',1200,819,0,91,17,1,0,0,0],['碎肉',8400,290,54,1.5,0.2,0,31,4.8,30]
+  ] : [
+    ['樹薯粉',120000,350,0,0,0,0,87.5,0,0],['碎肉',16800,290,54,1.5,0.2,0,31,4.8,30],
+    ['香菇頭',1050,333,23.3,1.4,0.2,0,66.6,6.7,15],['香油',3900,819,0,91,17,1,0,0,0],
+    ['大豆沙拉油',7200,828,0,92,15,1,0,0,0],['香椿',2100,394.3,2.6,42.3,6.9,0,1.3,0,503],
+    ['醬油',2100,108,9,0,0,0,18,11,5430],['素沙茶醬',1200,660,7,64,11,0.5,14,0.6,1550],
+    ['鮮味多',525,184,460,0,0,0,0,0,12583],['爌肉精',225,276,17,9,8,0,32,31,3628],
+    ['鹽',2400,0,0,0,0,0,0,0,39143],['菜脯',6000,16,1,0,0,0,3,0,1530],
+    ['黑胡椒粉',300,379,12,7,1,0,67,0,7],['素肉醬',150,417.8,38.8,4.3,0,0,74,4.8,1711],['水',61800,0,0,0,0,0,0,0,0]
+  ];
+  const names = { zhanzin:['臻品新肉絲粽','180公克/顆','大豆、小麥、芝麻及其製品'], triangle:['三角圓','－','大豆、小麥、芝麻、花生、堅果類及其製品'] };
+  const [pname, pcont, pallergen] = names[type];
+  document.getElementById('productName').value = pname;
+  document.getElementById('productContent').value = pcont;
+  document.getElementById('productAllergen').value = pallergen;
+  document.getElementById('productIngredientLabel').value = '';
+  rows.forEach(r => addRow({name:r[0],weight:r[1],cal:r[2],protein:r[3],fat:r[4],satFat:r[5],transFat:r[6],carb:r[7],sugar:r[8],sodium:r[9]}));
+  showToast('✅ 範例資料已載入！');
 }
 
-function autosave(){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  p.name=document.getElementById('pe-name').value;
-  p.spec=document.getElementById('pe-spec').value;
-  p.oq=parseFloat(document.getElementById('pe-oq').value)||1;
-  p.ou=document.getElementById('pe-ou').value;
-  saveDB(); renderSidebar();
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ═══════════════════════════════════════════════════════
-// RECALC
-// ═══════════════════════════════════════════════════════
-function recalc(){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  autosave();
-  const oq=parseFloat(p.oq)||1;
-  const sum=arr=>arr.reduce((a,r)=>a+(parseFloat(r.cost)||0),0);
-  const ing=sum(p.ing), pkg=sum(p.pkg), lab=sum(p.lab), fee=sum(p.fee);
-  const batch=ing+pkg+lab+fee;
-  const per=batch/oq;
-  const pct=v=>batch>0?((v/batch)*100).toFixed(1)+'%':'0%';
-  const w  =v=>batch>0?((v/batch)*100).toFixed(1)+'%':'0%';
 
-  set('cv-ing',f2(ing/oq)); set('cv-pkg',f2(pkg/oq));
-  set('cv-lab',f2(lab/oq)); set('cv-fee',f2(fee/oq));
-  set('cv-tot',f2(per)); set('cv-unit',p.ou||'包');
-  set('cp-ing',pct(ing)); set('cp-pkg',pct(pkg));
-  set('cp-lab',pct(lab)); set('cp-fee',pct(fee));
-  document.getElementById('rb-ing').style.width=w(ing);
-  document.getElementById('rb-pkg').style.width=w(pkg);
-  document.getElementById('rb-lab').style.width=w(lab);
-  document.getElementById('rb-fee').style.width=w(fee);
-  set('ing-subtotal-hd','小計：$'+f2(ing/oq));
-  set('pkg-subtotal-hd','小計：$'+f2(pkg/oq));
-  set('lab-subtotal-hd','小計：$'+f2(lab/oq));
-  set('fee-subtotal-hd','小計：$'+f2(fee/oq));
-  // 客戶定價表：成本變動後重新計算定價
-  renderPriceTable(p);
-  renderSidebar();
+// ══════════════════════════════════
+// TRANSLATION DB (詞庫)
+// ══════════════════════════════════
+const TDB_KEY = 'transDB_v1';
+let _tdbCache = null;
+function loadTransDB_local() { try { return JSON.parse(localStorage.getItem(TDB_KEY) || '[]'); } catch { return []; } }
+function saveTransDB_local(db) { localStorage.setItem(TDB_KEY, JSON.stringify(db)); }
+async function loadTransDB_remote() {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  try {
+    const rows = await sbFetch('trans_db?order=zh');
+    if (rows !== null) { const db = rows.map(r => ({ zh: r.zh, en: r.en, note: r.note || '' })); saveTransDB_local(db); return db; }
+  } catch(e) {}
+  return null;
 }
-function set(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
-
-// ═══════════════════════════════════════════════════════
-// TABLE RENDERERS
-// Code cell AND Name cell both trigger autocomplete lookup
-// ═══════════════════════════════════════════════════════
-function makeRow(type, r, idx){
-  const isLab = type==='lab';
-  const col3lbl = isLab?'時薪':'進價(含稅)';
-  const col4lbl = isLab?'時薪單位':'進貨單位';
-  const hid = `row-${type}-${r.id}`;
-  const cost = parseFloat(r.cost)||0;
-  // filled = row already has data from DB (show lighter bg on non-editable fields)
-  const filled = !!(r.name);
-  const roStyle = filled ? 'background:#fdfbf5;color:var(--ink2)' : 'color:var(--ink4)';
-  return `<tr id="${hid}">
-    <!-- ① 編碼：輸入後 Tab/Enter 觸發查詢帶入 -->
-    <td style="position:relative">
-      <input class="ci-inp mono" id="code-inp-${type}-${r.id}" style="width:88px;font-weight:600"
-        value="${r.code||''}" placeholder="輸入編碼"
-        oninput="showCodeAC('${type}',${r.id},this.value)"
-        onkeydown="codeKey(event,'${type}',${r.id})"
-        onblur="codeBlur('${type}',${r.id})">
-      <div class="ac-dd" id="code-dd-${type}-${r.id}"></div>
-    </td>
-    <!-- ② 品名：輸入後也可模糊搜尋帶入 -->
-    <td>
-      <div class="ac-wrap">
-        <input class="ci-inp" id="ac-inp-${type}-${r.id}" value="${r.name||''}" placeholder="或輸入品名搜尋…"
-          oninput="showAC('${type}',${r.id},this.value)"
-          onkeydown="acKey(event,'${type}',${r.id})"
-          onblur="delayHideAC('${type}',${r.id})"
-          onchange="rowChange('${type}',${r.id},'name',this.value)">
-        <div class="ac-dd" id="ac-dd-${type}-${r.id}"></div>
-      </div>
-    </td>
-    <!-- ③④⑤⑥ 帶入後唯讀顯示，但仍可手動修改 -->
-    <td><input class="ci-inp mono tr" style="width:88px;${roStyle}" type="number" value="${r.buyPrice||''}" step="any"
-      placeholder="${col3lbl}" onchange="rowChange('${type}',${r.id},'buyPrice',this.value)" oninput="recalcRow('${type}',${r.id})"></td>
-    <td><input class="ci-inp" style="width:68px;${roStyle}" value="${r.buyUnit||''}" placeholder="${col4lbl}" onchange="rowChange('${type}',${r.id},'buyUnit',this.value)"></td>
-    <td><input class="ci-inp mono tr" style="width:88px;${roStyle}" type="number" value="${r.unitPrice||''}" step="any"
-      placeholder="單價" onchange="rowChange('${type}',${r.id},'unitPrice',this.value)" oninput="recalcRow('${type}',${r.id})"></td>
-    <td><input class="ci-inp" style="width:58px;${roStyle}" value="${r.priceUnit||''}" placeholder="單位" onchange="rowChange('${type}',${r.id},'priceUnit',this.value)"></td>
-    <!-- ⑦⑧ 用量：重點輸入欄，帶入後游標自動跳到這裡 -->
-    <td><input class="ci-inp mono tr" style="width:68px;font-weight:700" id="qty-inp-${type}-${r.id}" type="number" value="${r.qty||''}" step="any"
-      placeholder="用量" onchange="rowChange('${type}',${r.id},'qty',this.value)" oninput="recalcRow('${type}',${r.id})"></td>
-    <td><input class="ci-inp" style="width:58px;${roStyle}" value="${r.qtyUnit||''}" placeholder="單位" onchange="rowChange('${type}',${r.id},'qtyUnit',this.value)"></td>
-    <!-- ⑨ 製造成本自動計算 -->
-    <td><span class="cost-cell" id="cost-${type}-${r.id}">${cost>0?'$'+f2(cost):''}</span></td>
-    <td style="text-align:center"><button class="btn-del" onclick="delRow('${type}',${r.id})">✕</button></td>
-  </tr>`;
+function loadTransDB() { return _tdbCache || loadTransDB_local(); }
+function saveTransDB(db) { saveTransDB_local(db); _tdbCache = null; }
+function findTransDB(zh) { return loadTransDB().find(d => d.zh.toLowerCase() === zh.trim().toLowerCase()) || null; }
+function searchTransDB(q) {
+  const db = loadTransDB();
+  if (!q) return db;
+  const lq = q.toLowerCase();
+  return db.filter(d => d.zh.toLowerCase().includes(lq) || d.en.toLowerCase().includes(lq));
 }
 
-function addTriggerRow(type, label){
-  return `<tr class="add-trigger-row"><td colspan="10">
-    <button class="add-trigger-btn" onclick="addRow('${type}')">＋ ${label}</button>
-  </td></tr>`;
+async function renderTransDB() {
+  const q = document.getElementById('tdbSearch').value;
+  if (!_tdbCache) { const remote = await loadTransDB_remote(); if (remote) _tdbCache = remote; }
+  const all = loadTransDB();
+  const data = searchTransDB(q);
+  document.getElementById('tdbCount').textContent = all.length;
+  const empty = document.getElementById('tdbEmpty');
+  const tbody = document.getElementById('tdbBody');
+  if (!all.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--text3)">找不到符合「${q}」的詞條</td></tr>`; return; }
+  tbody.innerHTML = data.map(item => {
+    const realIdx = all.findIndex(d => d.zh === item.zh);
+    return `<tr>
+      <td><strong>${item.zh}</strong></td>
+      <td>${item.en}</td>
+      <td style="color:var(--text3);font-size:.8rem">${item.note || ''}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openTransDBModal(${realIdx})" style="margin-right:4px">✏️</button>
+        <button class="btn btn-danger" onclick="deleteTransDBItem(${realIdx})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
-function renderIngTable(p){
-  const body=document.getElementById('ing-body');
-  body.innerHTML = p.ing.map((r,i)=>makeRow('ing',r,i)).join('') + addTriggerRow('ing','新增食材原料');
+let editingTDBIdx = -1;
+function openTransDBModal(idx) {
+  editingTDBIdx = idx;
+  const db = loadTransDB();
+  document.getElementById('transDBModalTitle').textContent = idx < 0 ? '＋ 新增詞條' : '✏️ 編輯詞條';
+  const item = idx >= 0 ? db[idx] : null;
+  document.getElementById('tdbF_zh').value = item ? item.zh : '';
+  document.getElementById('tdbF_en').value = item ? item.en : '';
+  document.getElementById('tdbF_note').value = item ? (item.note || '') : '';
+  document.getElementById('transDBModal').classList.add('open');
+  document.getElementById('tdbF_zh').focus();
 }
-function renderPkgTable(p){
-  const body=document.getElementById('pkg-body');
-  body.innerHTML = p.pkg.map((r,i)=>makeRow('pkg',r,i)).join('') + addTriggerRow('pkg','新增包材物料');
-}
-function renderLabTable(p){
-  const body=document.getElementById('lab-body');
-  body.innerHTML = p.lab.map((r,i)=>makeRow('lab',r,i)).join('') + addTriggerRow('lab','新增人工費');
-}
-function renderFeeTable(p){
-  const body=document.getElementById('fee-body');
-  const rows=p.fee.map(r=>`<tr>
-    <td><input class="ci-inp" value="${r.name||''}" placeholder="費用項目（例：管銷費用）" style="width:100%" onchange="feeChange(${r.id},'name',this.value)"></td>
-    <td><input class="ci-inp mono tr" type="number" value="${r.cost||''}" placeholder="0" step="any" style="width:108px" onchange="feeChange(${r.id},'cost',this.value)" oninput="recalc()"></td>
-    <td><input class="ci-inp" value="${r.note||''}" placeholder="備註" style="width:100%" onchange="feeChange(${r.id},'note',this.value)"></td>
-    <td style="text-align:center"><button class="btn-del" onclick="delFee(${r.id})">✕</button></td>
-  </tr>`).join('');
-  body.innerHTML=rows+`<tr class="add-trigger-row"><td colspan="4">
-    <button class="add-trigger-btn" onclick="addFee()">＋ 新增管銷費用</button></td></tr>`;
-}
-function renderPriceTable(p){
-  const body=document.getElementById('price-body');
-  const cost=prodTotal(p);  // 每單位產品成本
+function closeTransDBModal() { document.getElementById('transDBModal').classList.remove('open'); }
 
-  const rows=(p.prices||[]).map(r=>{
-    const sp=parseFloat(r.sellPrice)||0;   // 末端售價（使用者填入）
-    const profit=sp>0 ? sp-cost : null;
-    const margin=sp>0 ? (profit/sp)*100 : null;
+async function saveTransDBItem() {
+  const zh = document.getElementById('tdbF_zh').value.trim();
+  const en = document.getElementById('tdbF_en').value.trim();
+  if (!zh || !en) { showToast('中文和英文名稱都必須填寫！'); return; }
+  const note = document.getElementById('tdbF_note').value.trim();
+  const { url, key } = getSBConfig();
+  const db = loadTransDB();
+  const isEdit = editingTDBIdx >= 0;
+  const editZh = isEdit ? db[editingTDBIdx]?.zh : null;
+  if (!isEdit && db.find(d => d.zh.toLowerCase() === zh.toLowerCase())) { showToast('⚠️ 此中文名稱已存在！'); return; }
+  if (url && key) {
+    if (isEdit) await sbFetch(`trans_db?zh=eq.${encodeURIComponent(editZh)}`, { method: 'PATCH', body: JSON.stringify({ zh, en, note }), prefer: 'return=minimal' });
+    else await sbFetch('trans_db', { method: 'POST', body: JSON.stringify({ zh, en, note }) });
+  }
+  if (isEdit) { db[editingTDBIdx] = { zh, en, note }; }
+  else db.push({ zh, en, note });
+  saveTransDB(db); _tdbCache = db;
+  showToast(isEdit ? `✅ 已更新「${zh}」` : `✅ 已新增「${zh}」`);
+  closeTransDBModal(); renderTransDB();
+}
 
-    const profitStr  = profit!==null ? (profit>=0?'+':'')+f2(profit) : '—';
-    const marginStr  = margin!==null ? f2(margin,1)+'%' : '—';
-    const profitCls  = profit!==null ? (profit>=0?'profit-pos':'profit-neg') : '';
-    const marginCls  = margin!==null ? (margin>=0?'profit-pos':'profit-neg') : '';
+async function deleteTransDBItem(idx) {
+  const db = loadTransDB();
+  if (!db[idx] || !confirm(`確定刪除「${db[idx].zh}」嗎？`)) return;
+  const { url, key } = getSBConfig();
+  if (url && key) await sbFetch(`trans_db?zh=eq.${encodeURIComponent(db[idx].zh)}`, { method: 'DELETE', prefer: 'return=minimal' });
+  db.splice(idx, 1); saveTransDB(db); _tdbCache = db;
+  renderTransDB(); showToast('🗑️ 已刪除');
+}
 
+function exportTransDB() {
+  const db = loadTransDB();
+  if (!db.length) { showToast('詞庫是空的！'); return; }
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '成分翻譯詞庫.json'; a.click();
+}
+function importTransDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw '';
+      const existing = loadTransDB(); let added = 0, skipped = 0;
+      data.forEach(item => {
+        if (!item.zh || !item.en) return;
+        if (existing.find(d => d.zh === item.zh)) { skipped++; return; }
+        existing.push(item); added++;
+      });
+      saveTransDB(existing); renderTransDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch { showToast('⚠️ 格式錯誤'); }
+  };
+  reader.readAsText(file); input.value = '';
+}
+
+
+// ══════════════════════════════════
+// TRANSLATION
+// ══════════════════════════════════
+let _lastAIResults = []; // AI翻譯結果暫存，供「存入詞庫」使用
+
+function saveApiKey(val) { localStorage.setItem('anthropicApiKey', val); }
+function loadApiKey() {
+  const k = localStorage.getItem('anthropicApiKey') || '';
+  const inp = document.getElementById('apiKeyInput');
+  if (inp && k) inp.value = k;
+  return k;
+}
+
+function loadFromIngredients() {
+  const names = ingredients.filter(r => r.name).map(r => r.name);
+  if (!names.length) { showToast('配方表尚無成分資料！'); return; }
+  document.getElementById('transInput').value = names.join('\n');
+  showToast(`✅ 已載入 ${names.length} 個成分`);
+}
+
+function copyTransOutput() {
+  const val = document.getElementById('transOutput').value;
+  if (!val) { showToast('尚無翻譯結果'); return; }
+  navigator.clipboard.writeText(val).then(() => showToast('✅ 已複製！'));
+}
+
+// 將本次 AI 翻譯結果全部存入詞庫
+function saveNewToTransDB() {
+  if (!_lastAIResults.length) return;
+  const db = loadTransDB(); let added = 0, skipped = 0;
+  _lastAIResults.forEach(r => {
+    if (db.find(d => d.zh.toLowerCase() === r.zh.toLowerCase())) { skipped++; return; }
+    db.push({ zh: r.zh, en: r.en, note: 'AI 翻譯' }); added++;
+  });
+  saveTransDB(db);
+  showToast(`✅ 已存入詞庫：新增 ${added} 筆，略過重複 ${skipped} 筆`);
+  renderTransDB();
+  document.getElementById('statSaveBox').style.display = 'none';
+  _lastAIResults = [];
+}
+
+async function translateIngredients() {
+  const apiKey = loadApiKey();
+  const raw = document.getElementById('transInput').value.trim();
+  if (!raw) { showToast('請先輸入要翻譯的成分！'); return; }
+
+  const items = raw.split(/[\n,，、]+/).map(s => s.trim()).filter(Boolean);
+  if (!items.length) { showToast('找不到成分，請確認輸入格式'); return; }
+
+  document.getElementById('transLoading').style.display = 'flex';
+  document.getElementById('transBtn').disabled = true;
+  document.getElementById('transResultList').style.display = 'none';
+  document.getElementById('transStats').style.display = 'none';
+  document.getElementById('transOutput').value = '';
+  _lastAIResults = [];
+
+  // ── Step 1: 詞庫查詢 ──
+  const dbHits = [];
+  const needAI = [];
+  items.forEach(zh => {
+    const hit = findTransDB(zh);
+    if (hit) dbHits.push({ zh, en: hit.en, src: 'db' });
+    else needAI.push(zh);
+  });
+
+  let aiResults = [];
+
+  // ── Step 2: 需要 AI 翻譯的部分 ──
+  if (needAI.length > 0) {
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+      if (dbHits.length === 0) {
+        showToast('⚠️ 請先填入 Anthropic API Key，或先建立翻譯詞庫！');
+        document.getElementById('transLoading').style.display = 'none';
+        document.getElementById('transBtn').disabled = false;
+        return;
+      }
+      // 部分命中，AI 部分跳過
+      needAI.forEach(zh => aiResults.push({ zh, en: '（需要 API Key 翻譯）', src: 'ai' }));
+    } else {
+      try {
+        const prompt = `你是食品標示專家。請將以下中文食品成分名稱翻譯成英文（食品標示用語，專業準確）。
+請以 JSON 陣列格式回覆，每個元素包含 "zh" 和 "en" 兩個欄位，只回覆 JSON，不要其他文字。
+
+中文成分清單：
+${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
+
+範例輸出格式：
+[{"zh":"樹薯粉","en":"Tapioca Starch"},{"zh":"大豆沙拉油","en":"Soybean Salad Oil"}]`;
+
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+        });
+        if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error?.message || `HTTP ${resp.status}`); }
+        const data = await resp.json();
+        const text = data.content?.[0]?.text || '';
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) throw new Error('回傳格式無法解析');
+        const parsed = JSON.parse(jsonMatch[0]);
+        aiResults = parsed.map(r => ({ zh: r.zh, en: r.en, src: 'ai' }));
+        _lastAIResults = [...aiResults];
+      } catch(err) {
+        showToast('⚠️ AI 翻譯失敗：' + err.message);
+        needAI.forEach(zh => aiResults.push({ zh, en: '（翻譯失敗）', src: 'ai' }));
+      }
+    }
+  }
+
+  // ── Step 3: 按原始輸入順序合併結果 ──
+  const allResults = items.map(zh => {
+    return dbHits.find(r => r.zh === zh) || aiResults.find(r => r.zh === zh) || { zh, en: '（無法翻譯）', src: 'ai' };
+  });
+
+  // ── Step 4: 輸出 ──
+  document.getElementById('transOutput').value = allResults.map(r => r.en).join('\n');
+
+  // Stats
+  const dbCount = allResults.filter(r => r.src === 'db').length;
+  const aiCount = allResults.filter(r => r.src === 'ai').length;
+  document.getElementById('statDB').textContent = dbCount;
+  document.getElementById('statAI').textContent = aiCount;
+  document.getElementById('transStats').style.display = 'flex';
+  document.getElementById('statSaveBox').style.display = aiCount > 0 && _lastAIResults.length > 0 ? '' : 'none';
+
+  // Result list
+  document.getElementById('transItems').innerHTML = allResults.map((r, i) => `
+    <div class="trans-result-item">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0">${i+1}</div>
+      <div class="trans-zh">${r.zh}</div>
+      <div style="color:var(--text3)">→</div>
+      <div class="trans-en">${r.en}</div>
+      <span class="tdb-badge-${r.src}">${r.src === 'db' ? '詞庫' : 'AI'}</span>
+      <button class="btn btn-secondary trans-copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(r.en)}).then(()=>showToast('已複製！'))">複製</button>
+    </div>`).join('');
+  document.getElementById('transResultList').style.display = '';
+  showToast(`✅ 翻譯完成！詞庫 ${dbCount} 筆 + AI ${aiCount} 筆`);
+
+  document.getElementById('transLoading').style.display = 'none';
+  document.getElementById('transBtn').disabled = false;
+}
+
+
+// ══════════════════════════════════
+// EXPAND DB（原料展開）
+// ══════════════════════════════════
+const EXP_KEY = 'expandDB_v1';
+let _expCache = null;
+function loadExpandDB_local() { try { return JSON.parse(localStorage.getItem(EXP_KEY) || '[]'); } catch { return []; } }
+function saveExpandDB_local(db) { localStorage.setItem(EXP_KEY, JSON.stringify(db)); }
+async function loadExpandDB_remote() {
+  const { url, key } = getSBConfig();
+  if (!url || !key) return null;
+  try {
+    const rows = await sbFetch('expand_db?order=name');
+    if (rows !== null) { const db = rows.map(r => ({ name: r.name, expanded: r.expanded, note: r.note || '' })); saveExpandDB_local(db); return db; }
+  } catch(e) {}
+  return null;
+}
+function loadExpandDB() { return _expCache || loadExpandDB_local(); }
+function saveExpandDB(db) { saveExpandDB_local(db); _expCache = null; }
+function findExpand(name) {
+  const db = loadExpandDB();
+  return db.find(d => d.name.toLowerCase() === name.trim().toLowerCase()) || null;
+}
+
+// 將單一成分名稱套用展開（若有記錄則回傳展開文字，否則原名）
+function applyExpand(name) {
+  const hit = findExpand(name);
+  return hit ? hit.expanded : name;
+}
+
+async function renderExpandDB() {
+  const q = document.getElementById('expSearch').value.toLowerCase();
+  if (!_expCache) { const remote = await loadExpandDB_remote(); if (remote) _expCache = remote; }
+  const all = loadExpandDB();
+  document.getElementById('expCount').textContent = all.length;
+  const empty = document.getElementById('expEmpty');
+  const tbody = document.getElementById('expBody');
+  const data = q ? all.filter(d => d.name.toLowerCase().includes(q) || d.expanded.toLowerCase().includes(q)) : all;
+  if (!all.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--text3)">找不到符合的記錄</td></tr>`; return; }
+  tbody.innerHTML = data.map(item => {
+    const realIdx = all.findIndex(d => d.name === item.name);
     return `<tr>
       <td>
-        <input class="ci-inp" value="${esc(r.channel)}" placeholder="輸入客戶名稱…" style="width:100%"
-          onchange="priceChange(${r.id},'channel',this.value)">
+        <div>${item.name}</div>
+        ${item.note ? `<div style="font-size:.72rem;color:var(--text3);margin-top:2px">${item.note}</div>` : ''}
       </td>
-      <td class="mono tr" style="padding:6px 10px;font-weight:600;color:var(--gold)">
-        $${f2(cost)}
-      </td>
-      <td style="padding:2px 4px">
-        <div style="display:flex;align-items:center;gap:4px">
-          <span style="font-size:12px;color:var(--ink3);padding-left:4px">$</span>
-          <input class="ci-inp mono" type="number" value="${r.sellPrice||''}" placeholder="0"
-            min="0" step="any" style="width:100px;font-weight:700;font-size:13px;text-align:right"
-            oninput="priceChange(${r.id},'sellPrice',this.value);renderPriceTable(DB.prods.find(x=>x.id===activeProd))"
-            onchange="priceChange(${r.id},'sellPrice',this.value)">
-        </div>
-      </td>
-      <td class="mono tr" style="padding:6px 10px;font-size:14px;font-weight:700">
-        <span class="${profitCls}">${profitStr}</span>
-      </td>
-      <td style="padding:6px 10px;text-align:right">
-        <span class="mono ${marginCls}" style="font-size:13px;font-weight:700">${marginStr}</span>
-      </td>
-      <td style="text-align:center;padding:4px">
-        <button class="btn-del" onclick="delPrice(${r.id})">✕</button>
+      <td><div class="exp-expanded">${escH(item.expanded)}</div></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openExpandModal(${realIdx})" style="margin-right:4px">✏️</button>
+        <button class="btn btn-danger" onclick="deleteExpandItem(${realIdx})">✕</button>
       </td>
     </tr>`;
   }).join('');
-
-  body.innerHTML=rows+`<tr class="add-trigger-row"><td colspan="6">
-    <button class="add-trigger-btn" onclick="addPrice()">＋ 新增客戶</button></td></tr>`;
 }
 
-function esc(s){ return (s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+let editingExpIdx = -1;
+function openExpandModal(idx) {
+  editingExpIdx = idx;
+  const db = loadExpandDB();
+  document.getElementById('expandModalTitle').textContent = idx < 0 ? '＋ 新增展開記錄' : '✏️ 編輯展開記錄';
+  const item = idx >= 0 ? db[idx] : null;
+  document.getElementById('expF_name').value = item ? item.name : '';
+  document.getElementById('expF_expanded').value = item ? item.expanded : '';
+  document.getElementById('expF_note').value = item ? (item.note || '') : '';
+  document.getElementById('expandModal').classList.add('open');
+  document.getElementById('expF_name').focus();
+}
+function closeExpandModal() { document.getElementById('expandModal').classList.remove('open'); }
 
-// ═══════════════════════════════════════════════════════
-// ROW OPERATIONS
-// ═══════════════════════════════════════════════════════
-function addRow(type){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r={id:uid(),code:'',name:'',buyPrice:'',buyUnit:'',unitPrice:'',priceUnit:'',qty:'',qtyUnit:'',cost:0};
-  p[type].push(r); saveDB();
-  if(type==='ing') renderIngTable(p);
-  else if(type==='pkg') renderPkgTable(p);
-  else renderLabTable(p);
-}
-function addFee(){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  p.fee.push({id:uid(),name:'',cost:0,note:''});
-  saveDB(); renderFeeTable(p);
-}
-function addPrice(){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  if(!p.prices) p.prices=[];
-  p.prices.push({id:uid(),channel:'',sellPrice:''});
-  saveDB(); renderPriceTable(p);
-}
-
-function rowChange(type,id,field,val){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p[type].find(x=>x.id===id); if(!r) return;
-  r[field]=val; saveDB();
-}
-function feeChange(id,field,val){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p.fee.find(x=>x.id===id); if(!r) return;
-  r[field]=val; if(field==='cost') recalc(); else saveDB();
-}
-function priceChange(id,field,val){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p.prices.find(x=>x.id===id); if(!r) return;
-  r[field]=val;
-  saveDB();
-}
-function recalcRow(type,id){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p[type].find(x=>x.id===id); if(!r) return;
-  const up=parseFloat(document.querySelector(`#row-${type}-${id} input[type=number]:nth-of-type(2)`)||r.unitPrice)||parseFloat(r.unitPrice)||0;
-  const qty=parseFloat(r.qty)||0;
-  // re-read from inputs
-  const tds=document.getElementById(`row-${type}-${id}`);
-  if(tds){
-    const inps=tds.querySelectorAll('input[type=number]');
-    r.buyPrice=inps[0]?inps[0].value:'';
-    r.unitPrice=inps[1]?inps[1].value:'';
-    r.qty=inps[2]?inps[2].value:'';
+async function saveExpandItem() {
+  const name = document.getElementById('expF_name').value.trim();
+  const expanded = document.getElementById('expF_expanded').value.trim();
+  if (!name) { showToast('請填寫原料名稱！'); return; }
+  if (!expanded) { showToast('請填寫展開內容！'); return; }
+  const note = document.getElementById('expF_note').value.trim();
+  const { url, key } = getSBConfig();
+  const db = loadExpandDB();
+  const isEdit = editingExpIdx >= 0;
+  const editName = isEdit ? db[editingExpIdx]?.name : null;
+  if (!isEdit && db.find(d => d.name.toLowerCase() === name.toLowerCase())) { showToast('⚠️ 此名稱已存在！'); return; }
+  if (url && key) {
+    if (isEdit) await sbFetch(`expand_db?name=eq.${encodeURIComponent(editName)}`, { method: 'PATCH', body: JSON.stringify({ name, expanded, note }), prefer: 'return=minimal' });
+    else await sbFetch('expand_db', { method: 'POST', body: JSON.stringify({ name, expanded, note }) });
   }
-  const uPrice=parseFloat(r.unitPrice)||0;
-  const uQty=parseFloat(r.qty)||0;
-  r.cost=uPrice*uQty;
-  const cel=document.getElementById(`cost-${type}-${id}`);
-  if(cel) cel.textContent=r.cost>0?'$'+f2(r.cost):'';
-  saveDB(); recalc();
+  if (isEdit) { db[editingExpIdx] = { name, expanded, note }; }
+  else db.push({ name, expanded, note });
+  saveExpandDB(db); _expCache = db;
+  showToast(isEdit ? `✅ 已更新「${name}」` : `✅ 已新增「${name}」的展開記錄`);
+  closeExpandModal(); renderExpandDB();
 }
 
-function delRow(type,id){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  p[type]=p[type].filter(x=>x.id!==id);
-  saveDB();
-  if(type==='ing') renderIngTable(p);
-  else if(type==='pkg') renderPkgTable(p);
-  else renderLabTable(p);
-  recalc();
-}
-function delFee(id){ const p=DB.prods.find(x=>x.id===activeProd); if(!p) return; p.fee=p.fee.filter(x=>x.id!==id); saveDB(); renderFeeTable(p); recalc(); }
-function delPrice(id){ const p=DB.prods.find(x=>x.id===activeProd); if(!p) return; p.prices=p.prices.filter(x=>x.id!==id); saveDB(); renderPriceTable(p); }
-
-// ═══════════════════════════════════════════════════════
-// AUTOCOMPLETE ── 編碼欄 (精確/前綴優先)
-// ═══════════════════════════════════════════════════════
-function showCodeAC(type, rowId, q){
-  const qL=q.toLowerCase().trim();
-  const dd=document.getElementById(`code-dd-${type}-${rowId}`);
-  if(!qL){dd.classList.remove('open');return;}
-  const db=type==='ing'?DB.raw:type==='pkg'?DB.pkg:DB.lab;
-  const hits=db.filter(m=>(m.code||'').toLowerCase().startsWith(qL)||(m.code||'').toLowerCase().includes(qL)||m.name.toLowerCase().includes(qL)).slice(0,8);
-  if(!hits.length){dd.classList.remove('open');return;}
-  dd.innerHTML=hits.map(m=>`<div class="ac-row" onmousedown="applyByCode('${type}',${rowId},${m.id})">
-    <div class="ac-row-name" style="display:flex;align-items:center;gap:8px">
-      <span class="mono" style="font-weight:700;color:var(--gold);font-size:11px;min-width:64px">${m.code||''}</span>
-      <span>${m.name}</span>
-    </div>
-    <div class="ac-row-meta">$${f2(m.unitPrice,4)}/${m.priceUnit} · ${m.spec||''}</div>
-  </div>`).join('');
-  dd.classList.add('open');
+async function deleteExpandItem(idx) {
+  const db = loadExpandDB();
+  if (!db[idx] || !confirm(`確定刪除「${db[idx].name}」的展開記錄嗎？`)) return;
+  const { url, key } = getSBConfig();
+  if (url && key) await sbFetch(`expand_db?name=eq.${encodeURIComponent(db[idx].name)}`, { method: 'DELETE', prefer: 'return=minimal' });
+  db.splice(idx, 1); saveExpandDB(db); _expCache = db;
+  renderExpandDB(); showToast('🗑️ 已刪除');
 }
 
-function codeKey(e, type, rowId){
-  const dd=document.getElementById(`code-dd-${type}-${rowId}`);
-  const items=dd.querySelectorAll('.ac-row');
-  let cur=[...items].findIndex(el=>el.classList.contains('hi'));
-  if(e.key==='ArrowDown'){e.preventDefault();items.forEach(el=>el.classList.remove('hi'));cur=Math.min(cur+1,items.length-1);if(items[cur])items[cur].classList.add('hi');}
-  else if(e.key==='ArrowUp'){e.preventDefault();items.forEach(el=>el.classList.remove('hi'));cur=Math.max(cur-1,0);if(items[cur])items[cur].classList.add('hi');}
-  else if(e.key==='Enter'||e.key==='Tab'){
-    const hi=dd.querySelector('.ac-row.hi');
-    if(hi){e.preventDefault();hi.dispatchEvent(new Event('mousedown'));}
-    else if(items.length===1){e.preventDefault();items[0].dispatchEvent(new Event('mousedown'));}
-    else{
-      const inp=document.getElementById(`code-inp-${type}-${rowId}`);
-      const q=(inp?inp.value:'').trim().toUpperCase();
-      const db=type==='ing'?DB.raw:type==='pkg'?DB.pkg:DB.lab;
-      const exact=db.find(m=>(m.code||'').toUpperCase()===q);
-      if(exact){e.preventDefault();applyByCode(type,rowId,exact.id);}
-    }
-  }
-  else if(e.key==='Escape'){dd.classList.remove('open');}
+function exportExpandDB() {
+  const db = loadExpandDB();
+  if (!db.length) { showToast('展開庫是空的！'); return; }
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = '原料展開資料庫.json'; a.click();
 }
-
-function codeBlur(type, rowId){
-  setTimeout(()=>{
-    const dd=document.getElementById(`code-dd-${type}-${rowId}`);
-    if(dd) dd.classList.remove('open');
-    const inp=document.getElementById(`code-inp-${type}-${rowId}`);
-    if(!inp) return;
-    const q=inp.value.trim().toUpperCase();
-    if(!q) return;
-    const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-    const r=p[type].find(x=>x.id===rowId); if(!r) return;
-    if(r.name) return;
-    const db=type==='ing'?DB.raw:type==='pkg'?DB.pkg:DB.lab;
-    const exact=db.find(m=>(m.code||'').toUpperCase()===q);
-    if(exact) applyByCode(type,rowId,exact.id);
-  },180);
-}
-
-function applyByCode(type, rowId, matId){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p[type].find(x=>x.id===rowId); if(!r) return;
-  const db=type==='ing'?DB.raw:type==='pkg'?DB.pkg:DB.lab;
-  const m=db.find(x=>x.id===matId); if(!m) return;
-  r.code=m.code||''; r.name=m.name;
-  r.buyPrice=m.buyPrice; r.buyUnit=m.buyUnit;
-  r.unitPrice=m.unitPrice; r.priceUnit=m.priceUnit;
-  r.qtyUnit=m.useUnit||m.priceUnit;
-  r.qty=''; r.cost=0;
-  saveDB();
-  const tr=document.getElementById(`row-${type}-${rowId}`);
-  if(tr){
-    const tmp=document.createElement('tbody');
-    tmp.innerHTML=makeRow(type,r,0);
-    tr.parentNode.replaceChild(tmp.firstChild,tr);
-  }
-  const dd1=document.getElementById(`code-dd-${type}-${rowId}`);
-  const dd2=document.getElementById(`ac-dd-${type}-${rowId}`);
-  if(dd1) dd1.classList.remove('open');
-  if(dd2) dd2.classList.remove('open');
-  setTimeout(()=>{
-    const qtyInp=document.getElementById(`qty-inp-${type}-${rowId}`);
-    if(qtyInp){qtyInp.focus();qtyInp.select();}
-  },40);
-}
-
-// ═══════════════════════════════════════════════════════
-// AUTOCOMPLETE ── 品名欄 (模糊搜尋)
-// ═══════════════════════════════════════════════════════
-let _acTimer={};
-function showAC(type, rowId, q){
-  const qL=q.toLowerCase().trim();
-  const dd=document.getElementById(`ac-dd-${type}-${rowId}`);
-  if(!qL){dd.classList.remove('open');return;}
-  const db=type==='ing'?DB.raw:type==='pkg'?DB.pkg:DB.lab;
-  const hits=db.filter(m=>m.name.toLowerCase().includes(qL)||(m.code||'').toLowerCase().includes(qL)).slice(0,10);
-  let html=hits.map(m=>`<div class="ac-row" onmousedown="applyAC('${type}',${rowId},${m.id})">
-    <div class="ac-row-name">${m.name}</div>
-    <div class="ac-row-meta">${m.code||''} | $${f2(m.unitPrice,4)}/${m.priceUnit}</div>
-  </div>`).join('');
-  html+=`<div class="ac-create" onmousedown="quickCreate('${type}','${q.replace(/'/g,"\\'")}')">＋ 「${q}」新增至資料庫並帶入</div>`;
-  if(!hits.length) html=`<div style="padding:7px 10px;font-size:11px;color:var(--ink3)">找不到「${q}」</div>`+html;
-  dd.innerHTML=html; dd.classList.add('open');
-}
-
-function applyAC(type, rowId, matId){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p[type].find(x=>x.id===rowId); if(!r) return;
-  const db=type==='ing'?DB.raw:type==='pkg'?DB.pkg:DB.lab;
-  const m=db.find(x=>x.id===matId); if(!m) return;
-  // fill all fields
-  r.code=m.code||''; r.name=m.name;
-  r.buyPrice=m.buyPrice; r.buyUnit=m.buyUnit;
-  r.unitPrice=m.unitPrice; r.priceUnit=m.priceUnit;
-  r.qtyUnit=m.useUnit||m.priceUnit;
-  r.qty=''; r.cost=0;
-  saveDB();
-  // re-render just this row
-  const tr=document.getElementById(`row-${type}-${rowId}`);
-  if(tr){
-    const tmp=document.createElement('tbody');
-    tmp.innerHTML=makeRow(type,r,0);
-    tr.parentNode.replaceChild(tmp.firstChild,tr);
-  }
-  const dd1=document.getElementById(`code-dd-${type}-${rowId}`);
-  const dd2=document.getElementById(`ac-dd-${type}-${rowId}`);
-  if(dd1) dd1.classList.remove('open');
-  if(dd2) dd2.classList.remove('open');
-  // focus qty
-  setTimeout(()=>{
-    const qtyInp=document.getElementById(`qty-inp-${type}-${rowId}`);
-    if(qtyInp){qtyInp.focus();qtyInp.select();}
-  },40);
-}
-
-function acKey(e,type,rowId){
-  const dd=document.getElementById(`ac-dd-${type}-${rowId}`);
-  const items=dd.querySelectorAll('.ac-row');
-  let cur=[...items].findIndex(el=>el.classList.contains('hi'));
-  if(e.key==='ArrowDown'){e.preventDefault();items.forEach(el=>el.classList.remove('hi'));cur=Math.min(cur+1,items.length-1);if(items[cur])items[cur].classList.add('hi');}
-  else if(e.key==='ArrowUp'){e.preventDefault();items.forEach(el=>el.classList.remove('hi'));cur=Math.max(cur-1,0);if(items[cur])items[cur].classList.add('hi');}
-  else if(e.key==='Enter'){e.preventDefault();const hi=dd.querySelector('.ac-row.hi');if(hi)hi.dispatchEvent(new Event('mousedown'));}
-  else if(e.key==='Escape'){dd.classList.remove('open');}
-}
-function delayHideAC(type,rowId){ setTimeout(()=>{ const dd=document.getElementById(`ac-dd-${type}-${rowId}`); if(dd) dd.classList.remove('open'); },200); }
-
-// Close all dropdowns on outside click
-document.addEventListener('click',e=>{
-  document.querySelectorAll('.ac-dd.open').forEach(dd=>{
-    if(!dd.contains(e.target)){
-      const inp=dd.previousElementSibling||dd.parentElement.querySelector('input');
-      if(inp&&inp!==e.target) dd.classList.remove('open');
-    }
-  });
-});
-
-function quickCreate(type,name){
-  const dbType=type==='ing'?'raw':type==='pkg'?'pkg':'lab';
-  openMatModal(dbType,null,name,type);
-}
-
-// ═══════════════════════════════════════════════════════
-// PRODUCT CRUD
-// ═══════════════════════════════════════════════════════
-function openNewProd(){ openM('modal-new-prod'); ['np-name','np-spec','np-oq','np-p1','np-p2'].forEach(id=>document.getElementById(id).value=''); }
-function createProd(){
-  const name=document.getElementById('np-name').value.trim();
-  if(!name){alert('請輸入品名');return;}
-  const prices=[];
-  const p1=parseFloat(document.getElementById('np-p1').value); if(p1>0) prices.push({id:uid(),channel:'客戶售價',price:p1});
-  const p2=parseFloat(document.getElementById('np-p2').value); if(p2>0) prices.push({id:uid(),channel:'零售售價',price:p2});
-  const p={id:uid(),name,spec:document.getElementById('np-spec').value,
-    oq:parseFloat(document.getElementById('np-oq').value)||1,
-    ou:document.getElementById('np-ou').value,
-    ing:[],pkg:[],lab:[],fee:[],prices};
-  DB.prods.push(p); saveDB(); CM('modal-new-prod'); loadProd(p.id); renderSidebar();
-}
-function deleteProd(){
-  if(!activeProd||!confirm('確定刪除此產品？')) return;
-  DB.prods=DB.prods.filter(p=>p.id!==activeProd);
-  activeProd=null; saveDB(); renderSidebar();
-  document.getElementById('no-prod').style.display='flex';
-  document.getElementById('prod-editor').style.display='none';
-}
-
-// ═══════════════════════════════════════════════════════
-// LIBRARY RENDERERS
-// ═══════════════════════════════════════════════════════
-function renderRawLib(){
-  const q=(document.getElementById('raw-search').value||'').toLowerCase();
-  const list=DB.raw.filter(m=>!q||m.name.toLowerCase().includes(q)||(m.code||'').toLowerCase().includes(q));
-  document.getElementById('raw-count').textContent=`共 ${DB.raw.length} 筆食材原料`;
-  document.getElementById('raw-tbody').innerHTML=list.map(m=>libRow(m,'raw')).join('');
-}
-function renderPkgLib(){
-  const q=(document.getElementById('pkg-search').value||'').toLowerCase();
-  const list=DB.pkg.filter(m=>!q||m.name.toLowerCase().includes(q)||(m.code||'').toLowerCase().includes(q));
-  document.getElementById('pkg-count').textContent=`共 ${DB.pkg.length} 筆包材物料`;
-  document.getElementById('pkg-tbody').innerHTML=list.map(m=>libRow(m,'pkg')).join('');
-}
-function libRow(m,dbType){
-  return `<tr>
-    <td><span class="ci mono muted" style="font-size:10px">${m.code||''}</span></td>
-    <td><span class="ci bold">${m.name}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.spec||''}</span></td>
-    <td><span class="ci mono tr">$${f2(m.buyPrice)}</span></td>
-    <td><span class="ci muted">${m.buyUnit||''}</span></td>
-    <td><span class="ci mono tr bold" style="color:var(--gold)">$${f2(m.unitPrice,4)}</span></td>
-    <td><span class="ci muted">${m.priceUnit||''}</span></td>
-    <td><span class="ci mono tr">${m.useQty||''}</span></td>
-    <td><span class="ci muted">${m.useUnit||''}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.note||''}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.spec2||''}</span></td>
-    <td style="display:flex;gap:4px;padding:5px">
-      <button class="btn btn-ghost btn-sm" onclick="openMatModal('${dbType}',${m.id})">✏️</button>
-      <button class="btn-del" onclick="deleteMat('${dbType}',${m.id})">✕</button>
-    </td>
-  </tr>`;
-}
-function renderLabLib(){
-  document.getElementById('lab-lib-tbody').innerHTML=DB.lab.map(m=>`<tr>
-    <td><span class="ci mono muted" style="font-size:10px">${m.code||''}</span></td>
-    <td><span class="ci bold">${m.name}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.spec||''}</span></td>
-    <td><span class="ci mono tr">$${f2(m.rate)}</span></td>
-    <td><span class="ci muted">${m.rateUnit||''}</span></td>
-    <td><span class="ci mono tr bold" style="color:var(--gold)">$${f2(m.unitPrice)}</span></td>
-    <td><span class="ci muted">${m.priceUnit||''}</span></td>
-    <td><span class="ci mono tr">${m.useQty||''}</span></td>
-    <td><span class="ci muted">${m.useUnit||''}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.note||''}</span></td>
-    <td style="display:flex;gap:4px;padding:5px">
-      <button class="btn btn-ghost btn-sm" onclick="openLabModal(${m.id})">✏️</button>
-      <button class="btn-del" onclick="deleteLab(${m.id})">✕</button>
-    </td>
-  </tr>`).join('');
-}
-
-// ═══════════════════════════════════════════════════════
-// MAT MODAL
-// ═══════════════════════════════════════════════════════
-let _mmType='raw', _mmEdit=null, _mmBackType=null;
-function openMatModal(dbType, id, prefillName, backType){
-  _mmType=dbType; _mmEdit=id; _mmBackType=backType||null;
-  const isLab=dbType==='lab';
-  document.getElementById('mat-modal-title').textContent = id?'編輯':'新增 '+(dbType==='raw'?'食材':dbType==='pkg'?'包材':'工項');
-  document.getElementById('mm-save-btn').textContent = id?'更新':'儲存';
-  const fields=['mm-code','mm-name','mm-spec','mm-buyprice','mm-buyqty','mm-buyunit','mm-unitprice','mm-priceunit','mm-spec2','mm-note','mm-spec3'];
-  fields.forEach(f=>document.getElementById(f).value='');
-  document.getElementById('mm-hint').textContent='';
-  if(id){
-    const arr=dbType==='raw'?DB.raw:dbType==='pkg'?DB.pkg:DB.lab;
-    const m=arr.find(x=>x.id===id); if(!m) return;
-    document.getElementById('mm-code').value=m.code||'';
-    document.getElementById('mm-name').value=m.name||'';
-    document.getElementById('mm-spec').value=m.spec||'';
-    document.getElementById('mm-buyprice').value=m.buyPrice||'';
-    document.getElementById('mm-buyqty').value=m.buyQty||'';
-    document.getElementById('mm-buyunit').value=m.buyUnit||'';
-    document.getElementById('mm-unitprice').value=m.unitPrice||'';
-    document.getElementById('mm-priceunit').value=m.priceUnit||'';
-    document.getElementById('mm-spec2').value=m.spec2||m.buyQty||'';
-    document.getElementById('mm-note').value=m.note||'';
-    document.getElementById('mm-spec3').value=m.spec3||'';
-  } else if(prefillName){
-    document.getElementById('mm-name').value=prefillName;
-  }
-  openM('modal-mat');
-}
-function calcMM(){
-  const bp=parseFloat(document.getElementById('mm-buyprice').value);
-  const bq=parseFloat(document.getElementById('mm-buyqty').value);
-  const pu=document.getElementById('mm-priceunit').value||'單位';
-  if(bp>=0&&bq>0){
-    const up=bp/bq;
-    document.getElementById('mm-unitprice').value=f2(up,6);
-    document.getElementById('mm-hint').textContent=`單位成本 = $${f2(up,6)} / ${pu}`;
-  } else { document.getElementById('mm-hint').textContent=''; }
-}
-function calcMM2(){ document.getElementById('mm-hint').textContent=''; }
-function saveMat(){
-  const name=document.getElementById('mm-name').value.trim(); if(!name){alert('請輸入品名');return;}
-  const obj={
-    code:document.getElementById('mm-code').value.trim(),
-    name,
-    spec:document.getElementById('mm-spec').value.trim(),
-    buyPrice:parseFloat(document.getElementById('mm-buyprice').value)||0,
-    buyQty:parseFloat(document.getElementById('mm-buyqty').value)||1,
-    buyUnit:document.getElementById('mm-buyunit').value.trim(),
-    unitPrice:parseFloat(document.getElementById('mm-unitprice').value)||0,
-    priceUnit:document.getElementById('mm-priceunit').value.trim(),
-    spec2:document.getElementById('mm-spec2').value.trim(),
-    note:document.getElementById('mm-note').value.trim(),
-    spec3:document.getElementById('mm-spec3').value.trim(),
-    useQty:'', useUnit:document.getElementById('mm-priceunit').value.trim(),
-  };
-  const arr=_mmType==='raw'?DB.raw:_mmType==='pkg'?DB.pkg:DB.lab;
-  if(_mmEdit){
-    const m=arr.find(x=>x.id===_mmEdit); if(m) Object.assign(m,obj);
-  } else {
-    obj.id=uid(); arr.push(obj);
-    // if quick-create from product row, apply to current row
-    if(_mmBackType){
-      const p=DB.prods.find(x=>x.id===activeProd);
-      if(p){
-        const rowArr=_mmBackType==='ing'?p.ing:_mmBackType==='pkg'?p.pkg:p.lab;
-        // find last empty row or add
-        let emptyRow=rowArr.find(r=>!r.name);
-        if(!emptyRow){emptyRow={id:uid(),code:'',name:'',buyPrice:'',buyUnit:'',unitPrice:'',priceUnit:'',qty:'',qtyUnit:'',cost:0};rowArr.push(emptyRow);}
-        applyACObj(_mmBackType,emptyRow.id,obj.id,arr);
-      }
-    }
-  }
-  saveDB(); CM('modal-mat');
-  if(_mmType==='raw') renderRawLib();
-  else if(_mmType==='pkg') renderPkgLib();
-  else renderLabLib();
-}
-function applyACObj(type,rowId,matId,arr){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const r=p[type].find(x=>x.id===rowId); if(!r) return;
-  const m=arr.find(x=>x.id===matId); if(!m) return;
-  r.code=m.code||''; r.name=m.name;
-  r.buyPrice=m.buyPrice; r.buyUnit=m.buyUnit;
-  r.unitPrice=m.unitPrice; r.priceUnit=m.priceUnit;
-  r.qtyUnit=m.useUnit||m.priceUnit; r.qty=''; r.cost=0;
-  saveDB();
-  if(type==='ing') renderIngTable(p);
-  else if(type==='pkg') renderPkgTable(p);
-  else renderLabTable(p);
-}
-function deleteMat(dbType,id){
-  if(!confirm('確定刪除？')) return;
-  if(dbType==='raw') DB.raw=DB.raw.filter(x=>x.id!==id);
-  else DB.pkg=DB.pkg.filter(x=>x.id!==id);
-  saveDB();
-  if(dbType==='raw') renderRawLib(); else renderPkgLib();
-}
-
-// ═══════════════════════════════════════════════════════
-// LAB MODAL
-// ═══════════════════════════════════════════════════════
-let _lmEdit=null;
-function openLabModal(id){
-  _lmEdit=id;
-  document.getElementById('lab-modal-title').textContent=id?'編輯工項':'新增工項';
-  document.getElementById('lm-save-btn').textContent=id?'更新':'儲存';
-  ['lm-code','lm-name','lm-spec','lm-rate','lm-rateunit','lm-unitprice','lm-priceunit','lm-note'].forEach(f=>document.getElementById(f).value='');
-  if(id){
-    const m=DB.lab.find(x=>x.id===id); if(!m) return;
-    document.getElementById('lm-code').value=m.code||'';
-    document.getElementById('lm-name').value=m.name||'';
-    document.getElementById('lm-spec').value=m.spec||'';
-    document.getElementById('lm-rate').value=m.rate||'';
-    document.getElementById('lm-rateunit').value=m.rateUnit||'';
-    document.getElementById('lm-unitprice').value=m.unitPrice||'';
-    document.getElementById('lm-priceunit').value=m.priceUnit||'';
-    document.getElementById('lm-note').value=m.note||'';
-  }
-  openM('modal-lab');
-}
-function saveLab(){
-  const name=document.getElementById('lm-name').value.trim(); if(!name){alert('請輸入工項名稱');return;}
-  const rate=parseFloat(document.getElementById('lm-rate').value)||0;
-  const obj={
-    code:document.getElementById('lm-code').value.trim(), name,
-    spec:document.getElementById('lm-spec').value.trim(),
-    rate, rateUnit:document.getElementById('lm-rateunit').value.trim()||'1hr',
-    unitPrice:parseFloat(document.getElementById('lm-unitprice').value)||rate,
-    priceUnit:document.getElementById('lm-priceunit').value.trim()||'hr',
-    useQty:'', useUnit:document.getElementById('lm-priceunit').value.trim()||'hr',
-    note:document.getElementById('lm-note').value.trim(),
-  };
-  if(_lmEdit){ const m=DB.lab.find(x=>x.id===_lmEdit); if(m) Object.assign(m,obj); }
-  else { obj.id=uid(); DB.lab.push(obj); }
-  saveDB(); CM('modal-lab'); renderLabLib();
-}
-function deleteLab(id){ if(!confirm('確定刪除？')) return; DB.lab=DB.lab.filter(x=>x.id!==id); saveDB(); renderLabLib(); }
-
-// ═══════════════════════════════════════════════════════
-// NAV & UTILS
-// ═══════════════════════════════════════════════════════
-function showPage(id,btn){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-  btn.classList.add('on');
-  if(id==='pg-raw') renderRawLib();
-  if(id==='pg-pkg') renderPkgLib();
-  if(id==='pg-lab') renderLabLib();
-  if(id==='pg-db') renderDBPage();
-}
-function openM(id){ document.getElementById(id).classList.add('open'); }
-function CM(id){ document.getElementById(id).classList.remove('open'); }
-
-// ═══════════════════════════════════════════════════════
-// DB MANAGEMENT PAGE
-// ═══════════════════════════════════════════════════════
-function renderDBPage(){
-  // stats
-  document.getElementById('db-cnt-raw').textContent=DB.raw.length;
-  document.getElementById('db-cnt-pkg').textContent=DB.pkg.length;
-  document.getElementById('db-cnt-lab').textContent=DB.lab.length;
-  document.getElementById('db-cnt-prod').textContent=DB.prods.length;
-  dbRenderRaw(); dbRenderPkg(); dbRenderLab(); dbRenderProd();
-}
-
-function dbSwitchTab(id,btn){
-  ['dbt-raw','dbt-pkg','dbt-lab','dbt-prod'].forEach(t=>document.getElementById(t).style.display=t===id?'':'none');
-  document.querySelectorAll('.db-tab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-}
-
-function dbMatRow(m, dbType){
-  return `<tr>
-    <td><span class="ci mono" style="font-size:10px;font-weight:700;color:var(--gold)">${m.code||''}</span></td>
-    <td><span class="ci bold">${m.name}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.spec||''}</span></td>
-    <td><span class="ci mono tr">$${f2(m.buyPrice)}</span></td>
-    <td><span class="ci muted">${m.buyUnit||''}</span></td>
-    <td><span class="ci mono tr bold" style="color:var(--gold)">$${f2(m.unitPrice,5)}</span></td>
-    <td><span class="ci muted">${m.priceUnit||''}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.note||''}</span></td>
-    <td style="padding:4px 6px;display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm" onclick="openMatModal('${dbType}',${m.id})">✏️</button>
-      <button class="btn-del" onclick="dbDeleteMat('${dbType}',${m.id})">✕</button>
-    </td>
-  </tr>`;
-}
-
-function dbRenderRaw(){
-  const q=(document.getElementById('db-raw-search')||{value:''}).value.toLowerCase();
-  const list=DB.raw.filter(m=>!q||m.name.toLowerCase().includes(q)||(m.code||'').toLowerCase().includes(q));
-  document.getElementById('db-raw-tbody').innerHTML=list.map(m=>dbMatRow(m,'raw')).join('')||'<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--ink3)">尚無食材資料</td></tr>';
-  document.getElementById('db-cnt-raw').textContent=DB.raw.length;
-}
-function dbRenderPkg(){
-  const q=(document.getElementById('db-pkg-search')||{value:''}).value.toLowerCase();
-  const list=DB.pkg.filter(m=>!q||m.name.toLowerCase().includes(q)||(m.code||'').toLowerCase().includes(q));
-  document.getElementById('db-pkg-tbody').innerHTML=list.map(m=>dbMatRow(m,'pkg')).join('')||'<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--ink3)">尚無包材資料</td></tr>';
-  document.getElementById('db-cnt-pkg').textContent=DB.pkg.length;
-}
-function dbRenderLab(){
-  document.getElementById('db-lab-tbody').innerHTML=DB.lab.map(m=>`<tr>
-    <td><span class="ci mono" style="font-size:10px;font-weight:700;color:var(--gold)">${m.code||''}</span></td>
-    <td><span class="ci bold">${m.name}</span></td>
-    <td><span class="ci mono tr">$${f2(m.rate)}</span></td>
-    <td><span class="ci muted">${m.rateUnit||''}</span></td>
-    <td><span class="ci mono tr bold" style="color:var(--gold)">$${f2(m.unitPrice)}</span></td>
-    <td><span class="ci muted">${m.priceUnit||''}</span></td>
-    <td><span class="ci muted" style="font-size:11px">${m.note||''}</span></td>
-    <td style="padding:4px 6px;display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm" onclick="openLabModal(${m.id})">✏️</button>
-      <button class="btn-del" onclick="dbDeleteLab(${m.id})">✕</button>
-    </td>
-  </tr>`).join('')||'<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--ink3)">尚無人工資料</td></tr>';
-  document.getElementById('db-cnt-lab').textContent=DB.lab.length;
-}
-function dbRenderProd(){
-  const q=(document.getElementById('db-prod-search')||{value:''}).value.toLowerCase();
-  const list=DB.prods.filter(p=>!q||p.name.toLowerCase().includes(q));
-  document.getElementById('db-prod-tbody').innerHTML=list.map(p=>{
-    const cost=prodTotal(p);
-    return `<tr>
-      <td><span class="ci bold">${p.name||''}</span></td>
-      <td><span class="ci muted" style="font-size:11px">${p.spec||''}</span></td>
-      <td><span class="ci mono tr">${p.oq||1}</span></td>
-      <td><span class="ci muted">${p.ou||'包'}</span></td>
-      <td><span class="ci mono tr bold" style="color:var(--gold)">$${f2(cost)}</span></td>
-      <td><span class="ci tr muted">${p.ing.length}</span></td>
-      <td><span class="ci tr muted">${p.pkg.length}</span></td>
-      <td style="padding:4px 6px;display:flex;gap:4px">
-        <button class="btn btn-gold btn-sm" onclick="goToProd(${p.id})">開啟</button>
-        <button class="btn-del" onclick="dbDeleteProd(${p.id})">✕</button>
-      </td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--ink3)">尚無產品資料</td></tr>';
-  document.getElementById('db-cnt-prod').textContent=DB.prods.length;
-}
-
-function goToProd(id){
-  // switch to product page and load it
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
-  document.getElementById('pg-prod').classList.add('on');
-  document.querySelector('.nav-btn').classList.add('on');
-  loadProd(id);
-}
-
-function dbDeleteMat(dbType,id){
-  if(!confirm('確定刪除？')) return;
-  if(dbType==='raw') DB.raw=DB.raw.filter(x=>x.id!==id);
-  else DB.pkg=DB.pkg.filter(x=>x.id!==id);
-  saveDB(); renderDBPage(); renderRawLib(); renderPkgLib();
-}
-function dbDeleteLab(id){ if(!confirm('確定刪除？')) return; DB.lab=DB.lab.filter(x=>x.id!==id); saveDB(); renderDBPage(); renderLabLib(); }
-function dbDeleteProd(id){ if(!confirm('確定刪除此產品？')) return; DB.prods=DB.prods.filter(x=>x.id!==id); saveDB(); renderDBPage(); renderSidebar(); }
-
-function dbClearConfirm(type){
-  const label=type==='raw'?'所有食材原料':type==='pkg'?'所有包材物料':'所有人工費率';
-  if(!confirm(`確定要清空${label}？此操作不可復原。`)) return;
-  if(type==='raw') DB.raw=[]; else if(type==='pkg') DB.pkg=[]; else DB.lab=[];
-  saveDB(); renderDBPage(); renderRawLib(); renderPkgLib(); renderLabLib();
-}
-
-function dbExportCSV(type){
-  let csv='\uFEFF', fn='';
-  if(type==='raw'){
-    csv+='編碼,品名,包裝規格,進價(含稅),進貨單位,單價(含稅),單價單位,備註\n';
-    DB.raw.forEach(m=>csv+=`${m.code||''},${m.name},${m.spec||''},${m.buyPrice||''},${m.buyUnit||''},${m.unitPrice||''},${m.priceUnit||''},${m.note||''}\n`);
-    fn='食材原料庫';
-  } else if(type==='pkg'){
-    csv+='編碼,品名,包裝規格,進價(含稅),進貨單位,單價(含稅),單價單位,備註\n';
-    DB.pkg.forEach(m=>csv+=`${m.code||''},${m.name},${m.spec||''},${m.buyPrice||''},${m.buyUnit||''},${m.unitPrice||''},${m.priceUnit||''},${m.note||''}\n`);
-    fn='包材物料庫';
-  } else if(type==='lab'){
-    csv+='編碼,品名,時薪,時薪單位,單價(含稅),單價單位,備註\n';
-    DB.lab.forEach(m=>csv+=`${m.code||''},${m.name},${m.rate||''},${m.rateUnit||''},${m.unitPrice||''},${m.priceUnit||''},${m.note||''}\n`);
-    fn='人工費率';
-  } else {
-    csv+='品名,規格,每批產出,單位,每單位成本\n';
-    DB.prods.forEach(p=>csv+=`${p.name},${p.spec||''},${p.oq||1},${p.ou||'包'},$${f2(prodTotal(p))}\n`);
-    fn='產品列表';
-  }
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=`${fn}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-}
-
-// ═══════════════════════════════════════════════════════
-// PASTE IMPORT SYSTEM
-// ═══════════════════════════════════════════════════════
-let _pasteType='raw';  // 'raw' | 'pkg' | 'lab'
-let _pasteRows=[];     // parsed rows
-let _pasteCols=[];     // column headers detected
-
-// Field definitions per type
-const PASTE_FIELDS = {
-  raw: ['編碼','品名','包裝規格','進價','進貨單位','單價','單價單位','備註'],
-  pkg: ['編碼','品名','包裝規格','進價','進貨單位','單價','單價單位','備註'],
-  lab: ['編碼','品名','包裝規格','時薪','時薪單位','單價','單價單位','備註'],
-};
-const PASTE_KEYWORDS = {
-  '編碼':['編碼','code','id'],
-  '品名':['品名','名稱','name','原料','食材','包材'],
-  '包裝規格':['包裝','規格','spec','packaging'],
-  '進價':['進價','採購價','buyprice','進貨價','price','含稅'],
-  '進貨單位':['進貨單位','採購單位','buyunit','進貨'],
-  '時薪':['時薪','薪資','rate','薪'],
-  '時薪單位':['時薪單位','薪資單位'],
-  '單價':['單價','unitprice','每單位'],
-  '單價單位':['單價單位','priceunit','計算單位','用量單位'],
-  '備註':['備註','note','remark','說明'],
-};
-
-function openPasteModal(type){
-  _pasteType=type;
-  _pasteRows=[]; _pasteCols=[];
-  const typeLabel = type==='raw'?'食材原料':type==='pkg'?'包材物料':'人工費率';
-  document.getElementById('paste-modal-type').textContent=typeLabel;
-  document.getElementById('paste-textarea').value='';
-  document.getElementById('paste-step2').style.display='none';
-  document.getElementById('paste-step3').style.display='none';
-  document.getElementById('paste-dup-opt').style.display='none';
-  document.getElementById('paste-import-btn').style.display='none';
-  document.getElementById('paste-result-msg').innerHTML='';
-  openM('modal-paste');
-  setTimeout(()=>document.getElementById('paste-textarea').focus(),100);
-}
-
-function clearPaste(){
-  document.getElementById('paste-textarea').value='';
-  document.getElementById('paste-step2').style.display='none';
-  document.getElementById('paste-step3').style.display='none';
-  document.getElementById('paste-dup-opt').style.display='none';
-  document.getElementById('paste-import-btn').style.display='none';
-  _pasteRows=[]; _pasteCols=[];
-}
-
-function parsePaste(){
-  const raw=document.getElementById('paste-textarea').value.trim();
-  if(!raw){ clearPaste(); return; }
-
-  // Split into lines then cells (tab or comma delimited)
-  const lines=raw.split(/\r?\n/).filter(l=>l.trim());
-  if(!lines.length) return;
-
-  // Detect delimiter: tabs preferred
-  const delim = lines[0].includes('\t') ? '\t' : ',';
-
-  // Parse all rows
-  const allRows=lines.map(l=>l.split(delim).map(c=>c.trim().replace(/^["']|["']$/g,'')));
-  const maxCols=Math.max(...allRows.map(r=>r.length));
-
-  // Detect if first row is a header
-  const firstRow=allRows[0];
-  const isHeader=firstRow.some(c=>/編碼|品名|進價|單價|規格|time|code|name|price|spec/i.test(c));
-  const dataRows=isHeader?allRows.slice(1):allRows;
-  _pasteRows=dataRows.filter(r=>r.some(c=>c.length>0));
-
-  // Auto-detect column mapping
-  const fields=PASTE_FIELDS[_pasteType]||PASTE_FIELDS.raw;
-  _pasteCols=[];
-  for(let i=0;i<maxCols;i++){
-    const headerCell=isHeader?firstRow[i]||'':'';
-    let detected='(忽略)';
-    for(const [field,kws] of Object.entries(PASTE_KEYWORDS)){
-      if(fields.includes(field)&&kws.some(kw=>headerCell.toLowerCase().includes(kw))){
-        detected=field; break;
-      }
-    }
-    // If no header match, use position-based guess
-    if(detected==='(忽略)'&&!isHeader&&i<fields.length) detected=fields[i];
-    _pasteCols.push({col:i,header:headerCell||`第${i+1}欄`,detected});
-  }
-
-  // Render column mapper
-  document.getElementById('paste-step2').style.display='flex';
-  const mapHtml=_pasteCols.map((c,i)=>{
-    const opts=[...fields,'(忽略)'].map(f=>`<option value="${f}"${c.detected===f?'selected':''}>${f}</option>`).join('');
-    return `<div class="col-map-item">
-      <label>${c.header}</label>
-      <select id="col-sel-${i}" onchange="updateColMap(${i},this.value)">${opts}</select>
-    </div>`;
-  }).join('');
-  document.getElementById('paste-col-map').innerHTML=mapHtml;
-
-  renderPastePreview();
-}
-
-function updateColMap(idx,val){
-  _pasteCols[idx].detected=val;
-  renderPastePreview();
-}
-
-function renderPastePreview(){
-  document.getElementById('paste-step3').style.display='flex';
-  document.getElementById('paste-dup-opt').style.display='block';
-  document.getElementById('paste-import-btn').style.display='inline-flex';
-
-  const fields=PASTE_FIELDS[_pasteType]||PASTE_FIELDS.raw;
-  // Build field→colIdx map
-  const fieldMap={};
-  _pasteCols.forEach((c,i)=>{ if(c.detected!=='(忽略)') fieldMap[c.detected]=i; });
-
-  // header row
-  const headCells=fields.map(f=>`<th>${f}</th>`).join('')+'<th>狀態</th>';
-  document.getElementById('paste-preview-head').innerHTML=headCells;
-
-  const db=_pasteType==='raw'?DB.raw:_pasteType==='pkg'?DB.pkg:DB.lab;
-  let okCount=0, dupCount=0, errCount=0;
-
-  const bodyHtml=_pasteRows.map(row=>{
-    const get=f=>fieldMap[f]!==undefined?(row[fieldMap[f]]||''):'';
-    const code=get('編碼'); const name=get('品名');
-    if(!name&&!code){ return ''; } // skip blank rows
-    const hasDup=!!(code&&db.find(m=>(m.code||'')===(code||'')));
-    const isErr=!name;
-    if(isErr) errCount++;
-    else if(hasDup) dupCount++;
-    else okCount++;
-
-    const cells=fields.map(f=>{
-      const v=get(f); return `<td>${v}</td>`;
-    }).join('');
-    const status=isErr?'<td style="color:var(--red)">⚠ 缺品名</td>':hasDup?'<td style="color:#7a5a00">⚠ 重複</td>':'<td style="color:var(--green)">✓</td>';
-    return `<tr class="${isErr?'err':hasDup?'':'ok'}">${cells}${status}</tr>`;
-  }).filter(Boolean).join('');
-
-  document.getElementById('paste-preview-body').innerHTML=bodyHtml||'<tr><td colspan="10" style="padding:12px;text-align:center;color:var(--ink3)">無可匯入的資料</td></tr>';
-
-  const total=okCount+dupCount;
-  document.getElementById('paste-preview-count').textContent=`共 ${total} 筆（新增 ${okCount} 筆，重複 ${dupCount} 筆，錯誤 ${errCount} 筆）`;
-
-  const msgEl=document.getElementById('paste-result-msg');
-  if(errCount>0) msgEl.innerHTML=`<div class="import-result warn">⚠ 有 ${errCount} 筆因缺少品名無法匯入，其餘 ${total} 筆可以匯入</div>`;
-  else if(dupCount>0) msgEl.innerHTML=`<div class="import-result warn">⚠ 發現 ${dupCount} 筆重複編碼，請選擇下方處理方式</div>`;
-  else if(okCount>0) msgEl.innerHTML=`<div class="import-result ok">✓ ${okCount} 筆資料準備就緒，確認後點「匯入」</div>`;
-  else msgEl.innerHTML=`<div class="import-result err">✗ 無有效資料可匯入</div>`;
-}
-
-function executePasteImport(){
-  const fields=PASTE_FIELDS[_pasteType]||PASTE_FIELDS.raw;
-  const fieldMap={};
-  _pasteCols.forEach((c,i)=>{ if(c.detected!=='(忽略)') fieldMap[c.detected]=i; });
-  const get=(row,f)=>fieldMap[f]!==undefined?(row[fieldMap[f]]||''):'';
-
-  const dupMode=document.querySelector('input[name="dup-mode"]:checked')?.value||'skip';
-  const db=_pasteType==='raw'?DB.raw:_pasteType==='pkg'?DB.pkg:DB.lab;
-
-  let imported=0, skipped=0, overwritten=0;
-
-  _pasteRows.forEach(row=>{
-    const code=get(row,'編碼').trim();
-    const name=get(row,'品名').trim();
-    if(!name) return; // skip invalid
-
-    const buyPrice=parseFloat(get(row,'進價').replace(/[,$＄]/g,''))||0;
-    const buyUnit=get(row,'進貨單位')||'包';
-    const unitPrice=parseFloat(get(row,'單價').replace(/[,$＄]/g,''))||0;
-    const priceUnit=get(row,'單價單位')||get(row,'用量單位')||'g';
-    const rate=parseFloat(get(row,'時薪').replace(/[,$＄]/g,''))||0;
-    const rateUnit=get(row,'時薪單位')||'hr';
-    const spec=get(row,'包裝規格')||'';
-    const note=get(row,'備註')||'';
-
-    const existIdx=code?db.findIndex(m=>(m.code||'')===(code)):-1;
-
-    if(existIdx>=0){
-      if(dupMode==='skip'){ skipped++; return; }
-      if(dupMode==='overwrite'){
-        if(_pasteType==='lab'){
-          Object.assign(db[existIdx],{name,spec,rate,rateUnit:rateUnit||'1hr',unitPrice:unitPrice||rate,priceUnit:priceUnit||'hr',note,useUnit:priceUnit||'hr'});
-        } else {
-          Object.assign(db[existIdx],{name,spec,buyPrice,buyUnit,unitPrice,priceUnit,note,useUnit:priceUnit,buyQty:buyPrice>0&&unitPrice>0?buyPrice/unitPrice:1});
-        }
-        overwritten++; return;
-      }
-      // 'both': fall through to add
-    }
-
-    // new record
-    if(_pasteType==='lab'){
-      db.push({id:uid(),code,name,spec,rate,rateUnit:rateUnit||'1hr',unitPrice:unitPrice||rate,priceUnit:priceUnit||'hr',useQty:'',useUnit:priceUnit||'hr',note});
-    } else {
-      const bq=buyPrice>0&&unitPrice>0?(buyPrice/unitPrice):1;
-      db.push({id:uid(),code,name,spec,buyPrice,buyQty:bq,buyUnit,unitPrice,priceUnit,useQty:'',useUnit:priceUnit,note,spec2:''});
-    }
-    imported++;
-  });
-
-  saveDB();
-  CM('modal-paste');
-  renderDBPage();
-  renderRawLib(); renderPkgLib(); renderLabLib();
-
-  const msg=`✅ 匯入完成！新增 ${imported} 筆${overwritten?`、更新 ${overwritten} 筆`:''}${skipped?`、略過 ${skipped} 筆`:''}`;
-  setTimeout(()=>alert(msg),100);
-}
-
-// ─── EXPORT EXCEL ───
-function exportExcel(){
-  if(typeof XLSX === 'undefined'){ alert('Excel 程式庫尚未載入，請確認網路連線後重試'); return; }
-
-  const wb = XLSX.utils.book_new();
-  const date = new Date().toLocaleDateString('zh-TW');
-
-  // ── 樣式輔助 (XLSX不支援完整樣式，用欄寬+粗體已是上限)
-  const ao = (v, t='s') => ({ v, t });
-
-  // ── 共用：標題列底色用 !cols 控制欄寬
-  const COL_GOLD = { fgColor:{ rgb:'8A6500' } };
-
-  /* ─── Sheet 1: 原料資料庫 ─── */
-  const rawHeader = ['編碼','品名','包裝規格','進價(含稅)','進貨單位','單價(含稅)','單價單位','備註'];
-  const rawRows = DB.raw.map(m=>[
-    m.code||'', m.name||'', m.spec||'',
-    m.buyPrice||'', m.buyUnit||'',
-    m.unitPrice||'', m.priceUnit||'',
-    m.note||''
-  ]);
-  const rawSheet = XLSX.utils.aoa_to_sheet([rawHeader, ...rawRows]);
-  rawSheet['!cols'] = [12,22,18,12,10,12,10,16].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, rawSheet, '原料資料庫');
-
-  /* ─── Sheet 2: 包材物料庫 ─── */
-  const pkgHeader = ['編碼','品名','包裝規格','進價(含稅)','進貨單位','單價(含稅)','單價單位','備註'];
-  const pkgRows = DB.pkg.map(m=>[
-    m.code||'', m.name||'', m.spec||'',
-    m.buyPrice||'', m.buyUnit||'',
-    m.unitPrice||'', m.priceUnit||'',
-    m.note||''
-  ]);
-  const pkgSheet = XLSX.utils.aoa_to_sheet([pkgHeader, ...pkgRows]);
-  pkgSheet['!cols'] = [12,22,18,12,10,12,10,16].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, pkgSheet, '包材物料庫');
-
-  /* ─── Sheet 3: 人工費率 ─── */
-  const labHeader = ['編碼','品名','包裝規格','時薪','時薪單位','單價(含稅)','單價單位','備註'];
-  const labRows = DB.lab.map(m=>[
-    m.code||'', m.name||'', m.spec||'',
-    m.rate||'', m.rateUnit||'',
-    m.unitPrice||'', m.priceUnit||'',
-    m.note||''
-  ]);
-  const labSheet = XLSX.utils.aoa_to_sheet([labHeader, ...labRows]);
-  labSheet['!cols'] = [10,20,10,8,8,10,8,16].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, labSheet, '人工費率');
-
-  /* ─── 每個產品一個 Sheet ─── */
-  DB.prods.forEach(p => {
-    const oq = parseFloat(p.oq)||1;
-    const ou = p.ou||'包';
-    const sumArr = arr => arr.reduce((s,r)=>s+(parseFloat(r.cost)||0),0);
-    const ingTotal = sumArr(p.ing);
-    const pkgTotal = sumArr(p.bao||p.pkg||[]);  // support both field names
-    const labTotal = sumArr(p.lab);
-    const feeTotal = sumArr(p.fee);
-    const grandTotal = (ingTotal+pkgTotal+labTotal+feeTotal)/oq;
-
-    const rows = [];
-
-    // 產品基本資料
-    rows.push(['產品名稱', p.name||'']);
-    rows.push(['規格', p.spec||'']);
-    rows.push(['每批產出', oq, ou]);
-    rows.push(['日期', date]);
-    rows.push([]);
-
-    // ① 食材原料
-    rows.push(['① 食材原料成本']);
-    rows.push(['編碼','品名','進價(含稅)','進貨單位','單價(含稅)','單價單位','用量','用量單位','製造成本']);
-    p.ing.forEach(r => rows.push([
-      r.code||'', r.name||'',
-      r.buyPrice!==''?Number(r.buyPrice):'',
-      r.buyUnit||'',
-      r.unitPrice!==''?Number(r.unitPrice):'',
-      r.priceUnit||'',
-      r.qty!==''?Number(r.qty):'',
-      r.qtyUnit||'',
-      parseFloat(r.cost)||0
-    ]));
-    rows.push(['','','','','','','','食材小計', ingTotal/oq]);
-    rows.push([]);
-
-    // ② 包材物料
-    rows.push(['② 包材物料成本']);
-    rows.push(['編碼','品名','進價(含稅)','進貨單位','單價(含稅)','單價單位','用量','用量單位','製造成本']);
-    const pkgArr = p.bao||p.pkg||[];
-    pkgArr.forEach(r => rows.push([
-      r.code||'', r.name||'',
-      r.buyPrice!==''?Number(r.buyPrice):'',
-      r.buyUnit||'',
-      r.unitPrice!==''?Number(r.unitPrice):'',
-      r.priceUnit||'',
-      r.qty!==''?Number(r.qty):'',
-      r.qtyUnit||'',
-      parseFloat(r.cost)||0
-    ]));
-    rows.push(['','','','','','','','包材小計', pkgTotal/oq]);
-    rows.push([]);
-
-    // ③ 人工費
-    rows.push(['③ 人工費']);
-    rows.push(['編碼','工項名稱','時薪','時薪單位','單價(含稅)','單價單位','用量','用量單位','製造成本']);
-    p.lab.forEach(r => rows.push([
-      r.code||'', r.name||'',
-      r.buyPrice!==''?Number(r.buyPrice):'',
-      r.buyUnit||'',
-      r.unitPrice!==''?Number(r.unitPrice):'',
-      r.priceUnit||'',
-      r.qty!==''?Number(r.qty):'',
-      r.qtyUnit||'',
-      parseFloat(r.cost)||0
-    ]));
-    rows.push(['','','','','','','','人工小計', labTotal/oq]);
-    rows.push([]);
-
-    // ④ 管銷費用
-    rows.push(['④ 管銷費用攤提']);
-    rows.push(['費用項目','金額','備註']);
-    p.fee.forEach(r => rows.push([r.name||'', parseFloat(r.cost)||0, r.note||'']));
-    rows.push(['管銷小計', feeTotal/oq]);
-    rows.push([]);
-
-    // 成本合計
-    rows.push(['⑤ 每'+ou+'成本總計']);
-    rows.push(['料｜食材', ingTotal/oq]);
-    rows.push(['料｜包材', pkgTotal/oq]);
-    rows.push(['工｜人工', labTotal/oq]);
-    rows.push(['費｜管銷', feeTotal/oq]);
-    rows.push(['每'+ou+'總成本', grandTotal]);
-    rows.push([]);
-
-    // ⑥ 客戶定價
-    if(p.prices && p.prices.length){
-      rows.push(['⑥ 客戶定價']);
-      rows.push(['客戶名稱','產品成本','末端售價','毛利','毛利率']);
-      p.prices.forEach(r => {
-        const sp = parseFloat(r.sellPrice)||0;
-        const profit = sp>0 ? sp-grandTotal : '';
-        const margin = sp>0 ? (profit/sp)*100 : '';
-        rows.push([
-          r.channel||'',
-          grandTotal,
-          sp||'',
-          profit!==''?profit:'',
-          margin!==''?margin/100:''
-        ]);
+function importExpandDB(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw '';
+      const existing = loadExpandDB(); let added = 0, skipped = 0;
+      data.forEach(item => {
+        if (!item.name || !item.expanded) return;
+        if (existing.find(d => d.name === item.name)) { skipped++; return; }
+        existing.push(item); added++;
       });
-    }
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [14,22,12,10,12,10,10,10,12].map(w=>({wch:w}));
-
-    // 格式化百分比欄（客戶定價的毛利率）
-    const sheetName = (p.name||'產品').substring(0,28).replace(/[:\\/\*\?\[\]]/g,'_');
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  });
-
-  /* ─── 匯出 ─── */
-  const filename = `食品成本系統_${date.replace(/\//g,'-')}.xlsx`;
-  XLSX.writeFile(wb, filename);
+      saveExpandDB(existing); renderExpandDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch { showToast('⚠️ 格式錯誤'); }
+  };
+  reader.readAsText(file); input.value = '';
 }
 
-// ─── EXPORT JSON ───
-function exportCSV(){
-  const p=DB.prods.find(x=>x.id===activeProd); if(!p) return;
-  const oq=parseFloat(p.oq)||1; const ou=p.ou||'包';
-  const per=prodTotal(p);
-  let csv=`\uFEFF食品成本計算系統\n品名：${p.name}\n規格：${p.spec||'—'}\n日期：${new Date().toLocaleDateString('zh-TW')}\n\n`;
-  csv+=`=== 食材原料成本 ===\n編碼,品名,進價(含稅),進貨單位,單價(含稅),單價單位,用量,用量單位,製造成本\n`;
-  p.ing.forEach(r=>csv+=`${r.code||''},${r.name||''},${r.buyPrice||''},${r.buyUnit||''},${r.unitPrice||''},${r.priceUnit||''},${r.qty||''},${r.qtyUnit||''},$${f2(parseFloat(r.cost)||0)}\n`);
-  csv+=`\n=== 包材物料成本 ===\n編碼,品名,進價(含稅),進貨單位,單價(含稅),單價單位,用量,用量單位,製造成本\n`;
-  p.pkg.forEach(r=>csv+=`${r.code||''},${r.name||''},${r.buyPrice||''},${r.buyUnit||''},${r.unitPrice||''},${r.priceUnit||''},${r.qty||''},${r.qtyUnit||''},$${f2(parseFloat(r.cost)||0)}\n`);
-  csv+=`\n=== 人工費 ===\n編碼,工項名稱,時薪,時薪單位,單價(含稅),單價單位,用量,用量單位,製造成本\n`;
-  p.lab.forEach(r=>csv+=`${r.code||''},${r.name||''},${r.buyPrice||''},${r.buyUnit||''},${r.unitPrice||''},${r.priceUnit||''},${r.qty||''},${r.qtyUnit||''},$${f2(parseFloat(r.cost)||0)}\n`);
-  csv+=`\n=== 管銷費用 ===\n費用項目,金額,備註\n`;
-  p.fee.forEach(r=>csv+=`${r.name||''},$${f2(parseFloat(r.cost)||0)},${r.note||''}\n`);
-  csv+=`\n=== 每${ou}總成本 ===\n食材,$${f2(p.ing.reduce((a,r)=>a+(parseFloat(r.cost)||0),0)/oq)}\n包材,$${f2(p.pkg.reduce((a,r)=>a+(parseFloat(r.cost)||0),0)/oq)}\n人工,$${f2(p.lab.reduce((a,r)=>a+(parseFloat(r.cost)||0),0)/oq)}\n管銷,$${f2(p.fee.reduce((a,r)=>a+(parseFloat(r.cost)||0),0)/oq)}\n總成本,$${f2(per)}\n`;
-  if(p.prices&&p.prices.length){
-    csv+=`\n=== 客戶定價 ===\n客戶名稱,產品成本,末端售價,毛利,毛利率\n`;
-    p.prices.forEach(r=>{
-      const sp=parseFloat(r.sellPrice)||0;
-      const profit=sp>0?sp-per:null;
-      const margin=sp>0?(profit/sp)*100:null;
-      csv+=`${r.channel||''},$${f2(per)},${sp>0?'$'+f2(sp):'—'},${profit!==null?(profit>=0?'+':'')+f2(profit):'—'},${margin!==null?f2(margin,1)+'%':'—'}\n`;
+// ══════════════════════════════════
+// DB PASTE MODAL（原物料批次匯入）
+// ══════════════════════════════════
+const DB_FIELDS = [
+  { key:'cal',      label:'熱量(kcal/100g)' },
+  { key:'protein',  label:'蛋白質(g/100g)' },
+  { key:'fat',      label:'脂肪(g/100g)' },
+  { key:'satFat',   label:'飽和脂肪(g/100g)' },
+  { key:'transFat', label:'反式脂肪(g/100g)' },
+  { key:'carb',     label:'碳水化合物(g/100g)' },
+  { key:'sugar',    label:'糖(g/100g)' },
+  { key:'sodium',   label:'鈉(mg/100g)' },
+];
+let dbPasteFormat = 'col';
+let dbParsedPaste = [];
+let dbRowOrder = [0,1,2,3,4,5,6,7]; // cal,protein,fat,satFat,transFat,carb,sugar,sodium
+let dbColMap = [-99,0,1,2,3,4,5,6,7]; // col0=name, col1..=fields
+
+function openDBPasteModal() {
+  document.getElementById('dbPasteModal').classList.add('open');
+  buildDBRowOrderUI();
+  buildDBColMapUI();
+  document.getElementById('dbPasteArea').focus();
+}
+function closeDBPasteModal() { document.getElementById('dbPasteModal').classList.remove('open'); }
+
+function setDBFmt(fmt) {
+  dbPasteFormat = fmt;
+  document.getElementById('dbFmtBtn-col').classList.toggle('active', fmt==='col');
+  document.getElementById('dbFmtBtn-row').classList.toggle('active', fmt==='row');
+  document.getElementById('dbHintCol').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('dbHintRow').style.display = fmt==='row' ? '' : 'none';
+  document.getElementById('dbRowOrderSection').style.display = fmt==='col' ? '' : 'none';
+  document.getElementById('dbColMapSection').style.display = fmt==='row' ? '' : 'none';
+  parseDBPaste();
+}
+
+function buildDBRowOrderUI() {
+  const grid = document.getElementById('dbRowOrderGrid');
+  grid.innerHTML = '';
+  const opts = ['（略過）', ...DB_FIELDS.map(f => f.label)];
+  for (let i = 0; i < 8; i++) {
+    const div = document.createElement('div');
+    div.className = 'row-order-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 行`;
+    const sel = document.createElement('select');
+    sel.id = 'dbro-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      op.value = oi - 1;
+      op.textContent = o;
+      if (oi - 1 === dbRowOrder[i]) op.selected = true;
+      sel.appendChild(op);
     });
-  }
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=`成本_${p.name}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-}
-function exportJSON(){
-  const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
-  a.download=`backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-}
-function importJSON(inp){
-  const f=inp.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{try{Object.assign(DB,JSON.parse(e.target.result));saveDB();location.reload();}catch{alert('匯入失敗');}};
-  r.readAsText(f);
-}
-
-// ═══════════════════════════════════════════════════════
-// NATURAL LANGUAGE IMPORT
-// ═══════════════════════════════════════════════════════
-let _nlType = 'ing';       // which table we're importing to
-let _nlParsed = [];        // parsed + matched items from AI
-
-function openNLImport(type){
-  _nlType = type;
-  _nlParsed = [];
-  document.getElementById('nl-input').value = '';
-  document.getElementById('nl-result-wrap').style.display = 'none';
-  document.getElementById('nl-thinking').style.display = 'none';
-  document.getElementById('nl-import-btn').style.display = 'none';
-  document.getElementById('nl-api-status').textContent = '';
-  openM('modal-nl');
-  setTimeout(()=>document.getElementById('nl-input').focus(), 100);
-}
-
-async function runNLParse(){
-  const text = document.getElementById('nl-input').value.trim();
-  if(!text){ alert('請先輸入食材清單'); return; }
-
-  document.getElementById('nl-thinking').style.display = 'block';
-  document.getElementById('nl-result-wrap').style.display = 'none';
-  document.getElementById('nl-parse-btn').disabled = true;
-  document.getElementById('nl-import-btn').style.display = 'none';
-  document.getElementById('nl-api-status').textContent = '';
-
-  // Build DB name list for context
-  const dbArr = _nlType === 'ing' ? DB.raw : DB.pkg;
-  const dbNames = dbArr.map(m => `${m.code||''}|${m.name}|${m.priceUnit}`).join('\n');
-
-  const prompt = `你是一個食品原料資料解析助手。請解析以下食材清單，每行一項，輸出 JSON 陣列。
-
-食材清單：
-${text}
-
-資料庫現有品項（格式：編碼|品名|單位）：
-${dbNames || '（目前無資料）'}
-
-請將每行解析為：
-- name: 辨識出的品名（繁體中文，修正錯別字，例如「塩」→「鹽」、「麥片絲」→「小麥肉片」）
-- qty: 數量（數字，例如 200）
-- unit: 單位（例如 斤、兩、g、公斤、個、包）
-- note: 括號內的備註（如果有）
-- dbMatch: 資料庫中最相近的品名（完全一樣的品名優先，否則找最接近的，無則填 null）
-- matchType: "exact"=完全符合, "fuzzy"=模糊相近, "none"=找不到
-
-注意：
-- 「兩」= 37.5g，「斤」= 600g（台制）
-- 數量可能是 "x4" 這種格式，代表乘以4，請計算出總量
-- 只輸出 JSON 陣列，不要其他文字
-
-輸出範例：
-[{"name":"杏鮑菇","qty":200,"unit":"斤","note":"","dbMatch":"杏鮑菇(B級)","matchType":"fuzzy"},{"name":"鹽","qty":44,"unit":"兩","note":"","dbMatch":"高級精鹽","matchType":"fuzzy"}]`;
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await resp.json();
-    const raw = data.content?.map(c=>c.text||'').join('').trim();
-    // Strip markdown code fences if present
-    const jsonStr = raw.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'').trim();
-    const parsed = JSON.parse(jsonStr);
-    _nlParsed = parsed;
-    renderNLResult(parsed, dbArr);
-  } catch(err) {
-    document.getElementById('nl-api-status').textContent = '⚠ 解析失敗，請檢查網路或重試';
-    console.error(err);
-  } finally {
-    document.getElementById('nl-thinking').style.display = 'none';
-    document.getElementById('nl-parse-btn').disabled = false;
+    sel.oninput = () => { dbRowOrder[i] = parseInt(sel.value); parseDBPaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
   }
 }
 
-function renderNLResult(items, dbArr){
-  document.getElementById('nl-result-wrap').style.display = 'block';
-
-  let matchCount = 0, fuzzyCount = 0, newCount = 0;
-
-  const html = items.map((item, idx) => {
-    // find actual DB record
-    let dbRecord = null;
-    if(item.dbMatch){
-      dbRecord = dbArr.find(m => m.name === item.dbMatch);
-      if(!dbRecord) dbRecord = dbArr.find(m => m.name.includes(item.dbMatch) || item.dbMatch.includes(m.name));
-    }
-
-    const type = item.matchType === 'exact' ? 'match' :
-                 item.matchType === 'fuzzy' ? 'fuzzy' : 'new';
-    if(type==='match') matchCount++;
-    else if(type==='fuzzy') fuzzyCount++;
-    else newCount++;
-
-    const typeLabel = type==='match'?'完全比對':type==='fuzzy'?'模糊比對':'新品項';
-
-    // calc cost preview
-    let costStr = '—';
-    if(dbRecord && item.qty){
-      // unit conversion
-      let qtyInDBUnit = item.qty;
-      const fromUnit = item.unit;
-      const toUnit = dbRecord.priceUnit;
-      // common conversions
-      const toG = {
-        '兩': 37.5, '公兩': 37.5,
-        '斤': 600, '台斤': 600,
-        '公斤': 1000, 'kg': 1000,
-        'g': 1, 'G': 1,
-        '公克': 1,
-      };
-      if(toUnit === 'g' && toG[fromUnit]){
-        qtyInDBUnit = item.qty * toG[fromUnit];
-      } else if(fromUnit === toUnit){
-        qtyInDBUnit = item.qty;
-      }
-      const cost = dbRecord.unitPrice * qtyInDBUnit;
-      if(isFinite(cost)) costStr = '$' + f2(cost);
-    }
-
-    const matchedName = dbRecord ? dbRecord.name : (item.dbMatch || '—');
-    const unitConvNote = (item.unit !== (dbRecord?.priceUnit||item.unit)) ? `<span style="font-size:10px;color:var(--ink4)">${item.qty}${item.unit} → 換算中</span>` : '';
-
-    return `<div class="nl-result-row" id="nl-row-${idx}">
-      <span class="nl-badge ${type}">${typeLabel}</span>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="nl-name">${item.name}</span>
-          ${item.note?`<span style="font-size:10px;color:var(--ink3)">(${item.note})</span>`:''}
-          ${type!=='match'&&matchedName!=='—'?`<span style="font-size:10px;color:var(--ink3)">→ 比對為：<strong>${matchedName}</strong></span>`:''}
-        </div>
-        ${unitConvNote}
-      </div>
-      <span class="nl-qty">${item.qty} ${item.unit}</span>
-      <span class="nl-cost">${costStr}</span>
-      <label style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0">
-        <input type="checkbox" id="nl-chk-${idx}" ${type!=='none'||dbRecord?'checked':''} style="cursor:pointer">
-        加入
-      </label>
-    </div>`;
-  }).join('');
-
-  document.getElementById('nl-result-list').innerHTML = html;
-  document.getElementById('nl-result-summary').textContent =
-    `共 ${items.length} 項 — 完全比對 ${matchCount} 項、模糊比對 ${fuzzyCount} 項、新品項 ${newCount} 項`;
-  document.getElementById('nl-import-btn').style.display = 'inline-flex';
+function buildDBColMapUI() {
+  const grid = document.getElementById('dbColMapGrid');
+  grid.innerHTML = '';
+  const opts = ['（成分名稱）', '（略過）', ...DB_FIELDS.map(f => f.label)];
+  for (let i = 0; i < 9; i++) {
+    const div = document.createElement('div');
+    div.className = 'colmap-item';
+    const lbl = document.createElement('label');
+    lbl.textContent = `第 ${i+1} 欄`;
+    const sel = document.createElement('select');
+    sel.id = 'dbcm-' + i;
+    opts.forEach((o, oi) => {
+      const op = document.createElement('option');
+      op.value = oi === 0 ? -99 : oi - 2;
+      op.textContent = o;
+      if (op.value == dbColMap[i]) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.oninput = () => { dbColMap[i] = parseInt(sel.value); parseDBPaste(); };
+    div.appendChild(lbl); div.appendChild(sel);
+    grid.appendChild(div);
+  }
 }
 
-function executeNLImport(){
-  const p = DB.prods.find(x=>x.id===activeProd);
-  if(!p){ alert('請先選擇產品'); return; }
-  const dbArr = _nlType === 'ing' ? DB.raw : DB.pkg;
-  let added = 0, skipped = 0;
+function parseDBPaste() {
+  const raw = document.getElementById('dbPasteArea').value.trim();
+  if (!raw) { document.getElementById('dbPreviewSection').style.display = 'none'; dbParsedPaste = []; return; }
+  dbParsedPaste = dbPasteFormat === 'col' ? parseDBCol(raw) : parseDBRow(raw);
+  showDBPreview(dbParsedPaste);
+}
 
-  _nlParsed.forEach((item, idx) => {
-    const chk = document.getElementById(`nl-chk-${idx}`);
-    if(!chk || !chk.checked){ skipped++; return; }
-
-    // find DB record (same logic as renderNLResult)
-    let dbRecord = null;
-    if(item.dbMatch){
-      dbRecord = dbArr.find(m => m.name === item.dbMatch);
-      if(!dbRecord) dbRecord = dbArr.find(m => m.name.includes(item.dbMatch) || item.dbMatch.includes(m.name));
+function parseDBCol(raw) {
+  const lines = raw.split('\n').map(l => l.trim());
+  const results = [];
+  let i = 0;
+  const stripUnit = v => v.replace(/[,，]/g,'').replace(/\s*(g|kg|mg|kcal|公克|公斤|毫克|大卡|%)\s*$/i,'').trim();
+  const isNumLine = v => { if (!v) return false; const s = stripUnit(v); return s !== '' && !isNaN(s); };
+  const toNum = v => parseFloat(stripUnit(v)) || 0;
+  while (i < lines.length) {
+    if (!lines[i]) { i++; continue; }
+    if (isNumLine(lines[i])) { i++; continue; }
+    const name = lines[i]; i++;
+    const nums = [];
+    while (i < lines.length && nums.length < 8) {
+      if (!lines[i]) break;
+      if (!isNumLine(lines[i])) break;
+      nums.push(toNum(lines[i])); i++;
     }
+    const d = { name, cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    dbRowOrder.forEach((fieldIdx, lineIdx) => {
+      if (fieldIdx < 0 || lineIdx >= nums.length) return;
+      d[DB_FIELDS[fieldIdx].key] = nums[lineIdx];
+    });
+    results.push(d);
+  }
+  return results;
+}
 
-    // unit conversion
-    const toG = {
-      '兩':37.5,'公兩':37.5,'斤':600,'台斤':600,
-      '公斤':1000,'kg':1000,'g':1,'G':1,'公克':1
-    };
-    let qtyInDBUnit = item.qty;
-    if(dbRecord && dbRecord.priceUnit==='g' && toG[item.unit]){
-      qtyInDBUnit = item.qty * toG[item.unit];
+function parseDBRow(raw) {
+  return raw.split('\n').map(line => {
+    const c = line.split('\t').map(v => v.trim().replace(/[,，]/g,'').replace(/\s*(g|kg|mg|kcal|%)\s*$/i,'').trim());
+    if (c.every(v => !v)) return null;
+    const d = { name:'', cal:0, protein:0, fat:0, satFat:0, transFat:0, carb:0, sugar:0, sodium:0 };
+    dbColMap.forEach((fieldCode, ci) => {
+      if (ci >= c.length) return;
+      if (fieldCode === -99) { d.name = c[ci] || ''; return; }
+      if (fieldCode < 0) return;
+      d[DB_FIELDS[fieldCode].key] = parseFloat(c[ci]) || 0;
+    });
+    if (!d.name) return null;
+    return d;
+  }).filter(Boolean);
+}
+
+function showDBPreview(data) {
+  if (!data.length) { document.getElementById('dbPreviewSection').style.display = 'none'; return; }
+  document.getElementById('dbPreviewSection').style.display = '';
+  document.getElementById('dbPreviewCount').textContent = `（共 ${data.length} 筆）`;
+  document.getElementById('dbPreviewBody').innerHTML = data.map(d =>
+    `<tr><td>${escH(d.name)||'－'}</td><td>${d.cal}</td><td>${d.protein}</td><td>${d.fat}</td><td>${d.satFat}</td><td>${d.transFat}</td><td>${d.carb}</td><td>${d.sugar}</td><td>${d.sodium}</td></tr>`
+  ).join('');
+}
+
+async function confirmDBPaste() {
+  if (!dbParsedPaste.length) { showToast('沒有可匯入的資料！'); return; }
+  const db = _dbCache || loadDB_local();
+  _dbCache = db;
+  let added = 0, updated = 0, skipped = 0;
+  const mode = confirm(
+    `偵測到 ${dbParsedPaste.length} 筆原物料。\n\n確定 → 若名稱重複則覆蓋更新\n取消 → 名稱重複時略過（只新增）`
+  );
+  dbParsedPaste.forEach(d => {
+    if (!d.name) return;
+    const idx = db.findIndex(x => x.name.toLowerCase() === d.name.toLowerCase());
+    if (idx >= 0) {
+      if (mode) { db[idx] = d; updated++; }
+      else skipped++;
+    } else {
+      db.push(d); added++;
     }
-
-    let rowCost = 0;
-    if(dbRecord) rowCost = dbRecord.unitPrice * qtyInDBUnit;
-
-    const row = {
-      id: uid(),
-      code: dbRecord?.code || '',
-      name: dbRecord?.name || item.name,
-      buyPrice: dbRecord?.buyPrice || '',
-      buyUnit: dbRecord?.buyUnit || '',
-      unitPrice: dbRecord?.unitPrice || '',
-      priceUnit: dbRecord?.priceUnit || item.unit,
-      qty: qtyInDBUnit,
-      qtyUnit: dbRecord?.priceUnit || item.unit,
-      cost: rowCost,
-      note: item.note || ''
-    };
-
-    p[_nlType].push(row);
-    added++;
   });
-
-  saveDB();
-  CM('modal-nl');
-
-  if(_nlType === 'ing') renderIngTable(p);
-  else renderPkgTable(p);
-  recalc();
-
-  setTimeout(()=>alert(`✅ 已加入 ${added} 項${skipped?`，略過 ${skipped} 項`:''}！`), 80);
+  saveDB(db);
+  renderDB();
+  closeDBPasteModal();
+  showToast(`✅ 匯入完成：新增 ${added} 筆，更新 ${updated} 筆，略過 ${skipped} 筆`);
 }
 
-// ─── INIT ───
-loadDB();
-seedIfEmpty();
-renderSidebar();
-if(DB.prods.length) loadProd(DB.prods[0].id);
+// ══════════════════════════════════
+// INIT — run after full DOM is ready
+// ══════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Modal overlay click-to-close
+  ['pasteModal','dbModal','transDBModal','expandModal','dbPasteModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', e => { if (e.target.id === id) el.classList.remove('open'); });
+  });
+  // Test Supabase connection
+  showSBStatus('🔄 連線中...', 'ok');
+  testSBConnection().then(ok => {
+    showSBStatus(ok ? '🟢 資料庫已連線' : '🔴 連線失敗', ok ? 'ok' : 'err');
+  });
+  addRow();
+  renderDB();
+  renderTransDB();
+  renderExpandDB();
+  loadApiKey();
+});
 </script>
+
+<!-- ══ 新增/編輯翻譯詞條 Modal ══ -->
+<div class="modal-overlay" id="transDBModal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="closeTransDBModal()">✕</button>
+    <div class="modal-title" id="transDBModalTitle">＋ 新增詞條</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+      <div class="form-group">
+        <label>中文成分名稱</label>
+        <input type="text" id="tdbF_zh" placeholder="例：樹薯粉">
+      </div>
+      <div class="form-group">
+        <label>英文翻譯</label>
+        <input type="text" id="tdbF_en" placeholder="例：Tapioca Starch">
+      </div>
+      <div class="form-group">
+        <label>備註（選填）</label>
+        <input type="text" id="tdbF_note" placeholder="例：台灣慣用名稱">
+      </div>
+    </div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveTransDBItem()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="closeTransDBModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 新增/編輯展開記錄 Modal ══ -->
+<div class="modal-overlay" id="expandModal">
+  <div class="modal" style="width:min(680px,96vw)">
+    <button class="modal-close" onclick="closeExpandModal()">✕</button>
+    <div class="modal-title" id="expandModalTitle">＋ 新增展開記錄</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+      <div class="form-group">
+        <label>原料簡稱（配方表中使用的名稱）</label>
+        <input type="text" id="expF_name" placeholder="例：香菇素蠔油">
+      </div>
+      <div class="form-group">
+        <label>展開內容（完整成分標示文字，含括號格式）</label>
+        <textarea id="expF_expanded" style="min-height:100px" placeholder="例：香菇素蠔油[水、轉化液糖(蔗糖、水)、非基因改造脫脂大豆片、小麥、食鹽、黏稠劑(乙醯化己二酸二澱粉、玉米糖膠)、酵母抽出物、苯甲酸鈉(防腐劑)、香菇粉]"></textarea>
+        <div style="font-size:.76rem;color:var(--text3);margin-top:4px">格式：原料名稱[子成分1、子成分2、...] 或 原料名稱(子成分1、子成分2、...)</div>
+      </div>
+      <div class="form-group">
+        <label>備註（選填）</label>
+        <input type="text" id="expF_note" placeholder="例：廠商 A 提供">
+      </div>
+    </div>
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveExpandItem()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="closeExpandModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 原物料批次貼上 Modal ══ -->
+<div class="modal-overlay" id="dbPasteModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDBPasteModal()">✕</button>
+    <div class="modal-title">📋 批次貼上匯入原物料</div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px">支援兩種格式，請選擇後貼上。</p>
+
+    <div class="fmt-tabs">
+      <button class="fmt-tab active" id="dbFmtBtn-col" onclick="setDBFmt('col')">📄 直行格式（每項一行）</button>
+      <button class="fmt-tab" id="dbFmtBtn-row" onclick="setDBFmt('row')">📊 橫列格式（Excel 橫排複製）</button>
+    </div>
+
+    <div id="dbHintCol" class="hint-box">
+      <strong>📌 直行格式 — 一筆原物料佔多行，每行一個值</strong>
+      名稱行是唯一非數字的行，多筆之間可以有空行。<br>
+      順序：<span class="col-tag">成分名稱</span><span class="col-tag">熱量</span><span class="col-tag">蛋白質</span><span class="col-tag">脂肪</span><span class="col-tag">飽和脂肪</span><span class="col-tag">反式脂肪</span><span class="col-tag">碳水化合物</span><span class="col-tag">糖</span><span class="col-tag">鈉</span>
+    </div>
+    <div id="dbHintRow" class="hint-box" style="display:none">
+      <strong>📌 橫列格式 — 從 Excel 橫向複製（每列一筆，Tab 分隔）</strong>
+      欄位順序：<span class="col-tag">成分名稱</span><span class="col-tag">熱量</span><span class="col-tag">蛋白質</span><span class="col-tag">脂肪</span><span class="col-tag">飽和脂肪</span><span class="col-tag">反式脂肪</span><span class="col-tag">碳水化合物</span><span class="col-tag">糖</span><span class="col-tag">鈉</span>
+    </div>
+
+    <!-- 直行：行順序設定 -->
+    <div id="dbRowOrderSection" class="colmap-section">
+      <div class="colmap-title">🔢 行順序設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（成分名稱後，第幾行對應哪個欄位）</span></div>
+      <div class="row-order-grid" id="dbRowOrderGrid"></div>
+    </div>
+
+    <!-- 橫列：欄位對應設定 -->
+    <div id="dbColMapSection" class="colmap-section" style="display:none">
+      <div class="colmap-title">🗂️ 欄位對應設定 <span style="font-size:.72rem;font-weight:400;color:var(--text3)">（第幾欄對應哪個欄位）</span></div>
+      <div class="colmap-grid" id="dbColMapGrid"></div>
+    </div>
+
+    <label style="font-size:.85rem;font-weight:600;color:var(--text2)">📂 貼上資料（Ctrl+V）</label>
+    <textarea class="paste-area" id="dbPasteArea" placeholder="在此貼上資料..." oninput="parseDBPaste()"></textarea>
+
+    <div id="dbPreviewSection" style="display:none;margin-top:12px">
+      <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">👀 資料預覽 <span id="dbPreviewCount" style="color:var(--text3);font-weight:400"></span></div>
+      <div class="preview-wrap">
+        <table class="preview-tbl">
+          <thead><tr><th>成分名稱</th><th>熱量</th><th>蛋白質</th><th>脂肪</th><th>飽和脂肪</th><th>反式脂肪</th><th>碳水</th><th>糖</th><th>鈉</th></tr></thead>
+          <tbody id="dbPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="btn-group" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="confirmDBPaste()">✅ 匯入至原物料庫</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('dbPasteArea').value='';parseDBPaste()">🗑️ 清除</button>
+      <button class="btn btn-secondary" onclick="closeDBPasteModal()">取消</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
