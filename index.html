@@ -418,6 +418,9 @@
         <button class="btn btn-secondary" onclick="exportDB()">⬇️ 匯出 JSON</button>
         <button class="btn btn-secondary" onclick="document.getElementById('importDBFile').click()">⬆️ 匯入 JSON</button>
         <input type="file" id="importDBFile" accept=".json" style="display:none" onchange="importDB(this)">
+        <button class="btn btn-secondary" onclick="exportDBExcel()">📊 匯出 Excel</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importDBExcelFile').click()">📂 匯入 Excel</button>
+        <input type="file" id="importDBExcelFile" accept=".xlsx,.xls" style="display:none" onchange="importDBExcel(this)">
       </div>
       <div class="db-wrap">
         <table class="db-tbl">
@@ -507,6 +510,9 @@
         <button class="btn btn-secondary" onclick="exportTransDB()">⬇️ 匯出 JSON</button>
         <button class="btn btn-secondary" onclick="document.getElementById('importTDBFile').click()">⬆️ 匯入 JSON</button>
         <input type="file" id="importTDBFile" accept=".json" style="display:none" onchange="importTransDB(this)">
+        <button class="btn btn-secondary" onclick="exportTransDBExcel()">📊 匯出 Excel</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importTDBExcelFile').click()">📂 匯入 Excel</button>
+        <input type="file" id="importTDBExcelFile" accept=".xlsx,.xls" style="display:none" onchange="importTransDBExcel(this)">
       </div>
       <div class="tdb-wrap">
         <table class="tdb-tbl">
@@ -537,6 +543,9 @@
         <button class="btn btn-secondary" onclick="exportExpandDB()">⬇️ 匯出 JSON</button>
         <button class="btn btn-secondary" onclick="document.getElementById('importExpFile').click()">⬆️ 匯入 JSON</button>
         <input type="file" id="importExpFile" accept=".json" style="display:none" onchange="importExpandDB(this)">
+        <button class="btn btn-secondary" onclick="exportExpandDBExcel()">📊 匯出 Excel</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importExpExcelFile').click()">📂 匯入 Excel</button>
+        <input type="file" id="importExpExcelFile" accept=".xlsx,.xls" style="display:none" onchange="importExpandDBExcel(this)">
       </div>
       <div class="exp-wrap">
         <table class="exp-tbl">
@@ -988,6 +997,7 @@ function renderResult(p, totalWeight) {
         <div class="btn-group">
           <button class="btn btn-success" onclick="window.print()">🖨️ 列印標示</button>
           <button class="btn btn-secondary" onclick="copyResult()">📋 複製文字</button>
+          <button class="btn btn-secondary" onclick="exportResultExcel()">📊 匯出 Excel</button>
           <button class="btn btn-primary" onclick="saveToHistory()">💾 儲存此產品</button>
         </div>
       </div>
@@ -2191,6 +2201,172 @@ function importFromXlsx(input) {
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+
+// ══════════════════════════════════
+// EXCEL 匯出/匯入 共用函式
+// ══════════════════════════════════
+function downloadXlsx(wb, filename) {
+  XLSX.writeFile(wb, filename);
+}
+
+// ── 原物料資料庫 Excel 匯出 ──
+function exportDBExcel() {
+  const db = loadDB();
+  if (!db.length) { showToast('資料庫是空的！'); return; }
+  const wb = XLSX.utils.book_new();
+  const headers = ['成分名稱','熱量(kcal/100g)','蛋白質(g/100g)','脂肪(g/100g)','飽和脂肪(g/100g)','反式脂肪(g/100g)','碳水化合物(g/100g)','糖(g/100g)','鈉(mg/100g)'];
+  const rows = db.map(d => [d.name, d.cal, d.protein, d.fat, d.satFat, d.transFat, d.carb, d.sugar, d.sodium]);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [14,10,10,8,10,10,12,8,10].map(w => ({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws, '原物料資料庫');
+  downloadXlsx(wb, '原物料資料庫.xlsx');
+  showToast('✅ 已匯出 Excel！');
+}
+
+// ── 原物料資料庫 Excel 匯入 ──
+function importDBExcel(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: 0 });
+      if (rows.length < 2) { showToast('⚠️ 檔案沒有資料'); return; }
+      // skip header row
+      const data = rows.slice(1).filter(r => r[0]).map(r => ({
+        name: String(r[0]).trim(),
+        cal: +r[1]||0, protein: +r[2]||0, fat: +r[3]||0,
+        satFat: +r[4]||0, transFat: +r[5]||0, carb: +r[6]||0,
+        sugar: +r[7]||0, sodium: +r[8]||0
+      }));
+      const existing = loadDB(); let added=0, skipped=0;
+      data.forEach(item => {
+        if (existing.find(d => d.name===item.name)) { skipped++; return; }
+        existing.push(item); added++;
+      });
+      saveDB(existing); _dbCache=null; renderDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch(err) { showToast('⚠️ 匯入失敗：'+err.message); }
+  };
+  reader.readAsArrayBuffer(file); input.value='';
+}
+
+// ── 翻譯詞庫 Excel 匯出 ──
+function exportTransDBExcel() {
+  const db = loadTransDB();
+  if (!db.length) { showToast('詞庫是空的！'); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['中文成分名稱','英文翻譯','備註'],
+    ...db.map(d => [d.zh, d.en, d.note||''])
+  ]);
+  ws['!cols'] = [{wch:20},{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, ws, '翻譯詞庫');
+  downloadXlsx(wb, '翻譯詞庫.xlsx');
+  showToast('✅ 已匯出 Excel！');
+}
+
+// ── 翻譯詞庫 Excel 匯入 ──
+function importTransDBExcel(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, defval:'' });
+      const data = rows.slice(1).filter(r=>r[0]&&r[1]).map(r => ({ zh:String(r[0]).trim(), en:String(r[1]).trim(), note:String(r[2]||'').trim() }));
+      const existing = loadTransDB(); let added=0, skipped=0;
+      data.forEach(item => {
+        if (existing.find(d=>d.zh===item.zh)) { skipped++; return; }
+        existing.push(item); added++;
+      });
+      saveTransDB(existing); _tdbCache=existing; renderTransDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch(err) { showToast('⚠️ 匯入失敗：'+err.message); }
+  };
+  reader.readAsArrayBuffer(file); input.value='';
+}
+
+// ── 原料展開庫 Excel 匯出 ──
+function exportExpandDBExcel() {
+  const db = loadExpandDB();
+  if (!db.length) { showToast('展開庫是空的！'); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['原料名稱（簡稱）','展開內容（成分標示文字）','備註'],
+    ...db.map(d => [d.name, d.expanded, d.note||''])
+  ]);
+  ws['!cols'] = [{wch:20},{wch:80},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, ws, '原料展開庫');
+  downloadXlsx(wb, '原料展開庫.xlsx');
+  showToast('✅ 已匯出 Excel！');
+}
+
+// ── 原料展開庫 Excel 匯入 ──
+function importExpandDBExcel(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, defval:'' });
+      const data = rows.slice(1).filter(r=>r[0]&&r[1]).map(r => ({ name:String(r[0]).trim(), expanded:String(r[1]).trim(), note:String(r[2]||'').trim() }));
+      const existing = loadExpandDB(); let added=0, skipped=0;
+      data.forEach(item => {
+        if (existing.find(d=>d.name===item.name)) { skipped++; return; }
+        existing.push(item); added++;
+      });
+      saveExpandDB(existing); _expCache=existing; renderExpandDB();
+      showToast(`✅ 匯入：新增 ${added} 筆，略過 ${skipped} 筆`);
+    } catch(err) { showToast('⚠️ 匯入失敗：'+err.message); }
+  };
+  reader.readAsArrayBuffer(file); input.value='';
+}
+
+// ── 營養標示結果 Excel 匯出 ──
+function exportResultExcel() {
+  if (!window._lastResult) { showToast('請先計算營養標示！'); return; }
+  const { name, finalLabel, allergen, content, p } = window._lastResult;
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: 產品標示
+  const ws1 = XLSX.utils.aoa_to_sheet([
+    ['品名', name],
+    ['原料', finalLabel],
+    ['過敏原', allergen],
+    ['內容物', content],
+    [],
+    ['營養標示', '每一份量 100 公克'],
+    ['項目', '每份', '每100公克', '單位'],
+    ['熱量', +p.cal.toFixed(1), +p.cal.toFixed(1), '大卡'],
+    ['蛋白質', +p.protein.toFixed(1), +p.protein.toFixed(1), 'g'],
+    ['脂肪', +p.fat.toFixed(1), +p.fat.toFixed(1), 'g'],
+    ['　飽和脂肪', +p.satFat.toFixed(1), +p.satFat.toFixed(1), 'g'],
+    ['　反式脂肪', +p.transFat.toFixed(2), +p.transFat.toFixed(2), 'g'],
+    ['碳水化合物', +p.carb.toFixed(1), +p.carb.toFixed(1), 'g'],
+    ['　糖', +p.sugar.toFixed(1), +p.sugar.toFixed(1), 'g'],
+    ['鈉', +p.sodium.toFixed(0), +p.sodium.toFixed(0), 'mg'],
+  ]);
+  ws1['!cols'] = [{wch:14},{wch:60},{wch:12},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, ws1, '營養標示');
+
+  // Sheet 2: 配方成分
+  const ingHeaders = ['成分名稱','配方重量(g)','佔比(%)','熱量(kcal/100g)','蛋白質(g/100g)','脂肪(g/100g)','飽和脂肪(g/100g)','反式脂肪(g/100g)','碳水化合物(g/100g)','糖(g/100g)','鈉(mg/100g)'];
+  const totalW = ingredients.reduce((s,r)=>s+(r.weight||0),0);
+  const ingRows = ingredients.map(r => [
+    r.name, r.weight,
+    totalW>0?(r.weight/totalW*100).toFixed(2)+'%':'0%',
+    r.cal, r.protein, r.fat, r.satFat, r.transFat, r.carb, r.sugar, r.sodium
+  ]);
+  const ws2 = XLSX.utils.aoa_to_sheet([ingHeaders, ...ingRows]);
+  ws2['!cols'] = [14,12,8,10,10,8,10,10,12,8,10].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb, ws2, '配方成分');
+
+  downloadXlsx(wb, `${name || '營養標示'}.xlsx`);
+  showToast('✅ 已匯出 Excel！');
 }
 
 // ══════════════════════════════════
