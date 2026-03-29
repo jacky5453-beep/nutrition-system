@@ -447,8 +447,21 @@
         <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 使用 AI 翻譯食品成分名稱</span>
       </div>
 
-      <div class="api-key-row">
-        <div class="form-group">
+      <div class="api-key-row" style="align-items:flex-start;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:220px">
+          <div style="font-size:.85rem;font-weight:700;color:var(--text2)">🌐 翻譯引擎</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.88rem">
+              <input type="radio" name="transEngine" value="google" id="engineGoogle" checked onchange="saveTransEngine(this.value)">
+              Google 翻譯（免費，不需要 Key）
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.88rem">
+              <input type="radio" name="transEngine" value="anthropic" id="engineAnthropic" onchange="saveTransEngine(this.value)">
+              Anthropic AI（專業食品術語）
+            </label>
+          </div>
+        </div>
+        <div class="form-group" id="apiKeyGroup" style="flex:2;min-width:260px;display:none">
           <label>Anthropic API Key</label>
           <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="saveApiKey(this.value)">
           <div class="api-key-hint">API Key 僅儲存於本機瀏覽器，不會上傳。可至 <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a> 取得。</div>
@@ -1506,6 +1519,39 @@ function loadApiKey() {
   if (inp && k) inp.value = k;
   return k;
 }
+function saveTransEngine(val) { localStorage.setItem('transEngine', val); }
+function loadTransEngine() { return localStorage.getItem('transEngine') || 'google'; }
+function initTransEngine() {
+  const val = loadTransEngine();
+  const r = document.querySelector(`input[name=transEngine][value=${val}]`);
+  if (r) r.checked = true;
+  const grp = document.getElementById('apiKeyGroup');
+  if (grp) grp.style.display = val === 'anthropic' ? '' : 'none';
+}
+
+// Google 翻譯（逐筆，不需要 Key）
+async function googleTranslateOne(text) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-TW&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Google 翻譯請求失敗');
+  const data = await resp.json();
+  return data[0].map(x => x[0]).join('').trim();
+}
+
+// 批次 Google 翻譯（每筆獨立呼叫，加小延遲避免封鎖）
+async function googleTranslateBatch(items) {
+  const results = [];
+  for (let i = 0; i < items.length; i++) {
+    try {
+      const en = await googleTranslateOne(items[i]);
+      results.push({ zh: items[i], en, src: 'google' });
+    } catch(e) {
+      results.push({ zh: items[i], en: '（翻譯失敗）', src: 'google' });
+    }
+    if (i < items.length - 1) await new Promise(r => setTimeout(r, 120));
+  }
+  return results;
+}
 
 function loadFromIngredients() {
   const names = ingredients.filter(r => r.name).map(r => r.name);
@@ -1546,7 +1592,8 @@ function saveSingleToTransDB(zh, en, rowIdx) {
     showToast('⚠️ 此詞條已在詞庫中');
     return;
   }
-  db.push({ zh, en, note: 'AI 翻譯' });
+  const engineNote = loadTransEngine() === 'google' ? 'Google 翻譯' : 'AI 翻譯';
+  db.push({ zh, en, note: engineNote });
   saveTransDB(db);
   renderTransDB();
   // Update button state in the result list
@@ -1588,20 +1635,36 @@ async function translateIngredients() {
 
   let aiResults = [];
 
-  // ── Step 2: 需要 AI 翻譯的部分 ──
+  // ── Step 2: 翻譯詞庫未命中的部分 ──
+  const engine = loadTransEngine();
   if (needAI.length > 0) {
-    if (!apiKey || !apiKey.startsWith('sk-')) {
-      if (dbHits.length === 0) {
-        showToast('⚠️ 請先填入 Anthropic API Key，或先建立翻譯詞庫！');
-        document.getElementById('transLoading').style.display = 'none';
-        document.getElementById('transBtn').disabled = false;
-        return;
+    if (engine === 'google') {
+      // ── Google 翻譯 ──
+      document.querySelector('#transLoading span').textContent = `Google 翻譯中（0/${needAI.length}）...`;
+      for (let i = 0; i < needAI.length; i++) {
+        document.querySelector('#transLoading span').textContent = `Google 翻譯中（${i+1}/${needAI.length}）...`;
+        try {
+          const en = await googleTranslateOne(needAI[i]);
+          aiResults.push({ zh: needAI[i], en, src: 'google' });
+        } catch(e) {
+          aiResults.push({ zh: needAI[i], en: '（翻譯失敗）', src: 'google' });
+        }
+        if (i < needAI.length - 1) await new Promise(r => setTimeout(r, 120));
       }
-      // 部分命中，AI 部分跳過
-      needAI.forEach(zh => aiResults.push({ zh, en: '（需要 API Key 翻譯）', src: 'ai' }));
+      _lastAIResults = aiResults.filter(r => r.en !== '（翻譯失敗）');
     } else {
-      try {
-        const prompt = `你是食品標示專家。請將以下中文食品成分名稱翻譯成英文（食品標示用語，專業準確）。
+      // ── Anthropic AI 翻譯 ──
+      if (!apiKey || !apiKey.startsWith('sk-')) {
+        if (dbHits.length === 0) {
+          showToast('⚠️ 請先填入 Anthropic API Key，或改用 Google 翻譯！');
+          document.getElementById('transLoading').style.display = 'none';
+          document.getElementById('transBtn').disabled = false;
+          return;
+        }
+        needAI.forEach(zh => aiResults.push({ zh, en: '（需要 API Key 翻譯）', src: 'ai' }));
+      } else {
+        try {
+          const prompt = `你是食品標示專家。請將以下中文食品成分名稱翻譯成英文（食品標示用語，專業準確）。
 請以 JSON 陣列格式回覆，每個元素包含 "zh" 和 "en" 兩個欄位，只回覆 JSON，不要其他文字。
 
 中文成分清單：
@@ -1610,25 +1673,27 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
 範例輸出格式：
 [{"zh":"樹薯粉","en":"Tapioca Starch"},{"zh":"大豆沙拉油","en":"Soybean Salad Oil"}]`;
 
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
-        });
-        if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error?.message || `HTTP ${resp.status}`); }
-        const data = await resp.json();
-        const text = data.content?.[0]?.text || '';
-        const jsonMatch = text.match(/\[[\s\S]*\]/);
-        if (!jsonMatch) throw new Error('回傳格式無法解析');
-        const parsed = JSON.parse(jsonMatch[0]);
-        aiResults = parsed.map(r => ({ zh: r.zh, en: r.en, src: 'ai' }));
-        _lastAIResults = [...aiResults];
-      } catch(err) {
-        showToast('⚠️ AI 翻譯失敗：' + err.message);
-        needAI.forEach(zh => aiResults.push({ zh, en: '（翻譯失敗）', src: 'ai' }));
+          const resp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+          });
+          if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error?.message || `HTTP ${resp.status}`); }
+          const data = await resp.json();
+          const text = data.content?.[0]?.text || '';
+          const jsonMatch = text.match(/\[[\s\S]*\]/);
+          if (!jsonMatch) throw new Error('回傳格式無法解析');
+          const parsed = JSON.parse(jsonMatch[0]);
+          aiResults = parsed.map(r => ({ zh: r.zh, en: r.en, src: 'ai' }));
+          _lastAIResults = [...aiResults];
+        } catch(err) {
+          showToast('⚠️ AI 翻譯失敗：' + err.message);
+          needAI.forEach(zh => aiResults.push({ zh, en: '（翻譯失敗）', src: 'ai' }));
+        }
       }
     }
   }
+
 
   // ── Step 3: 按原始輸入順序合併結果 ──
   const allResults = items.map(zh => {
@@ -1640,9 +1705,13 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
 
   // Stats
   const dbCount = allResults.filter(r => r.src === 'db').length;
-  const aiCount = allResults.filter(r => r.src === 'ai').length;
+  const aiCount = allResults.filter(r => r.src === 'ai' || r.src === 'google').length;
+  const engine2 = loadTransEngine();
   document.getElementById('statDB').textContent = dbCount;
   document.getElementById('statAI').textContent = aiCount;
+  // Update AI badge label to match engine
+  const aiBadge = document.querySelector('#transStats .tdb-badge-ai');
+  if (aiBadge) aiBadge.textContent = engine2 === 'google' ? 'Google' : 'AI';
   document.getElementById('transStats').style.display = 'flex';
   document.getElementById('statSaveBox').style.display = aiCount > 0 && _lastAIResults.length > 0 ? '' : 'none';
 
@@ -1650,7 +1719,7 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
   const currentDB = loadTransDB();
   document.getElementById('transItems').innerHTML = allResults.map((r, i) => {
     const inDB = currentDB.some(d => d.zh.toLowerCase() === r.zh.toLowerCase());
-    const saveBtn = r.src === 'ai' && !inDB
+    const saveBtn = (r.src === 'ai' || r.src === 'google') && !inDB
       ? `<button class="btn btn-secondary trans-copy-btn" id="saveTDB-${i}" onclick="saveSingleToTransDB(${JSON.stringify(r.zh)},${JSON.stringify(r.en)},${i})" style="padding:3px 10px;white-space:nowrap">💾 存詞庫</button>`
       : inDB
         ? `<span style="font-size:.72rem;color:var(--green);white-space:nowrap">✓ 已在詞庫</span>`
@@ -1661,7 +1730,7 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
       <div class="trans-zh">${r.zh}</div>
       <div style="color:var(--text3)">→</div>
       <div class="trans-en">${r.en}</div>
-      <span class="tdb-badge-${r.src}">${r.src === 'db' ? '詞庫' : 'AI'}</span>
+      <span class="tdb-badge-${r.src === 'google' ? 'ai' : r.src}">${r.src === 'db' ? '詞庫' : r.src === 'google' ? 'Google' : 'AI'}</span>
       ${saveBtn}
       <button class="btn btn-secondary trans-copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(r.en)}).then(()=>showToast('已複製！'))">複製</button>
     </div>`;
@@ -2426,6 +2495,13 @@ document.addEventListener('DOMContentLoaded', () => {
   renderExpandDB();
   renderHistory();
   loadApiKey();
+  initTransEngine();
+  // Toggle API key group on engine change
+  document.querySelectorAll('input[name=transEngine]').forEach(r => {
+    r.addEventListener('change', () => {
+      document.getElementById('apiKeyGroup').style.display = r.value === 'anthropic' ? '' : 'none';
+    });
+  });
 });
 </script>
 
