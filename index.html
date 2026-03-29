@@ -487,7 +487,7 @@
         <div class="trans-stat-box">詞庫命中 <strong id="statDB">0</strong> 筆 <span class="tdb-badge-db">詞庫</span></div>
         <div class="trans-stat-box">AI 翻譯 <strong id="statAI">0</strong> 筆 <span class="tdb-badge-ai">AI</span></div>
         <div class="trans-stat-box" id="statSaveBox" style="display:none">
-          <button class="btn btn-secondary btn-sm" onclick="saveNewToTransDB()" style="padding:3px 10px">💾 將 AI 結果存入詞庫</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveNewToTransDB()" style="padding:3px 10px">💾 全部 AI 結果存入詞庫</button>
         </div>
       </div>
 
@@ -1531,8 +1531,35 @@ function saveNewToTransDB() {
   saveTransDB(db);
   showToast(`✅ 已存入詞庫：新增 ${added} 筆，略過重複 ${skipped} 筆`);
   renderTransDB();
+  // Update all save buttons in result list to show ✓ saved state
+  document.querySelectorAll('[id^="saveTDB-"]').forEach(btn => {
+    btn.outerHTML = `<span style="font-size:.72rem;color:var(--green);white-space:nowrap">✓ 已在詞庫</span>`;
+  });
   document.getElementById('statSaveBox').style.display = 'none';
   _lastAIResults = [];
+}
+
+// 將單筆 AI 翻譯存入詞庫
+function saveSingleToTransDB(zh, en, rowIdx) {
+  const db = loadTransDB();
+  if (db.find(d => d.zh.toLowerCase() === zh.toLowerCase())) {
+    showToast('⚠️ 此詞條已在詞庫中');
+    return;
+  }
+  db.push({ zh, en, note: 'AI 翻譯' });
+  saveTransDB(db);
+  renderTransDB();
+  // Update button state in the result list
+  const btn = document.getElementById(`saveTDB-${rowIdx}`);
+  if (btn) {
+    btn.outerHTML = `<span style="font-size:.72rem;color:var(--green);white-space:nowrap">✓ 已在詞庫</span>`;
+  }
+  showToast(`✅ 已儲存「${zh}」到詞庫`);
+  // Remove from _lastAIResults to keep global save count accurate
+  _lastAIResults = _lastAIResults.filter(r => r.zh !== zh);
+  if (_lastAIResults.length === 0) {
+    document.getElementById('statSaveBox').style.display = 'none';
+  }
 }
 
 async function translateIngredients() {
@@ -1619,16 +1646,26 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
   document.getElementById('transStats').style.display = 'flex';
   document.getElementById('statSaveBox').style.display = aiCount > 0 && _lastAIResults.length > 0 ? '' : 'none';
 
-  // Result list
-  document.getElementById('transItems').innerHTML = allResults.map((r, i) => `
-    <div class="trans-result-item">
+  // Result list — with per-item save button
+  const currentDB = loadTransDB();
+  document.getElementById('transItems').innerHTML = allResults.map((r, i) => {
+    const inDB = currentDB.some(d => d.zh.toLowerCase() === r.zh.toLowerCase());
+    const saveBtn = r.src === 'ai' && !inDB
+      ? `<button class="btn btn-secondary trans-copy-btn" id="saveTDB-${i}" onclick="saveSingleToTransDB(${JSON.stringify(r.zh)},${JSON.stringify(r.en)},${i})" style="padding:3px 10px;white-space:nowrap">💾 存詞庫</button>`
+      : inDB
+        ? `<span style="font-size:.72rem;color:var(--green);white-space:nowrap">✓ 已在詞庫</span>`
+        : '';
+    return `
+    <div class="trans-result-item" id="trans-row-${i}">
       <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0">${i+1}</div>
       <div class="trans-zh">${r.zh}</div>
       <div style="color:var(--text3)">→</div>
       <div class="trans-en">${r.en}</div>
       <span class="tdb-badge-${r.src}">${r.src === 'db' ? '詞庫' : 'AI'}</span>
+      ${saveBtn}
       <button class="btn btn-secondary trans-copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(r.en)}).then(()=>showToast('已複製！'))">複製</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('transResultList').style.display = '';
   showToast(`✅ 翻譯完成！詞庫 ${dbCount} 筆 + AI ${aiCount} 筆`);
 
