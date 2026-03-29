@@ -342,6 +342,7 @@
     <button class="tab-btn" onclick="switchTab('transdb',this)">📖 翻譯詞庫</button>
     <button class="tab-btn" onclick="switchTab('expand',this)">🔍 原料展開庫</button>
     <button class="tab-btn" onclick="switchTab('history',this)">📦 產品歷史記錄</button>
+    <button class="tab-btn" onclick="switchTab('transhist',this)">🌐 翻譯記錄</button>
   </div>
 
   <!-- ─── TAB 1 配方輸入 ─── -->
@@ -508,6 +509,19 @@
         <div class="card-title" style="border:none;padding-bottom:8px;margin-bottom:8px">📋 逐條對照</div>
         <div id="transItems"></div>
       </div>
+
+      <!-- 儲存翻譯記錄 -->
+      <div id="transRecordSaveArea" style="display:none;margin-top:16px;background:var(--accent-light);border:1px solid var(--border2);border-radius:8px;padding:14px 18px">
+        <div style="font-size:.88rem;font-weight:700;color:var(--accent);margin-bottom:10px">💾 儲存此次翻譯為產品記錄</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group" style="flex:1;min-width:200px;margin:0">
+            <label>產品名稱</label>
+            <input type="text" id="transRecordName" placeholder="例：素燒麥、黑胡椒豆包..." style="margin-top:4px">
+          </div>
+          <button class="btn btn-primary" onclick="saveTransRecord()" style="flex-shrink:0">💾 儲存翻譯記錄</button>
+        </div>
+        <div style="font-size:.76rem;color:var(--text3);margin-top:6px">儲存後可在「翻譯記錄」頁查詢、載入或複製英文清單</div>
+      </div>
     </div>
   </div>
 
@@ -588,6 +602,23 @@
       </div>
       <div class="hist-grid" id="histGrid">
         <div class="hist-empty">尚無儲存記錄</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ─── TAB 翻譯記錄 ─── -->
+  <div class="tab-panel" id="tab-transhist">
+    <div class="card">
+      <div class="card-title">🌐 翻譯記錄
+        <span style="font-size:.76rem;font-weight:400;color:var(--text3)">— 儲存的產品成分翻譯對照表</span>
+      </div>
+      <div class="hist-toolbar">
+        <input type="text" id="transHistSearch" placeholder="🔍 搜尋產品名稱..." oninput="renderTransHistory()">
+        <span id="transHistCount" style="font-size:.82rem;color:var(--text3)"></span>
+      </div>
+      <div class="hist-grid" id="transHistGrid">
+        <div class="hist-empty">尚無翻譯記錄</div>
       </div>
     </div>
   </div>
@@ -1702,6 +1733,7 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
 
   // ── Step 4: 輸出 ──
   document.getElementById('transOutput').value = allResults.map(r => r.en).join('\n');
+  window._lastTransResults = allResults; // store for saving
 
   // Stats
   const dbCount = allResults.filter(r => r.src === 'db').length;
@@ -1736,6 +1768,7 @@ ${needAI.map((s,i) => `${i+1}. ${s}`).join('\n')}
     </div>`;
   }).join('');
   document.getElementById('transResultList').style.display = '';
+  document.getElementById('transRecordSaveArea').style.display = '';
   showToast(`✅ 翻譯完成！詞庫 ${dbCount} 筆 + AI ${aiCount} 筆`);
 
   document.getElementById('transLoading').style.display = 'none';
@@ -2044,6 +2077,9 @@ async function confirmDBPaste() {
 // PRODUCT HISTORY
 // ══════════════════════════════════
 const HIST_KEY = 'productHistory_v1';
+const TRANS_HIST_KEY = 'transHistory_v1';
+function loadTransHistory() { try { return JSON.parse(localStorage.getItem(TRANS_HIST_KEY) || '[]'); } catch { return []; } }
+function saveTransHistory(db) { localStorage.setItem(TRANS_HIST_KEY, JSON.stringify(db)); }
 let _histCache = null;
 
 function loadHistory_local() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; } }
@@ -2104,6 +2140,124 @@ async function saveToHistory() {
   _histCache = null;
 
   showToast(`✅ 已儲存「${name}」到歷史記錄！`);
+}
+
+// ══════════════════════════════════
+// TRANSLATION HISTORY
+// ══════════════════════════════════
+let _transHistCache = null;
+
+function saveTransRecord() {
+  if (!window._lastTransResults || !window._lastTransResults.length) {
+    showToast('請先執行翻譯！'); return;
+  }
+  // Ask product name
+  const name = document.getElementById('transRecordName').value.trim();
+  if (!name) { showToast('請輸入產品名稱！'); document.getElementById('transRecordName').focus(); return; }
+
+  const record = {
+    id: Date.now(),
+    product_name: name,
+    created_at: new Date().toISOString(),
+    engine: loadTransEngine(),
+    items: window._lastTransResults.map(r => ({ zh: r.zh, en: r.en, src: r.src }))
+  };
+
+  const db = loadTransHistory();
+  // If same name exists, overwrite
+  const idx = db.findIndex(r => r.product_name === name);
+  if (idx >= 0) {
+    if (!confirm(`「${name}」已有翻譯記錄，是否覆蓋？`)) return;
+    db[idx] = record;
+  } else {
+    db.unshift(record);
+  }
+  saveTransHistory(db);
+  _transHistCache = null;
+  renderTransHistory();
+  showToast(`✅ 已儲存「${name}」的翻譯記錄！`);
+}
+
+function renderTransHistory() {
+  const db = loadTransHistory();
+  _transHistCache = db;
+  const q = (document.getElementById('transHistSearch')?.value || '').toLowerCase();
+  const data = q ? db.filter(r => r.product_name.toLowerCase().includes(q)) : db;
+  const grid = document.getElementById('transHistGrid');
+  if (!grid) return;
+  document.getElementById('transHistCount').textContent = `共 ${db.length} 筆`;
+
+  if (!data.length) {
+    grid.innerHTML = '<div class="hist-empty">尚無翻譯記錄，翻譯完成後點「💾 儲存翻譯記錄」存入</div>';
+    return;
+  }
+
+  grid.innerHTML = data.map(r => {
+    const date = new Date(r.created_at).toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const preview = r.items.slice(0, 4).map(i => `${i.zh}→${i.en}`).join('、');
+    const more = r.items.length > 4 ? ` 等 ${r.items.length} 項` : `（共 ${r.items.length} 項）`;
+    return `<div class="hist-card">
+      <button class="hist-del-btn" onclick="deleteTransRecord(${r.id},'${escH(r.product_name)}')" title="刪除">✕</button>
+      <div class="hist-card-name">🌐 ${escH(r.product_name)}</div>
+      <div class="hist-card-meta">📅 ${date} &nbsp;·&nbsp; ${r.items.length} 項成分 &nbsp;·&nbsp; ${r.engine === 'google' ? 'Google 翻譯' : 'AI 翻譯'}</div>
+      <div class="hist-card-label" title="${escH(r.items.map(i=>i.zh+'→'+i.en).join('、'))}">${escH(preview)}${escH(more)}</div>
+      <div class="hist-card-btns" style="gap:6px;margin-top:8px">
+        <button class="btn btn-secondary btn-sm" onclick="loadTransRecord(${r.id})">📂 載入翻譯</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportTransRecord(${r.id})">📋 複製英文清單</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadTransRecord(id) {
+  const db = loadTransHistory();
+  const r = db.find(d => d.id === id);
+  if (!r) return;
+  // Fill translation tab
+  document.getElementById('transInput').value = r.items.map(i => i.zh).join('\n');
+  document.getElementById('transOutput').value = r.items.map(i => i.en).join('\n');
+  window._lastTransResults = r.items;
+  // Render result list
+  const currentDB = loadTransDB();
+  document.getElementById('transItems').innerHTML = r.items.map((item, i) => {
+    const inDB = currentDB.some(d => d.zh.toLowerCase() === item.zh.toLowerCase());
+    const saveBtn = !inDB
+      ? `<button class="btn btn-secondary trans-copy-btn" id="saveTDB-${i}" onclick="saveSingleToTransDB(${JSON.stringify(item.zh)},${JSON.stringify(item.en)},${i})" style="padding:3px 10px;white-space:nowrap">💾 存詞庫</button>`
+      : `<span style="font-size:.72rem;color:var(--green);white-space:nowrap">✓ 已在詞庫</span>`;
+    return `
+    <div class="trans-result-item" id="trans-row-${i}">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0">${i+1}</div>
+      <div class="trans-zh">${escH(item.zh)}</div>
+      <div style="color:var(--text3)">→</div>
+      <div class="trans-en">${escH(item.en)}</div>
+      <span class="tdb-badge-${item.src === 'db' ? 'db' : 'ai'}">${item.src === 'db' ? '詞庫' : item.src === 'google' ? 'Google' : 'AI'}</span>
+      ${saveBtn}
+      <button class="btn btn-secondary trans-copy-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(item.en)}).then(()=>showToast('已複製！'))">複製</button>
+    </div>`;
+  }).join('');
+  document.getElementById('transResultList').style.display = '';
+  // Show save name
+  document.getElementById('transRecordName').value = r.product_name;
+  document.getElementById('transRecordSaveArea').style.display = '';
+  switchTab('trans', document.querySelectorAll('.tab-btn')[4]);
+  showToast(`✅ 已載入「${r.product_name}」的翻譯記錄`);
+}
+
+function exportTransRecord(id) {
+  const db = loadTransHistory();
+  const r = db.find(d => d.id === id);
+  if (!r) return;
+  const text = r.items.map(i => i.en).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast(`✅ 已複製「${r.product_name}」的英文清單`));
+}
+
+function deleteTransRecord(id, name) {
+  if (!confirm(`確定要刪除「${name}」的翻譯記錄嗎？`)) return;
+  const db = loadTransHistory().filter(r => r.id !== id);
+  saveTransHistory(db);
+  _transHistCache = null;
+  renderTransHistory();
+  showToast('🗑️ 已刪除');
 }
 
 async function renderHistory() {
@@ -2496,6 +2650,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHistory();
   loadApiKey();
   initTransEngine();
+  renderTransHistory();
   // Toggle API key group on engine change
   document.querySelectorAll('input[name=transEngine]').forEach(r => {
     r.addEventListener('change', () => {
