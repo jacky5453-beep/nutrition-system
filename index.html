@@ -231,6 +231,14 @@
   .hist-empty { text-align:center; padding:40px; color:var(--text3); font-size:.9rem; font-style:italic; grid-column:1/-1; }
   .save-btn-group { display:flex; gap:8px; margin-top:14px; }
   @media(max-width:800px){.form-grid{grid-template-columns:1fr;}.label-wrapper{flex-direction:column;}}
+  /* 英文翻譯結果區 */
+  .eng-result-box { margin-top:16px; padding:16px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+  .eng-result-box .eng-title { font-weight:700; color:var(--accent); margin-bottom:10px; font-size:.9rem; }
+  .eng-result-box .eng-row { margin-bottom:6px; font-size:.88rem; line-height:1.6; }
+  .eng-result-box .eng-row strong { color:var(--text1); }
+  .eng-missing { color:#e65100; background:#fff3e0; padding:1px 5px; border-radius:4px; font-size:.82rem; border:1px dashed #ffab40; }
+  .eng-found { color:#2e7d32; }
+  .eng-copy-row { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
   @media print{.tabs,.card:not(.print-target),.btn-group,.header{display:none!important;}.nutrition-label{border-color:#000;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1258,6 +1266,10 @@ function renderResult(p, totalWeight) {
           <button class="btn btn-secondary" onclick="exportResultExcel()">📊 匯出 Excel</button>
           <button class="btn btn-primary" onclick="saveToHistory()">💾 儲存此產品</button>
         </div>
+        <div class="btn-group" style="margin-top:6px">
+          <button class="btn btn-secondary" onclick="translateResultToEnglish()" id="btnTransResult">🌐 一鍵翻成英文</button>
+        </div>
+        <div id="engResultArea"></div>
       </div>
     </div>`;
   window._lastResult = { name, finalLabel, allergen, content, p };
@@ -1307,6 +1319,104 @@ function copyResult() {
   if (!window._lastResult) return;
   const {name,finalLabel,allergen,content,p} = window._lastResult;
   navigator.clipboard.writeText(`品名：${name}\n原料：${finalLabel}\n過敏原：${allergen}\n內容物：${content}\n\n【營養標示 每100公克】\n熱量：${p.cal.toFixed(1)} 大卡\n蛋白質：${p.protein.toFixed(2)} g\n脂肪：${p.fat.toFixed(2)} g\n飽和脂肪：${p.satFat.toFixed(2)} g\n反式脂肪：${p.transFat.toFixed(3)} g\n碳水化合物：${p.carb.toFixed(2)} g\n糖：${p.sugar.toFixed(2)} g\n鈉：${p.sodium.toFixed(1)} mg`).then(()=>showToast('✅ 已複製！'));
+}
+
+// ══════════════════════════════════
+// 一鍵翻成英文
+// ══════════════════════════════════
+async function translateResultToEnglish() {
+  if (!window._lastResult) { showToast('請先計算結果！'); return; }
+  const btn = document.getElementById('btnTransResult');
+  btn.disabled = true; btn.textContent = '🌐 翻譯中...';
+  try {
+    const { name, finalLabel, allergen, content, p } = window._lastResult;
+    // 確保翻譯詞庫已載入
+    if (!_tdbCache) { const remote = await loadTransDB_remote(); if (remote) _tdbCache = remote; }
+
+    // 解析原料清單（支援頓號、逗號分隔）
+    const rawIngredients = finalLabel.split(/[、，,]/).map(s => s.trim()).filter(Boolean);
+
+    // 逐一查詞庫翻譯原料
+    let missingCount = 0;
+    const engIngredients = rawIngredients.map(zh => {
+      const hit = findTransDB(zh);
+      if (hit) return { zh, en: hit.en, found: true };
+      missingCount++;
+      return { zh, en: zh, found: false }; // 沒找到就顯示中文
+    });
+
+    // 品名用 Google 翻譯
+    let engName = name;
+    try { engName = await googleTranslateOne(name); } catch(e) { /* 翻譯失敗就用中文 */ }
+
+    // 過敏原用 Google 翻譯
+    let engAllergen = allergen;
+    if (allergen && allergen !== '－') {
+      try { engAllergen = await googleTranslateOne(allergen); } catch(e) {}
+    }
+
+    // 內容物用 Google 翻譯
+    let engContent = content;
+    if (content && content !== '－') {
+      try { engContent = await googleTranslateOne(content); } catch(e) {}
+    }
+
+    // 組裝英文原料標示（純文字版，未找到的保留中文）
+    const engLabelPlain = engIngredients.map(r => r.en).join(', ');
+
+    // 組裝顯示用 HTML（有顏色標記）
+    const engLabelHtml = engIngredients.map(r =>
+      r.found ? `<span class="eng-found">${escH(r.en)}</span>`
+              : `<span class="eng-missing" title="詞庫中無此成分">${escH(r.zh)}</span>`
+    ).join(', ');
+
+    // 營養標示英文
+    const nlEng = `Nutrition Facts (per 100g)\nCalories: ${p.cal.toFixed(1)} kcal\nProtein: ${p.protein.toFixed(2)} g\nTotal Fat: ${p.fat.toFixed(2)} g\nSaturated Fat: ${p.satFat.toFixed(2)} g\nTrans Fat: ${p.transFat.toFixed(3)} g\nTotal Carbohydrate: ${p.carb.toFixed(2)} g\nSugars: ${p.sugar.toFixed(2)} g\nSodium: ${p.sodium.toFixed(1)} mg`;
+
+    // 顯示結果
+    const area = document.getElementById('engResultArea');
+    area.innerHTML = `
+      <div class="eng-result-box">
+        <div class="eng-title">🌐 English Translation${missingCount > 0 ? ` <span style="color:#e65100;font-weight:400;font-size:.8rem">（${missingCount} 項成分在詞庫中無資料，以橘色標示）</span>` : ''}</div>
+        <div class="eng-row"><strong>Product Name:</strong> ${escH(engName)}</div>
+        <div class="eng-row"><strong>Ingredients:</strong> ${engLabelHtml}</div>
+        <div class="eng-row"><strong>Allergens:</strong> ${escH(engAllergen)}</div>
+        <div class="eng-row"><strong>Contents:</strong> ${escH(engContent)}</div>
+        <div style="margin-top:12px;padding:12px;background:var(--bg1);border-radius:8px;font-size:.84rem;line-height:1.7;font-family:monospace;white-space:pre-line">${escH(nlEng)}</div>
+        <div class="eng-copy-row">
+          <button class="btn btn-secondary btn-sm" onclick="copyEngResult()">📋 複製全部英文</button>
+          <button class="btn btn-secondary btn-sm" onclick="copyEngIngredients()">📋 僅複製英文原料</button>
+        </div>
+      </div>`;
+
+    // 暫存英文結果供複製
+    window._engResult = {
+      name: engName, ingredients: engLabelPlain, allergen: engAllergen,
+      content: engContent, nutrition: nlEng
+    };
+
+    showToast(missingCount > 0
+      ? `✅ 翻譯完成！${missingCount} 項成分需補詞庫`
+      : '✅ 翻譯完成！所有成分皆有詞庫資料');
+  } catch(e) {
+    showToast('⚠️ 翻譯失敗：' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🌐 一鍵翻成英文';
+  }
+}
+
+function copyEngResult() {
+  if (!window._engResult) return;
+  const r = window._engResult;
+  navigator.clipboard.writeText(
+    `Product Name: ${r.name}\nIngredients: ${r.ingredients}\nAllergens: ${r.allergen}\nContents: ${r.content}\n\n${r.nutrition}`
+  ).then(() => showToast('✅ 已複製英文結果！'));
+}
+
+function copyEngIngredients() {
+  if (!window._engResult) return;
+  navigator.clipboard.writeText(window._engResult.ingredients)
+    .then(() => showToast('✅ 已複製英文原料！'));
 }
 
 // ══════════════════════════════════
