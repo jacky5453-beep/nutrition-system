@@ -7,18 +7,18 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap');
   :root {
-    --bg:#f5f2eb;--surface:#fffdf7;--surface2:#f0ece0;
-    --border:#d4c9a8;--border2:#c2b68a;
-    --accent:#8b6914;--accent2:#c4961a;--accent-light:#f5e8c0;
-    --text:#2c2416;--text2:#5a4a2a;--text3:#8a7550;
+    --bg:#f5f7f0;--surface:#ffffff;--surface2:#f0f4e8;
+    --border:#d8e0cc;--border2:#b0c490;
+    --accent:#5a7a00;--accent2:#8aab00;--accent-light:#f0f7d4;
+    --text:#1a1a16;--text2:#3a4a2a;--text3:#6a7a5a;
     --red:#c0392b;--green:#27632a;
-    --shadow:0 2px 12px rgba(139,105,20,0.10);--radius:10px;
+    --shadow:0 2px 12px rgba(90,122,0,0.10);--radius:10px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
 
-  .header{background:linear-gradient(135deg,#6b4f10 0%,#9a7020 60%,#c4961a 100%);color:#fff8e8;padding:18px 32px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 16px rgba(0,0,0,0.18);}
-  .header-icon{font-size:2rem;}
+  .header{background:linear-gradient(135deg,#1A1A16 0%,#2a3a1a 60%,#3a5a10 100%);color:#f0f7d4;padding:18px 32px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 16px rgba(0,0,0,0.18);}
+  .header-logo{height:36px;object-fit:contain;}
   .header h1{font-family:'Noto Serif TC',serif;font-size:1.35rem;font-weight:700;letter-spacing:2px;}
   .header p{font-size:0.8rem;opacity:.8;margin-top:2px;}
 
@@ -36,14 +36,14 @@
   .form-group{display:flex;flex-direction:column;gap:5px;}
   .form-group.full{grid-column:1/-1;}
   label{font-size:.82rem;color:var(--text2);font-weight:500;}
-  input[type=text],input[type=number],textarea,select{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.88rem;color:var(--text);background:#fdfaf2;transition:border-color .2s,box-shadow .2s;width:100%;}
+  input[type=text],input[type=number],textarea,select{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.88rem;color:var(--text);background:#f8faf2;transition:border-color .2s,box-shadow .2s;width:100%;}
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(196,150,26,.15);}
   textarea{resize:vertical;min-height:60px;}
 
   .table-wrap{overflow-x:auto;}
   table{width:100%;border-collapse:collapse;font-size:.83rem;}
-  thead th{background:linear-gradient(180deg,#8b6914 0%,#7a5c10 100%);color:#fff8e8;padding:8px 10px;text-align:center;font-weight:600;white-space:nowrap;border:1px solid #6b4f10;}
-  tbody tr:nth-child(even){background:#faf7ee;}
+  thead th{background:linear-gradient(180deg,#5a7a00 0%,#4a6800 100%);color:#f0f7d4;padding:8px 10px;text-align:center;font-weight:600;white-space:nowrap;border:1px solid #3a5800;}
+  tbody tr:nth-child(even){background:#f8faf2;}
   tbody tr:hover{background:var(--accent-light);}
   tbody td{padding:6px 8px;border:1px solid var(--border);text-align:center;vertical-align:middle;}
   tbody td:first-child{text-align:left;}
@@ -69,8 +69,8 @@
   tr.db-match td{background:#f0fff2!important;}
 
   .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:6px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .18s;border:none;}
-  .btn-primary{background:var(--accent);color:#fff8e8;}
-  .btn-primary:hover{background:#7a5c10;transform:translateY(-1px);box-shadow:0 4px 12px rgba(139,105,20,.3);}
+  .btn-primary{background:var(--accent);color:#f0f7d4;}
+  .btn-primary:hover{background:#4a6800;transform:translateY(-1px);box-shadow:0 4px 12px rgba(90,122,0,.3);}
   .btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
   .btn-secondary:hover{background:var(--accent-light);color:var(--accent);}
   .btn-danger{background:#e74c3c;color:#fff;font-size:.75rem;padding:4px 8px;border-radius:4px;}
@@ -98,10 +98,10 @@
   /* Sort */
   .sort-item{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;}
   .sort-rank{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;}
-  .sort-rank.top3{background:#c4961a;}
+  .sort-rank.top3{background:#8aab00;}
   .sort-name{flex:1;font-weight:600;}
-  .sort-bar-wrap{flex:2;height:10px;background:#e8e0cc;border-radius:5px;overflow:hidden;}
-  .sort-bar{height:100%;background:linear-gradient(90deg,#c4961a,#8b6914);border-radius:5px;}
+  .sort-bar-wrap{flex:2;height:10px;background:#e0e8cc;border-radius:5px;overflow:hidden;}
+  .sort-bar{height:100%;background:linear-gradient(90deg,#8aab00,#5a7a00);border-radius:5px;}
   .sort-weight{font-size:.82rem;color:var(--text2);white-space:nowrap;width:80px;text-align:right;}
   .sort-pct{font-size:.78rem;color:var(--text3);white-space:nowrap;width:48px;text-align:right;}
   .label-result{background:var(--accent-light);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin-top:14px;font-size:.9rem;line-height:1.8;}
@@ -133,20 +133,20 @@
   .hint-box{background:#f0f6ff;border:1px solid #a8c4f0;border-radius:7px;padding:10px 14px;font-size:.82rem;color:#1a3060;margin-bottom:12px;line-height:1.8;}
   .hint-box strong{display:block;margin-bottom:3px;color:#1a4a8b;}
   .col-tag{display:inline-block;background:var(--accent-light);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-size:.75rem;color:var(--accent);font-family:monospace;margin:1px;}
-  .paste-area{width:100%;min-height:130px;border:2px dashed var(--border2);border-radius:8px;padding:12px 14px;font-family:'Courier New',monospace;font-size:.82rem;resize:vertical;background:#fdfaf2;color:var(--text);transition:border-color .2s;}
+  .paste-area{width:100%;min-height:130px;border:2px dashed var(--border2);border-radius:8px;padding:12px 14px;font-family:'Courier New',monospace;font-size:.82rem;resize:vertical;background:#f8faf2;color:var(--text);transition:border-color .2s;}
   .paste-area:focus{outline:none;border-color:var(--accent2);background:#fff;}
   .preview-wrap{max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:6px;margin:8px 0;}
   .preview-tbl{font-size:.78rem;width:100%;border-collapse:collapse;}
-  .preview-tbl th{background:var(--accent);color:#fff8e8;padding:5px 8px;white-space:nowrap;position:sticky;top:0;}
+  .preview-tbl th{background:var(--accent);color:#f0f7d4;padding:5px 8px;white-space:nowrap;position:sticky;top:0;}
   .preview-tbl td{padding:4px 8px;border:1px solid var(--border);white-space:nowrap;}
-  .preview-tbl tr:nth-child(even) td{background:#faf7ee;}
+  .preview-tbl tr:nth-child(even) td{background:#f8faf2;}
 
   /* DB */
   .db-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .db-toolbar input{flex:1;min-width:160px;}
   .db-wrap{max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;}
   .db-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
-  .db-tbl th{background:var(--accent);color:#fff8e8;padding:7px 10px;white-space:nowrap;position:sticky;top:0;text-align:center;}
+  .db-tbl th{background:var(--accent);color:#f0f7d4;padding:7px 10px;white-space:nowrap;position:sticky;top:0;text-align:center;}
   .db-tbl th:first-child{text-align:left;}
   .db-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;}
   .db-tbl td:first-child{text-align:left;font-weight:600;}
@@ -159,19 +159,19 @@
   .colmap-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
   .colmap-item { display:flex; flex-direction:column; gap:3px; }
   .colmap-item label { font-size:.72rem; color:var(--text3); font-weight:500; }
-  .colmap-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#fdfaf2; color:var(--text); }
+  .colmap-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#f8faf2; color:var(--text); }
   .colmap-item select:focus { outline:none; border-color:var(--accent2); }
   .row-order-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
   .row-order-item { display:flex; flex-direction:column; gap:3px; }
   .row-order-item label { font-size:.72rem; color:var(--text3); font-weight:500; }
-  .row-order-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#fdfaf2; color:var(--text); }
+  .row-order-item select { padding:5px 6px; border:1px solid var(--border); border-radius:5px; font-size:.78rem; font-family:inherit; background:#f8faf2; color:var(--text); }
 
 
   /* ── Translation ── */
   .trans-input-area { display:flex; gap:16px; margin-bottom:16px; }
   .trans-box { flex:1; display:flex; flex-direction:column; gap:8px; }
   .trans-box label { font-size:.82rem; font-weight:600; color:var(--text2); }
-  .trans-textarea { width:100%; min-height:220px; border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:inherit; font-size:.88rem; resize:vertical; background:#fdfaf2; color:var(--text); line-height:1.8; }
+  .trans-textarea { width:100%; min-height:220px; border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:inherit; font-size:.88rem; resize:vertical; background:#f8faf2; color:var(--text); line-height:1.8; }
   .trans-textarea:focus { outline:none; border-color:var(--accent2); box-shadow:0 0 0 3px rgba(196,150,26,.15); }
   .trans-textarea[readonly] { background:var(--surface2); cursor:default; }
   .trans-arrow { display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--border2); flex-shrink:0; padding-top:32px; }
@@ -192,7 +192,7 @@
   .tdb-toolbar input { flex:1; min-width:160px; }
   .tdb-wrap { max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; }
   .tdb-tbl { width:100%; border-collapse:collapse; font-size:.85rem; }
-  .tdb-tbl th { background:var(--accent); color:#fff8e8; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
+  .tdb-tbl th { background:var(--accent); color:#f0f7d4; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
   .tdb-tbl td { padding:7px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
   .tdb-tbl tr:hover td { background:var(--accent-light); }
   .tdb-tbl td:nth-child(2) { color:var(--accent); font-weight:500; }
@@ -205,7 +205,7 @@
   /* ── Expand DB ── */
   .exp-wrap { max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; }
   .exp-tbl { width:100%; border-collapse:collapse; font-size:.84rem; }
-  .exp-tbl th { background:var(--accent); color:#fff8e8; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
+  .exp-tbl th { background:var(--accent); color:#f0f7d4; padding:8px 14px; text-align:left; position:sticky; top:0; white-space:nowrap; }
   .exp-tbl td { padding:8px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
   .exp-tbl tr:hover td { background:var(--accent-light); }
   .exp-tbl td:first-child { font-weight:700; white-space:nowrap; width:160px; }
@@ -234,102 +234,316 @@
   @media print{.tabs,.card:not(.print-target),.btn-group,.header{display:none!important;}.nutrition-label{border-color:#000;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 
 <!-- ══ Supabase 狀態 Banner ══ -->
 
-<style id="login-style">
-#login-screen {
-  position:fixed;inset:0;background:#f5f2eb;
+<style id="auth-style">
+/* 登入 / 未授權 / 載入中畫面 */
+#auth-screen {
+  position:fixed;inset:0;background:#f5f7f0;
   display:flex;align-items:center;justify-content:center;z-index:99999;
 }
-.login-box {
-  background:#fffdf7;border:1px solid #d4c9a8;border-radius:16px;
-  padding:40px 48px;text-align:center;width:360px;
-  box-shadow:0 4px 32px rgba(139,105,20,0.12);
+.auth-box {
+  background:#ffffff;border:1px solid #d8e0cc;border-radius:16px;
+  padding:40px 48px;text-align:center;width:380px;max-width:92vw;
+  box-shadow:0 4px 32px rgba(90,122,0,0.12);
 }
-.login-logo { font-size:2.5rem; margin-bottom:12px; }
-.login-title {
+.auth-logo { margin-bottom:12px; }
+.auth-title {
   font-family:'Noto Serif TC',serif;font-size:1.2rem;font-weight:700;
-  color:#8b6914;margin-bottom:4px;
+  color:#5a7a00;margin-bottom:4px;
 }
-.login-subtitle { font-size:0.82rem;color:#8a7550;margin-bottom:28px; }
-.login-box input[type=password] {
-  width:100%;padding:10px 14px;border:1px solid #d4c9a8;border-radius:8px;
-  font-size:0.95rem;font-family:inherit;background:#fdfaf2;color:#2c2416;
-  margin-bottom:14px;text-align:center;letter-spacing:2px;
+.auth-subtitle { font-size:0.82rem;color:#6a7a5a;margin-bottom:28px; }
+.auth-google-btn {
+  width:100%;padding:12px;background:#ffffff;color:#1a1a16;border:1px solid #d8e0cc;
+  border-radius:8px;font-size:0.95rem;font-weight:600;font-family:inherit;
+  cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;justify-content:center;gap:10px;
 }
-.login-box input[type=password]:focus {
-  outline:none;border-color:#c4961a;box-shadow:0 0 0 3px rgba(196,150,26,0.15);
-}
-.login-btn {
-  width:100%;padding:10px;background:#8b6914;color:#fff8e8;border:none;
-  border-radius:8px;font-size:0.95rem;font-weight:700;font-family:inherit;
-  cursor:pointer;transition:background 0.2s;
-}
-.login-btn:hover { background:#7a5c10; }
-.login-error {
-  color:#c0392b;font-size:0.82rem;margin-top:10px;min-height:20px;
-}
+.auth-google-btn:hover { background:#f0f7d4;border-color:#b0c490; }
+.auth-google-btn svg { width:20px;height:20px; }
+.auth-error { color:#c0392b;font-size:0.82rem;margin-top:10px;min-height:20px; }
+.auth-spinner { width:36px;height:36px;border:3px solid #d8e0cc;border-top-color:#5a7a00;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px; }
+.auth-switch-btn { background:none;border:none;color:#6a7a5a;font-size:0.82rem;cursor:pointer;margin-top:12px;font-family:inherit; }
+.auth-switch-btn:hover { color:#5a7a00;text-decoration:underline; }
+.auth-user-email { font-size:0.88rem;color:#5a7a00;font-weight:600;margin:8px 0; }
+/* Header 使用者區塊 */
+.header-user { margin-left:auto;display:flex;align-items:center;gap:10px; }
+.header-avatar { width:32px;height:32px;border-radius:50%;border:2px solid rgba(192,240,0,0.3); }
+.header-email { font-size:0.78rem;color:#f0f7d4;opacity:0.85;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.header-logout-btn { background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#f0f7d4;padding:4px 12px;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:inherit;transition:all .2s; }
+.header-logout-btn:hover { background:rgba(255,255,255,0.25); }
+.header-admin-btn { background:rgba(195,240,0,0.15);border:1px solid rgba(195,240,0,0.3);color:#C3F000;padding:4px 12px;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:inherit;transition:all .2s; }
+.header-admin-btn:hover { background:rgba(195,240,0,0.3); }
+/* 白名單管理 Modal */
+.wl-modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:10000;align-items:center;justify-content:center; }
+.wl-modal-overlay.open { display:flex; }
+.wl-modal { background:#fff;border-radius:12px;padding:26px 30px;width:min(520px,94vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.25);position:relative; }
+.wl-modal-title { font-family:'Noto Serif TC',serif;font-size:1.05rem;font-weight:700;color:#5a7a00;margin-bottom:16px; }
+.wl-modal-close { position:absolute;top:16px;right:18px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6a7a5a; }
+.wl-modal-close:hover { color:#c0392b; }
+.wl-add-form { display:flex;flex-direction:column;gap:8px;margin-bottom:18px;padding:14px;background:#f0f4e8;border-radius:8px; }
+.wl-add-form input { padding:8px 12px;border:1px solid #d8e0cc;border-radius:6px;font-size:0.88rem;font-family:inherit;background:#fff; }
+.wl-add-form input:focus { outline:none;border-color:#8aab00; }
+.wl-add-btn { padding:8px 16px;background:#5a7a00;color:#f0f7d4;border:none;border-radius:6px;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit; }
+.wl-add-btn:hover { background:#4a6800; }
+.wl-add-btn:disabled { opacity:0.5;cursor:not-allowed; }
+.wl-list-item { display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f4e8; }
+.wl-list-name { font-weight:600;font-size:0.88rem;color:#1a1a16; }
+.wl-list-email { font-size:0.78rem;color:#6a7a5a; }
+.wl-del-btn { background:none;border:none;color:#c0392b;font-size:0.78rem;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:4px; }
+.wl-del-btn:hover { background:#fff0f0; }
+.wl-empty { text-align:center;padding:20px;color:#6a7a5a;font-size:0.88rem; }
 </style>
-<div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">🏷️</div>
-    <div class="login-title">食品營養標示計算系統</div>
-    <div class="login-subtitle">請輸入密碼以繼續</div>
-    <input type="password" id="loginPwd" placeholder="輸入密碼"
-      onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">登入</button>
-    <div class="login-error" id="loginErr"></div>
+
+<!-- 認證畫面（登入 / 載入中 / 未授權） -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo"><img src="logo.png" alt="得來素" style="height:60px;object-fit:contain;"></div>
+    <div class="auth-title">食品營養標示計算系統</div>
+    <!-- 載入中狀態 -->
+    <div id="auth-loading" style="display:none;margin-top:20px;">
+      <div class="auth-spinner"></div>
+      <div class="auth-subtitle" style="margin-bottom:0;">驗證中...</div>
+    </div>
+    <!-- 登入按鈕 -->
+    <div id="auth-login" style="display:none;">
+      <div class="auth-subtitle">內部工具，請使用 Google 帳號登入</div>
+      <button class="auth-google-btn" onclick="doGoogleLogin()">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        使用 Google 帳號登入
+      </button>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+    <!-- 未授權狀態 -->
+    <div id="auth-denied" style="display:none;">
+      <div class="auth-subtitle" style="margin-bottom:8px;">⚠️ 尚未取得使用權限</div>
+      <div class="auth-user-email" id="auth-denied-email"></div>
+      <div style="font-size:0.8rem;color:#6a7a5a;margin-bottom:16px;">請聯繫管理員申請使用權限</div>
+      <button class="auth-switch-btn" onclick="doLogout()">切換帳號</button>
+    </div>
   </div>
 </div>
+
+<!-- 白名單管理 Modal -->
+<div class="wl-modal-overlay" id="wlModal">
+  <div class="wl-modal">
+    <button class="wl-modal-close" onclick="closeWhitelistModal()">✕</button>
+    <div class="wl-modal-title">👥 帳號權限管理</div>
+    <div class="wl-add-form">
+      <div style="font-size:0.78rem;color:#6a7a5a;margin-bottom:4px;">新增可使用此系統的 Google 帳號</div>
+      <input type="text" id="wlName" placeholder="名稱（例：小美）">
+      <div style="display:flex;gap:8px;">
+        <input type="email" id="wlEmail" placeholder="Google 信箱（例：user@gmail.com）" style="flex:1;">
+        <button class="wl-add-btn" id="wlAddBtn" onclick="addWhitelistUser()">新增</button>
+      </div>
+    </div>
+    <div id="wlList"></div>
+  </div>
+</div>
+
 <script>
+// ═══ Firebase 初始化 + Google 登入 + 白名單管理 ═══
 (function(){
-  const PWD = 'derlife53613149';
-  const KEY = 'nutrition_auth';
-  function doLogin() {
-    const val = document.getElementById('loginPwd').value;
-    if (val === PWD) {
-      sessionStorage.setItem(KEY, '1');
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('login-style').remove();
+  const firebaseConfig = {
+    apiKey: "AIzaSyCMnHuSPNX8kJC53eYgWHXUV4BQjXhM7uo",
+    authDomain: "derlife-audit.firebaseapp.com",
+    projectId: "derlife-audit",
+    storageBucket: "derlife-audit.firebasestorage.app",
+    messagingSenderId: "992417419976",
+    appId: "1:992417419976:web:8b44d06620ca2e8cd5cbfd"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const WHITELIST_COL = 'nutrition-whitelist';
+  const ADMIN_EMAIL = 'jacky5453@gmail.com';
+  let currentUserEmail = null;
+  let isAdmin = false;
+
+  // 監聽登入狀態
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUserEmail = user.email;
+      isAdmin = (user.email === ADMIN_EMAIL);
+      // 檢查白名單
+      const allowed = await isUserAllowed(user.email);
+      if (allowed) {
+        showApp(user);
+      } else {
+        showDenied(user.email);
+      }
     } else {
-      const err = document.getElementById('loginErr');
-      err.textContent = '密碼錯誤，請再試一次';
-      document.getElementById('loginPwd').value = '';
-      document.getElementById('loginPwd').focus();
-      setTimeout(()=>{ err.textContent=''; }, 3000);
+      currentUserEmail = null;
+      isAdmin = false;
+      showLogin();
+    }
+  });
+
+  // 檢查白名單
+  async function isUserAllowed(email) {
+    if (email === ADMIN_EMAIL) return true;
+    try {
+      const doc = await db.collection(WHITELIST_COL).doc(email).get();
+      return doc.exists;
+    } catch(e) {
+      console.error('白名單檢查失敗:', e);
+      return false;
     }
   }
-  window.doLogin = doLogin;
-  // Check if already authenticated this session
-  if (sessionStorage.getItem(KEY) === '1') {
-    document.addEventListener('DOMContentLoaded', () => {
-      const s = document.getElementById('login-screen');
-      if (s) s.style.display = 'none';
-      const st = document.getElementById('login-style');
-      if (st) st.remove();
-    });
+
+  // 顯示登入畫面
+  function showLogin() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'block';
+    document.getElementById('auth-denied').style.display = 'none';
   }
+
+  // 顯示載入中
+  function showLoading() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('auth-loading').style.display = 'block';
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-denied').style.display = 'none';
+  }
+
+  // 顯示未授權
+  function showDenied(email) {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-denied').style.display = 'block';
+    document.getElementById('auth-denied-email').textContent = email;
+  }
+
+  // 顯示主應用
+  function showApp(user) {
+    document.getElementById('auth-screen').style.display = 'none';
+    // 更新 Header 使用者資訊
+    const userArea = document.getElementById('headerUser');
+    if (userArea) {
+      const avatar = user.photoURL ? `<img class="header-avatar" src="${user.photoURL}" referrerpolicy="no-referrer">` : '';
+      const adminBtn = isAdmin ? `<button class="header-admin-btn" onclick="openWhitelistModal()">👥 帳號管理</button>` : '';
+      userArea.innerHTML = `${adminBtn}${avatar}<span class="header-email">${user.email}</span><button class="header-logout-btn" onclick="doLogout()">登出</button>`;
+    }
+  }
+
+  // Google 登入
+  window.doGoogleLogin = async function() {
+    showLoading();
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch(e) {
+      if (e.code !== 'auth/popup-closed-by-user') {
+        document.getElementById('auth-error').textContent = '登入失敗: ' + e.message;
+      }
+      showLogin();
+    }
+  };
+
+  // 登出
+  window.doLogout = function() {
+    auth.signOut();
+  };
+
+  // ═══ 白名單管理（僅管理員） ═══
+  window.openWhitelistModal = async function() {
+    if (!isAdmin) return;
+    document.getElementById('wlModal').classList.add('open');
+    await loadWhitelistUsers();
+  };
+
+  window.closeWhitelistModal = function() {
+    document.getElementById('wlModal').classList.remove('open');
+  };
+
+  async function loadWhitelistUsers() {
+    const listEl = document.getElementById('wlList');
+    listEl.innerHTML = '<div class="wl-empty">載入中...</div>';
+    try {
+      const snap = await db.collection(WHITELIST_COL).get();
+      if (snap.empty) {
+        listEl.innerHTML = '<div class="wl-empty">尚未新增其他帳號</div>';
+        return;
+      }
+      let html = '';
+      snap.forEach(doc => {
+        const d = doc.data();
+        html += `<div class="wl-list-item">
+          <div><div class="wl-list-name">${d.name || '未命名'}</div><div class="wl-list-email">${d.email}</div></div>
+          <button class="wl-del-btn" onclick="removeWhitelistUser('${d.email}')">移除</button>
+        </div>`;
+      });
+      listEl.innerHTML = html;
+    } catch(e) {
+      listEl.innerHTML = '<div class="wl-empty">載入失敗: ' + e.message + '</div>';
+    }
+  }
+
+  window.addWhitelistUser = async function() {
+    const emailEl = document.getElementById('wlEmail');
+    const nameEl = document.getElementById('wlName');
+    const btn = document.getElementById('wlAddBtn');
+    const email = emailEl.value.trim().toLowerCase();
+    const name = nameEl.value.trim();
+    if (!email || !name) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      await db.collection(WHITELIST_COL).doc(email).set({
+        email: email,
+        name: name,
+        addedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      emailEl.value = '';
+      nameEl.value = '';
+      await loadWhitelistUsers();
+    } catch(e) {
+      alert('新增失敗: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '新增';
+    }
+  };
+
+  window.removeWhitelistUser = async function(email) {
+    if (!confirm('確定要移除 ' + email + ' 的使用權限嗎？')) return;
+    try {
+      await db.collection(WHITELIST_COL).doc(email).delete();
+      await loadWhitelistUsers();
+    } catch(e) {
+      alert('移除失敗: ' + e.message);
+    }
+  };
+
+  // 初始顯示載入中
+  showLoading();
 })();
 </script>
 
-<div id="supabaseBanner" style="background:#1a3060;color:#e8f0ff;padding:8px 24px;font-size:0.82rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+<div id="supabaseBanner" style="background:#1A1A16;color:#f0f7d4;padding:8px 24px;font-size:0.82rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
   <span style="font-weight:700;white-space:nowrap">🔗 Supabase 雲端資料庫</span>
   <input id="sbUrl" type="text" style="display:none">
   <input id="sbKey" type="text" style="display:none">
   <span id="sbStatus" style="font-size:0.82rem;">🔄 連線中...</span>
-  <button onclick="document.getElementById('supabaseBanner').style.display='none'" style="margin-left:auto;background:none;border:none;color:#9ab;cursor:pointer;font-size:1.1rem">✕</button>
+  <button onclick="document.getElementById('supabaseBanner').style.display='none'" style="margin-left:auto;background:none;border:none;color:#8aab00;cursor:pointer;font-size:1.1rem">✕</button>
 </div>
 
 <div class="header">
-  <div class="header-icon">🏷️</div>
+  <img src="logo.png" alt="得來素" class="header-logo">
   <div>
     <h1>食品營養標示計算系統</h1>
     <p>輸入成分配方 · 自動計算營養標示 · 成分重量排序 · 原物料資料庫</p>
   </div>
+  <div class="header-user" id="headerUser"></div>
 </div>
 
 <div class="container">
