@@ -1324,6 +1324,26 @@ function copyResult() {
 // ══════════════════════════════════
 // 一鍵翻成英文
 // ══════════════════════════════════
+
+// 智慧型頂層分割：只在括號外的頓號／逗號才切割，避免展開型原料被錯誤拆開
+function splitTopLevel(label) {
+  const result = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of label) {
+    if ('[【（('.includes(ch)) depth++;
+    else if (']】）)'.includes(ch)) { if (depth > 0) depth--; }
+    else if (depth === 0 && '、，,'.includes(ch)) {
+      if (current.trim()) result.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim()) result.push(current.trim());
+  return result;
+}
+
 async function translateResultToEnglish() {
   if (!window._lastResult) { showToast('請先計算結果！'); return; }
   const btn = document.getElementById('btnTransResult');
@@ -1333,13 +1353,19 @@ async function translateResultToEnglish() {
     // 確保翻譯詞庫已載入
     if (!_tdbCache) { const remote = await loadTransDB_remote(); if (remote) _tdbCache = remote; }
 
-    // 解析原料清單（支援頓號、逗號分隔）
-    const rawIngredients = finalLabel.split(/[、，,]/).map(s => s.trim()).filter(Boolean);
+    // 解析原料清單（括號感知，避免展開型原料被錯誤拆開）
+    const rawIngredients = splitTopLevel(finalLabel);
 
     // 逐一查詞庫翻譯原料
     let missingCount = 0;
     const engIngredients = rawIngredients.map(zh => {
-      const hit = findTransDB(zh);
+      // 先試完整比對（適用展開型如「素蠔油[水、...]」）
+      let hit = findTransDB(zh);
+      // 若無，再試去掉展開內容後的基本名稱（如「素蠔油」）
+      if (!hit) {
+        const baseName = zh.replace(/[\[【（(].*$/, '').trim();
+        if (baseName && baseName !== zh) hit = findTransDB(baseName);
+      }
       if (hit) return { zh, en: hit.en, found: true };
       missingCount++;
       return { zh, en: zh, found: false }; // 沒找到就顯示中文
