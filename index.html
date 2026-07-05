@@ -975,12 +975,16 @@ function showSBStatus(msg, type) {
 async function sbFetch(path, opts = {}) {
   const { url, key } = getSBConfig();
   if (!url || !key) return null;
+  // 綁 Firebase 登入：已登入用 idToken 當身份（Supabase Third-Party Auth 驗，RLS 認 derlife-audit）；
+  // 未登入退回 anon key（過渡相容；RLS 收緊後未登入即無法寫）。apikey 仍帶 anon 讓 Supabase 識別專案。
+  let bearer = key;
+  try { const u = firebase.auth().currentUser; if (u) bearer = await u.getIdToken(); } catch (e) {}
   const res = await fetch(url + '/rest/v1/' + path, {
     ...opts,
     headers: {
       'Content-Type': 'application/json',
       'apikey': key,
-      'Authorization': 'Bearer ' + key,
+      'Authorization': 'Bearer ' + bearer,
       'Prefer': opts.prefer || 'return=representation',
       ...(opts.headers || {})
     }
