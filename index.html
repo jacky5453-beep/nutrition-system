@@ -1314,6 +1314,8 @@ function renderSort(rows, totalWeight) {
     <span style="font-size:.85rem;color:var(--text2)">共 ${sorted.length} 種，總重 ${totalWeight.toLocaleString()} g</span>
     <button class="btn btn-secondary btn-sm" onclick="copySortPct()">📋 複製比例（不含克數）</button>
     <button class="btn btn-secondary btn-sm" onclick="exportSortPctExcel()">📊 匯出比例 Excel（不含克數）</button>
+    <button class="btn btn-secondary btn-sm" onclick="copySortPctEng()">🌍 複製英文比例</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportSortPctExcelEng()">🌍 匯出英文比例 Excel</button>
   </div>`;
   sorted.forEach((r,i) => {
     const pct = totalWeight > 0 ? r.weight/totalWeight*100 : 0;
@@ -1364,6 +1366,57 @@ function exportSortPctExcel() {
   XLSX.utils.book_append_sheet(wb, ws, '成分比例');
   downloadXlsx(wb, `${name && name !== '－' ? name + '-' : ''}成分比例.xlsx`);
   showToast('✅ 已匯出比例 Excel（不含克數）！');
+}
+
+// ── 英文版比例匯出（外銷用：成分名稱查翻譯詞庫，查不到保留中文並提醒）──
+// 查詞庫翻譯單一成分名（含展開型原料的基本名稱後備，如「素蠔油[水、…]」退查「素蠔油」）
+function transIngredientName(zh) {
+  let hit = findTransDB(zh);
+  if (!hit) {
+    const baseName = zh.replace(/[\[【（(].*$/, '').trim();
+    if (baseName && baseName !== zh) hit = findTransDB(baseName);
+  }
+  return hit ? hit.en : null;
+}
+
+async function buildSortPctEnglish() {
+  if (!window._lastSortData || !window._lastSortData.length) { showToast('請先在「配方輸入」計算！'); return null; }
+  if (!_tdbCache) { const remote = await loadTransDB_remote(); if (remote) _tdbCache = remote; }
+  const missing = [];
+  const rows = window._lastSortData.map(d => {
+    const en = transIngredientName(d.name);
+    if (!en) missing.push(d.name);
+    return { rank: d.rank, name: en || d.name, pct: d.pct };
+  });
+  // 品名走 Google 翻譯（失敗就保留中文）
+  let engName = (window._lastResult && window._lastResult.name) || '';
+  if (!engName || engName === '－') engName = '';
+  else { try { engName = await googleTranslateOne(engName); } catch(e) {} }
+  if (missing.length) {
+    const show = missing.slice(0, 5).join('、') + (missing.length > 5 ? `…等 ${missing.length} 項` : '');
+    showToast(`⚠️ 詞庫查無翻譯（以中文保留）：${show}，可到「翻譯詞庫」補上後重新匯出`);
+  }
+  return { rows, engName };
+}
+
+async function copySortPctEng() {
+  const data = await buildSortPctEnglish();
+  if (!data) return;
+  const lines = data.rows.map(r => `${r.rank}. ${r.name}  ${r.pct.toFixed(2)}%`);
+  const text = (data.engName ? `Product: ${data.engName}\n` : '') + `Ingredient Composition (%):\n` + lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('✅ 已複製英文比例清單（不含克數）！'));
+}
+
+async function exportSortPctExcelEng() {
+  const data = await buildSortPctEnglish();
+  if (!data) return;
+  const rows = data.rows.map(r => [r.rank, r.name, Number(r.pct.toFixed(2))]);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([['No.', 'Ingredient', 'Percentage (%)'], ...rows]);
+  ws['!cols'] = [{ wch: 6 }, { wch: 36 }, { wch: 14 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Ingredient Composition');
+  downloadXlsx(wb, `${data.engName ? data.engName + '-' : ''}Ingredient-Composition.xlsx`);
+  showToast('✅ 已匯出英文比例 Excel（不含克數）！');
 }
 
 function copyResult() {
