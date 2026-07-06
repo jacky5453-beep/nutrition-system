@@ -9,7 +9,8 @@
 - **Firebase 專案**：derlife-audit（Google 登入 + 白名單）
 - **Firestore Collections**：`nutrition-whitelist`（帳號白名單，doc id = email）
 - **Supabase 專案**：`btnyditozvaqcxthomjk`（資料本體：`nutrition_db` 原物料／`trans_db` 翻譯詞庫／`expand_db` 展開庫／`product_history` 產品歷史記錄；2026-07-05 起 RLS 收緊，只認 Firebase idToken）
-- **最後部署日期**：2026-07-06（成分排序新增「匯出比例」功能——外銷用：複製文字與匯出 Excel 都只含排序＋成分名稱＋百分比，不含克數。commit 865d1da）
+- **最後部署日期**：2026-07-06（成分排序新增「英文版比例匯出」：成分名查翻譯詞庫（含展開型基本名稱後備）、品名走 Google 翻譯、缺譯保留中文並 toast 提醒補詞庫；表頭 No./Ingredient/Percentage (%)。commit 0a47f2b）
+- **前次部署**：2026-07-06（成分排序新增「匯出比例」功能——外銷用：複製文字與匯出 Excel 都只含排序＋成分名稱＋百分比，不含克數。commit 865d1da）
 - **前次部署**：2026-07-06（修正 RLS 收緊後「歷史記錄消失」bug：頁面開啟瞬間未登入就抓 Supabase，被 RLS 擋拿到空陣列、還把 localStorage 備援洗掉。修法＝所有雲端讀取等 Firebase 登入狀態確定才執行、未登入直接用本地備援不覆寫，登入完成後自動清快取重新 render。commit a3467eb）
 - **前次部署**：2026-07-05（Supabase 綁 Firebase idToken：sbFetch 登入後帶 idToken，配合 RLS 收緊。commit 898afea）
 - **前次部署**：2026-04-15
