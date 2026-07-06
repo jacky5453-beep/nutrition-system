@@ -1001,6 +1001,26 @@ async function testSBConnection() {
   } catch { return false; }
 }
 
+// ── 登入時序守門（2026-07-06）──
+// RLS 收緊後（2026-07-05），未登入的 SELECT 會拿到空陣列（HTTP 200，不是錯誤），
+// 若照舊把空陣列存回 localStorage，會把本地備援洗掉（歷史記錄「消失」事件的根因）。
+// 因此雲端讀取一律等 Firebase 登入狀態確定後才執行；未登入直接跳過、改用本地備援。
+const _sbAuthReady = new Promise(res => {
+  const off = firebase.auth().onAuthStateChanged(() => { off(); res(); });
+});
+async function sbCanRead() {
+  await _sbAuthReady;
+  return !!firebase.auth().currentUser;
+}
+// 登入完成後清快取並重新 render，把登入前用本地備援畫的畫面換成雲端資料
+firebase.auth().onAuthStateChanged(u => {
+  if (!u) return;
+  _dbCache = null; _tdbCache = null; _expCache = null; _histCache = null;
+  const refresh = () => { renderDB(); renderTransDB(); renderExpandDB(); renderHistory(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh, { once: true });
+  else refresh();
+});
+
 // ── Nutrition DB (原物料) ──
 const DB_KEY = 'nutritionDB_v2';
 function loadDB_local() { try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch { return []; } }
@@ -1010,7 +1030,7 @@ let _dbCache = null;
 
 async function loadDB() {
   const { url, key } = getSBConfig();
-  if (url && key) {
+  if (url && key && await sbCanRead()) {
     try {
       const rows = await sbFetch('nutrition_db?order=name');
       if (rows !== null) {
@@ -1779,6 +1799,7 @@ function saveTransDB_local(db) { localStorage.setItem(TDB_KEY, JSON.stringify(db
 async function loadTransDB_remote() {
   const { url, key } = getSBConfig();
   if (!url || !key) return null;
+  if (!(await sbCanRead())) return null; // 未登入不讀雲端，避免空陣列洗掉本地備援
   try {
     const rows = await sbFetch('trans_db?order=zh');
     if (rows !== null) { const db = rows.map(r => ({ zh: r.zh, en: r.en, note: r.note || '' })); saveTransDB_local(db); return db; }
@@ -2140,6 +2161,7 @@ function saveExpandDB_local(db) { localStorage.setItem(EXP_KEY, JSON.stringify(d
 async function loadExpandDB_remote() {
   const { url, key } = getSBConfig();
   if (!url || !key) return null;
+  if (!(await sbCanRead())) return null; // 未登入不讀雲端，避免空陣列洗掉本地備援
   try {
     const rows = await sbFetch('expand_db?order=name');
     if (rows !== null) { const db = rows.map(r => ({ name: r.name, expanded: r.expanded, note: r.note || '' })); saveExpandDB_local(db); return db; }
@@ -2442,6 +2464,7 @@ function saveHistory_local(db) { localStorage.setItem(HIST_KEY, JSON.stringify(d
 async function loadHistory_remote() {
   const { url, key } = getSBConfig();
   if (!url || !key) return null;
+  if (!(await sbCanRead())) return null; // 未登入不讀雲端，避免空陣列洗掉本地備援
   try {
     const rows = await sbFetch('product_history?order=created_at.desc');
     if (rows !== null) {
